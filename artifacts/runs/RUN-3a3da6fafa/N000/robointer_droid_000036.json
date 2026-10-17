@@ -1,0 +1,36 @@
+{
+ "episode_id": "robointer_droid_000036",
+ "version_id": "N000",
+ "segments": [
+  {
+   "start_sec": 0.0,
+   "end_sec": 5.0,
+   "subtask": "Position the gripper above the white lid."
+  },
+  {
+   "start_sec": 5.0,
+   "end_sec": 10.0,
+   "subtask": "Lower the gripper to make contact with the white lid."
+  },
+  {
+   "start_sec": 10.0,
+   "end_sec": 15.0,
+   "subtask": "Grip the white lid."
+  },
+  {
+   "start_sec": 15.0,
+   "end_sec": 20.0,
+   "subtask": "Lift the white lid."
+  },
+  {
+   "start_sec": 20.0,
+   "end_sec": 25.0,
+   "subtask": "Move the white lid to the right side of the table."
+  },
+  {
+   "start_sec": 25.0,
+   "end_sec": 27.7,
+   "subtask": "Place the white lid down."
+  }
+ ]
+}

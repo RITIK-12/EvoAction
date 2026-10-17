@@ -1,0 +1,11 @@
+{
+ "episode_id": "robointer_droid_000038",
+ "version_id": "strong_fixed",
+ "segments": [
+  {
+   "start_sec": 0.0,
+   "end_sec": 27.7,
+   "subtask": "clean the white lid"
+  }
+ ]
+}

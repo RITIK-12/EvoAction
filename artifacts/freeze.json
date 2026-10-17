@@ -1,0 +1,76 @@
+{
+ "protocol": "evoaction-temporal-v1",
+ "frozen_at": 1792272606.686898,
+ "pilot": true,
+ "splits_sha256": "f32ee7d80870a8b0ef66f733cac55c5cdcca308bcf74f45b2a8ee223cc055166",
+ "C_label": "unchanged incumbent (no candidate promoted)",
+ "A": {
+  "version_id": "N000",
+  "workflow_sha256": "f6d53464c3711baeea9ffde68f2e19187ee61984b4a005be9b7d594bf5c56611",
+  "files_sha256": {
+   "config.json": "53e574e73406ebc1eca87fbcf0b8e8a6ca099986a8f08b3dcead2bf810f60cd5",
+   "prompt.md": "04c3c82356498849910193e07b3ca59674ba3715f02b6f9fc9ad9805e6f98c32",
+   "workflow.json": "9d80d50ba2f7e3d0a16b720448b0c4d2a4a74518e3af812b6944d69989d1a67c"
+  },
+  "models": {
+   "vision": "nvidia/Nemotron-3-Nano-Omni-Reasoning-30B-A3B",
+   "nemotron": "nvidia/NVIDIA-Nemotron-3-Super-120B-A12B"
+  },
+  "nodes": [
+   "sample_contact_sheets",
+   "initial_annotate",
+   "validate_export"
+  ]
+ },
+ "B": {
+  "version_id": "strong_fixed",
+  "workflow_sha256": "ce7f49e65e45b2b2a0b3f12f99de8c9f0f27bfb5a3db64325a8a1cd3441290e4",
+  "files_sha256": {
+   "config.json": "53e574e73406ebc1eca87fbcf0b8e8a6ca099986a8f08b3dcead2bf810f60cd5",
+   "prompt.md": "d201ce040f2b87d81a238c60f258f61ac3b6ff1acacfec024648c8d5f1190114",
+   "workflow.json": "603d155a6a7d1169763a8e28640cde05dacaa5bd6eee1932c01a4b54276f173f"
+  },
+  "models": {
+   "vision": "nvidia/Nemotron-3-Nano-Omni-Reasoning-30B-A3B",
+   "nemotron": "nvidia/NVIDIA-Nemotron-3-Super-120B-A12B"
+  },
+  "nodes": [
+   "sample_contact_sheets",
+   "initial_annotate",
+   "merge_filter_segments",
+   "validate_export"
+  ]
+ },
+ "C": {
+  "version_id": "N000",
+  "workflow_sha256": "f6d53464c3711baeea9ffde68f2e19187ee61984b4a005be9b7d594bf5c56611",
+  "files_sha256": {
+   "config.json": "53e574e73406ebc1eca87fbcf0b8e8a6ca099986a8f08b3dcead2bf810f60cd5",
+   "prompt.md": "04c3c82356498849910193e07b3ca59674ba3715f02b6f9fc9ad9805e6f98c32",
+   "workflow.json": "9d80d50ba2f7e3d0a16b720448b0c4d2a4a74518e3af812b6944d69989d1a67c"
+  },
+  "models": {
+   "vision": "nvidia/Nemotron-3-Nano-Omni-Reasoning-30B-A3B",
+   "nemotron": "nvidia/NVIDIA-Nemotron-3-Super-120B-A12B"
+  },
+  "nodes": [
+   "sample_contact_sheets",
+   "initial_annotate",
+   "validate_export"
+  ]
+ },
+ "test_set": {
+  "name": "fresh",
+  "episode_ids": [
+   "robointer_droid_000038",
+   "galaxea_033",
+   "galaxea_039"
+  ],
+  "continuity_episode_ids": [
+   "galaxea_037",
+   "robointer_droid_000036",
+   "galaxea_049"
+  ],
+  "note": "fresh = full-split test episodes never evaluated before (v1 scored the pilot test episodes)"
+ }
+}

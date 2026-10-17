@@ -1,0 +1,41 @@
+{
+ "episode_id": "galaxea_033",
+ "version_id": "N000",
+ "segments": [
+  {
+   "start_sec": 0.0,
+   "end_sec": 10.0,
+   "subtask": "Move to the test tube with red pigment."
+  },
+  {
+   "start_sec": 10.0,
+   "end_sec": 15.0,
+   "subtask": "Pick up the test tube with red pigment."
+  },
+  {
+   "start_sec": 15.0,
+   "end_sec": 20.0,
+   "subtask": "Move to the container."
+  },
+  {
+   "start_sec": 20.0,
+   "end_sec": 25.0,
+   "subtask": "Pour the test tube with red pigment into the container."
+  },
+  {
+   "start_sec": 25.0,
+   "end_sec": 30.0,
+   "subtask": "Move to the test tube with blue pigment."
+  },
+  {
+   "start_sec": 30.0,
+   "end_sec": 34.867,
+   "subtask": "Pick up the test tube with blue pigment."
+  },
+  {
+   "start_sec": 35.0,
+   "end_sec": 34.867,
+   "subtask": "Move to the container."
+  }
+ ]
+}

@@ -1,0 +1,21 @@
+{
+ "episode_id": "galaxea_049",
+ "version_id": "strong_fixed",
+ "segments": [
+  {
+   "start_sec": 0.0,
+   "end_sec": 4.5,
+   "subtask": "pick up the cup from the table"
+  },
+  {
+   "start_sec": 4.5,
+   "end_sec": 7.0,
+   "subtask": "pour the solid into the bowl"
+  },
+  {
+   "start_sec": 7.0,
+   "end_sec": 13.167,
+   "subtask": "place the cup on the table"
+  }
+ ]
+}

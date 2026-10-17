@@ -12,7 +12,39 @@ Robot manipulation subtask annotation is the working environment, because it is 
 
 Nothing is preordained. Promotion, rejection, grandchild spawning and benchmark wins are empirical outcomes, and `artifacts/report.html` shows only what actually happened.
 
-<!-- RESULTS_V2 -->
+## Results (v2 no-ground-truth protocol; every number comes from `artifacts/`)
+
+**Version N** (`N000`, scored against ground truth by the experimenters only):
+
+| | dev (5 episodes) | validation (4 episodes) |
+|---|---|---|
+| F1@0.75 | 0.081 | 0.098 |
+| label-free self-score | 0.543 | 0.511 |
+
+**N+1 loop** (`RUN-83d7bcb960`, agents saw no ground truth):
+- The Nemotron supervisor diagnosed evenly spaced ~1 s boundaries with no visual confirmation and poor telemetry alignment. It worked from label-free evidence only.
+- It launched 4 depth-1 investigations. No investigator raised an evidence-backed follow-up question, so the maximum depth reached was 1.
+- Ground-truth vocabulary appears 0 times in agent-written text.
+
+| Experiment | Change | Label-free score (gate) | Decision | Shadow GT F1@0.75 (measured afterwards) |
+|---|---|---|---|---|
+| EXP-0001 | prompt: longer subtasks | 0.511 → 0.366 | REJECTED (score fell) | 0.098 → 0.098 (F1@0.5 0.098 → 0.341) |
+| EXP-0002 | topology: 2 Hz + gripper hints → windows → refine → merge | 0.511 → 0.602 | REJECTED (cost 2.56× > 1.5×) | 0.098 → 0.140 |
+
+**Sealed held-out test:** the 3 episodes never evaluated before (`robointer_droid_000038, galaxea_033, galaxea_039`). A, B and C were frozen first and the test ran once.
+
+| System | F1@0.75 | F1@0.5 | Label-free self-score | Annotation cost |
+|---|---|---|---|---|
+| A · N000 | 0.037 | 0.222 | 0.241 | $0.0040 |
+| B · strong fixed | 0.000 | 0.091 | 0.316 | $0.0031 |
+| C · unchanged incumbent (no candidate promoted) | 0.037 | 0.222 | 0.241 | $0.0040 |
+
+Continuity check on the v1 pilot test episodes, which were already scored once: A 0.077, B 0.211, C 0.077 (F1@0.75).
+
+**What this shows, honestly:**
+- EvoAction ran a real N → N+1 loop with no ground truth. EXP-0002 changed the topology using robot telemetry, improved the label-free score, and, measured afterwards, also improved validation F1@0.75 (0.098 → 0.140). The predeclared 1.5× cost cap rejected it anyway, so C is the unchanged incumbent.
+- The label-free proxy is informative but imperfect. It agreed with ground truth on EXP-0002 and disagreed on EXP-0001 and on the A-vs-B ranking of the fresh test.
+- B vs A flips between test sets: B wins on the pilot test, A wins on the fresh test. With 3–4 episodes per split, sample variance dominates and nothing is statistically established.
 
 ## No-ground-truth protocol (v2)
 
@@ -96,6 +128,8 @@ Call, spend and time budgets are set in `.env`: `MAX_NEMOTRON_CALLS`, `MAX_VISIO
 - Default `REQUEST_TIMEOUT_SECONDS` is 180, because reasoning calls can exceed 90 s.
 - WGO-Bench's official scorer could not be verified, so the outer-snapped score is labeled as an evaluator-only variant.
 - The pilot splits are small, so results are **feasibility evidence**, not established generalization.
+- The v2 evolve run used `MAX_VISION_CALLS=96` because label-free visual verification adds one vision call per assessed episode. Total spend stays around $1–2 of the $35 cap.
+- I stopped at the predeclared 2 experiments. A third was allowed by budget, but I had already seen the shadow ground-truth measurements, and running more experiments because of them would let ground truth steer the process.
 
 ## Layout
 

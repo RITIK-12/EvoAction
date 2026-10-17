@@ -1,0 +1,21 @@
+{
+ "episode_id": "galaxea_037",
+ "version_id": "strong_fixed",
+ "segments": [
+  {
+   "start_sec": 0.0,
+   "end_sec": 2.5,
+   "subtask": "pick up the test tube with yellow pigment"
+  },
+  {
+   "start_sec": 2.5,
+   "end_sec": 4.5,
+   "subtask": "pick up the test tube with red pigment"
+  },
+  {
+   "start_sec": 4.5,
+   "end_sec": 18.6,
+   "subtask": "pour the test tubes into the beaker"
+  }
+ ]
+}
