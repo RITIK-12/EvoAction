@@ -53,6 +53,8 @@ def main(argv: list[str] | None = None) -> int:
         p.add_argument("--full", action="store_true", help="use full splits instead of pilot subsets")
         if name == "final":
             p.add_argument("--dry-run", action="store_true", help="verify freeze inputs and budgets without inference or unsealing")
+            p.add_argument("--test-set", choices=["fresh", "pilot", "full"], default="fresh",
+                           help="fresh = never-evaluated full-split test episodes (default); pilot/full for comparison")
     sub.add_parser("report")
     args = ap.parse_args(argv)
     if args.cmd == "baselines":

@@ -15,7 +15,7 @@ from evoaction.evaluation.protected import ProtectedEvaluator
 from evoaction.evaluation.segments import PROTOCOL_VERSION, paired_comparison
 from evoaction.experiments.evolution import load_lineage
 from evoaction.persistence import get_store
-from evoaction.pipeline import ensure_baselines, run_and_score
+from evoaction.pipeline import ensure_baselines, run_and_assess
 from evoaction.workflow.engine import VersionStore, usage_for
 
 
@@ -53,11 +53,16 @@ def cmd_final(args: argparse.Namespace) -> int:
         files = {name: hashlib.sha256((v.path / name).read_bytes()).hexdigest() for name in sorted(v.manifest["files"])}
         manifest[k] = {"version_id": v.id, "workflow_sha256": v.workflow_sha256, "files_sha256": files,
                        "models": v.config.get("models"), "nodes": [n.operator for n in v.workflow.nodes]}
-    test_ids = split_ids("test", pilot)
+    full_test, pilot_test = split_ids("test", False), split_ids("test", True)
+    test_set = getattr(args, "test_set", "fresh")
+    test_ids = {"fresh": [e for e in full_test if e not in pilot_test], "pilot": pilot_test, "full": full_test}[test_set]
+    continuity_ids = pilot_test if test_set == "fresh" else []
+    manifest["test_set"] = {"name": test_set, "episode_ids": test_ids, "continuity_episode_ids": continuity_ids,
+                            "note": "fresh = full-split test episodes never evaluated before (v1 scored the pilot test episodes)"}
     if getattr(args, "dry_run", False):
         from evoaction.data.wgo import load_episode
 
-        need = {k: v.workflow.max_calls * len(test_ids) for k, v in systems.items() if not (k == "C" and v.id == systems["A"].id)}
+        need = {k: (v.workflow.max_calls + 1) * len(test_ids + continuity_ids) for k, v in systems.items() if not (k == "C" and v.id == systems["A"].id)}
         check = {"systems": {k: (manifest[k]["version_id"], manifest[k]["workflow_sha256"][:12], manifest[k]["nodes"]) for k in "ABC"},
                  "C_label": c_label, "test_ids": test_ids, "test_media_ingested": all(load_episode(e)["video_path"] for e in test_ids),
                  "max_vision_calls_needed": sum(need.values()), "vision_limit_in_test_phase": client.budget.limit_for("vision"),
@@ -77,10 +82,20 @@ def cmd_final(args: argparse.Namespace) -> int:
         if k == "C" and v.id == systems["A"].id:
             results[k] = results["A"]
         else:
-            results[k] = run_and_score(v, "test", test_ids, client, evaluator, run_id, store, s)
+            results[k] = run_and_assess(v, "test", test_ids, client, run_id, evaluator=evaluator, store=store, settings=s)
         preds[k] = {e: r["segments"] for e, r in results[k]["run"]["episodes"].items()}
         durations.update({e: r["duration_sec"] for e, r in results[k]["run"]["episodes"].items()})
     rep = evaluator.final_test_report(preds, durations)
+    continuity: dict[str, Any] = {}
+    if continuity_ids:
+        for k, v in systems.items():
+            if k == "C" and v.id == systems["A"].id:
+                continuity[k] = continuity["A"]
+                continue
+            r = run_and_assess(v, "test", continuity_ids, client, run_id, evaluator=evaluator, store=store, settings=s, verify=False)
+            raw = r["gt_measurement"]["raw"]
+            continuity[k] = {"version_id": v.id, "micro_f1": raw["micro_f1"], "micro_f1_iou05": raw["micro_f1_iou05"],
+                             "per_episode_f1": raw["per_episode_f1"]}
     summary: dict[str, Any] = {}
     for k in "ABC":
         raw = rep["systems"][k]["raw"]
@@ -95,8 +110,12 @@ def cmd_final(args: argparse.Namespace) -> int:
             "annotation_tokens": {"prompt": sum(e.get("inference_tokens", {}).get("prompt", 0) for e in eps),
                                   "completion": sum(e.get("inference_tokens", {}).get("completion", 0) for e in eps)},
             "wall_s": results[k]["wall_s"], "statuses": results[k]["statuses"],
+            "label_free_self_score": results[k]["assessment"]["mean_self_score"],
+            "label_free_per_episode": results[k]["assessment"]["per_episode_self_score"],
+            "label_free_components": results[k]["assessment"]["component_means"],
         }
-    out = {"run_id": run_id, "protocol": PROTOCOL_VERSION, "pilot": pilot, "test_episode_ids": test_ids, "C_label": c_label,
+    out = {"run_id": run_id, "protocol": PROTOCOL_VERSION, "evolution_protocol": "v2-label-free", "test_set": test_set,
+           "continuity_episode_ids": continuity_ids, "continuity": continuity, "pilot": pilot, "test_episode_ids": test_ids, "C_label": c_label,
            "freeze_manifest": manifest, "summary": summary,
            "paired": {"C_vs_A": paired_comparison(summary["C"]["per_episode_f1"], summary["A"]["per_episode_f1"]),
                       "C_vs_B": paired_comparison(summary["C"]["per_episode_f1"], summary["B"]["per_episode_f1"]),

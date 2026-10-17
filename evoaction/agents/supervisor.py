@@ -7,15 +7,18 @@ from typing import Any
 
 from pydantic import ValidationError
 
-from evoaction.agents.tools import TOOL_DOCS, ToolContext, compact, condense_profile
+from evoaction.agents.tools import TOOL_DOCS, ToolContext, compact, condense_assessment
+from evoaction.selfcheck.label_free import SCORE_DEFINITION
 from evoaction.clients.crusoe import ROLE_NEMOTRON, CrusoeClient
 from evoaction.persistence import Store
 from evoaction.schemas import PARAM_MODELS, ExperimentProposal, WorkflowPatch
 from evoaction.workflow.engine import Version, WorkflowValidationError, apply_patch
 
-GOAL = ("Improve the incumbent robot-video temporal subtask annotation workflow so that it generalizes to unseen robot episodes "
-        "(primary metric: Segment F1 at temporal IoU >= 0.75, one-to-one matching), without exceeding 1.5x the incumbent's "
-        "annotation inference cost per episode.")
+GOAL = ("Improve the incumbent robot-video temporal subtask annotation workflow (segments that end when a manipulation "
+        "state change completes) WITHOUT any reference labels: no ground truth exists for you. Judge quality only from "
+        "label-free evidence (robot telemetry, visual verification of boundaries, structural plausibility), without exceeding "
+        "1.5x the incumbent's annotation inference cost per episode.")
+LABEL_FREE_SCORE = json.dumps({k: SCORE_DEFINITION[k] for k in ("components", "weights", "aggregation")})
 
 OPERATOR_DOCS = {
     "sample_contact_sheets": "uniformly samples frames and tiles them into timestamped contact sheets (input to initial_annotate).",
@@ -76,7 +79,7 @@ def _chat(client: CrusoeClient, system: str, user: str, purpose: str, max_tokens
 
 SUPERVISOR_SYSTEM = f"""You are the supervisor of EvoAction, a recursive agent harness that improves its own annotation workflow.
 Goal: {GOAL}
-You see the incumbent's real failure profile on development episodes (reference labels are hidden; you get binned errors and counts).
+You see the incumbent's label-free self-assessment on development episodes. No reference labels exist for you; reason from frames, telemetry and self-consistency.
 Decide which 1-2 focused investigations to launch FIRST. Each is a specific question about WHY the incumbent fails, with initial tool calls.
 Do not propose a fix yet and do not assume any particular fix works. Reply with one JSON object only."""
 
@@ -85,17 +88,17 @@ def plan_investigations(client: CrusoeClient, ctx: ToolContext, incumbent: Versi
                         history: list[dict[str, Any]], cost_profile: dict[str, Any]) -> dict[str, Any]:
     from evoaction.data.wgo import load_episode
 
-    dev_view = ctx.incumbent_dev["agent_view"]
+    dev_view = ctx.incumbent_eval["assessment"]
     dev_eps = {e: {k: load_episode(e)[k] for k in ("has_telemetry", "duration_sec", "source")} for e in ctx.dev_ids}
     user = f"""Incumbent version {incumbent.id}: {workflow_summary(incumbent)}
 Incumbent prompt.md:
 {incumbent.prompts.get('prompt.md', '')}
 
 Dev episodes: {json.dumps(dev_eps)}
-Dev failure profile (evidence id {ctx.incumbent_dev['eval_id']}):
-{compact(condense_profile(dev_view), 9000)}
+Label-free self-assessment on dev (evidence id {ctx.incumbent_eval['eval_id']}); score definition: {LABEL_FREE_SCORE}
+{compact(condense_assessment(dev_view), 9000)}
 
-Validation aggregate for the incumbent (aggregate only): {json.dumps({k: val_view.get(k) for k in ('micro_f1', 'micro_f1_iou05', 'short_event_recall', 'mean_boundary_mae_sec', 'invalid_items', 'empty_output_episodes')})}
+Incumbent label-free score on held-out validation episodes (aggregate only): {json.dumps({k: val_view.get(k) for k in ('mean_self_score', 'component_means')})}
 Measured incumbent inference cost profile: {json.dumps(cost_profile)}
 Previous experiments in this lineage: {compact(history, 3000) if history else 'none'}
 
@@ -113,7 +116,9 @@ Return JSON: {{"failure_summary": str, "investigations": [{{"question": str, "to
 STRATEGY_SYSTEM = f"""You are the strategy agent of EvoAction. Goal: {GOAL}
 Convert the investigation findings into ONE falsifiable experiment: a hypothesis grounded in cited evidence ids plus an executable WorkflowPatch.
 The controller (not you) will run the candidate on held-out validation episodes it never showed you, compare it with the incumbent on the same episodes,
-and apply a predeclared gate: validation micro F1@0.75 delta >= 0.02, >= 50% of validation episodes non-regressing, valid outputs, and annotation inference cost <= 1.5x incumbent.
+and apply a predeclared label-free gate: mean label-free self-score delta >= 0.03, >= 50% of validation episodes non-regressing on that score, valid outputs, and annotation inference cost <= 1.5x incumbent.
+Label-free score definition: {LABEL_FREE_SCORE}
+No reference labels exist; a change must be justified by label-free evidence, and an independent measurement you never see will later check whether it truly helped.
 Changing workflow topology (inserting/removing/re-routing operators) is encouraged when the evidence motivates it; parameter- or prompt-only changes are allowed if better justified.
 Do not repeat an experiment that was already rejected. Reply with one JSON object only."""
 
@@ -170,7 +175,7 @@ def _validate_proposal(data: dict[str, Any], incumbent: Version, exp_id: str, va
 
 CRITIC_SYSTEM = """You are a skeptical reviewer of a proposed experiment on an annotation workflow.
 Check: Is the hypothesis falsifiable and specific? Does it follow from the cited evidence? Does the patch actually test the hypothesis?
-Is the cost likely within 1.5x of the incumbent? Does anything rely on hidden reference labels (forbidden)? Reply with one JSON object only."""
+Is the cost likely within 1.5x of the incumbent? Does anything assume access to reference labels (none exist)? Could the change merely game the label-free score without better annotations? Reply with one JSON object only."""
 
 
 def propose_experiment(client: CrusoeClient, store: Store, run_id: str, exp_id: str, findings: list[dict[str, Any]], incumbent: Version,

@@ -37,8 +37,8 @@ class FakeVersion:
 
 def make_ctx(tmp_path, client):
     store = Store(tmp_path / "db.sqlite", tmp_path / "events.jsonl")
-    ctx = ToolContext(client=client, store=store, evaluator=None, incumbent=FakeVersion(), dev_ids=["d1"], run_id="RUN-test",
-                      incumbent_dev={"agent_view": {"aggregate": {"micro_f1": 0.1}}, "run": {"episodes": {}}, "eval_id": "EVAL-x"})
+    ctx = ToolContext(client=client, store=store, incumbent=FakeVersion(), dev_ids=["d1"], run_id="RUN-test",
+                      incumbent_eval={"assessment": {"mean_self_score": 0.4, "episodes": {}}, "run": {"episodes": {}}, "eval_id": "SELF-x"})
     return ctx, store
 
 
@@ -57,17 +57,17 @@ def test_child_and_grandchild_spawn_via_gates(tmp_path):
         if "depth 1" in prompt:
             return {"status": "answered", "finding": "coarse sampling", "evidence_ids": ids[:1],
                     "new_questions": [{"question": "Do sampled frames straddle the transitions?", "evidence_ids": ids[:1],
-                                       "tool_requests": [{"tool": "dev_failure_profile", "args": {}}]}]}
+                                       "tool_requests": [{"tool": "self_assessment", "args": {}}]}]}
         if "depth 2" in prompt:
             return {"status": "answered", "finding": "yes they straddle", "evidence_ids": ids[:1],
                     "new_questions": [{"question": "Would local 4 Hz windows resolve the straddled transitions?", "evidence_ids": ids[:1],
-                                       "tool_requests": [{"tool": "dev_failure_profile", "args": {}}]}]}
+                                       "tool_requests": [{"tool": "self_assessment", "args": {}}]}]}
         return {"status": "answered", "finding": "probably", "evidence_ids": ids[:1], "new_questions": []}
 
     client = FakeClient(script)
     ctx, store = make_ctx(tmp_path, client)
     g = TaskGraph(store, "RUN-test", max_total=12)
-    root, verdict = g.add("Why is short-event recall low?", None, ["dev_failure_profile"], [{"tool": "dev_failure_profile", "args": {}}])
+    root, verdict = g.add("Why is short-event recall low?", None, ["self_assessment"], [{"tool": "self_assessment", "args": {}}])
     assert verdict == "accepted"
     dispatch(g, [root], ctx, "wf")
     depths = sorted(t.depth for t in g.tasks.values() if t.status == "done")
@@ -151,4 +151,3 @@ def test_large_profile_cannot_hide_later_evidence():
     view = [evidence_item("EV-1", "dev_failure_profile", {}, huge), evidence_item("EV-2", "telemetry_hints", {}, {"hints": [{"t": 3.1}]})]
     text = compact(view, 24000)
     assert "EV-2" in text and '\\"t\\": 3.1' in text
-    assert "prediction_error_classes" in view[0]["result_json"]

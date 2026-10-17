@@ -151,3 +151,11 @@
 {"ts": 1792271037.15293, "run_id": "RUN-b219c77e3c", "kind": "version_run_finished", "version_id": "strong_fixed", "statuses": {"galaxea_037": "ok", "robointer_droid_000036": "ok", "galaxea_049": "ok"}, "calls": 3}
 {"ts": 1792271037.1601, "run_id": "RUN-b219c77e3c", "kind": "evaluation", "eval_id": "EVAL-1fedb1bbdf", "version_id": "strong_fixed", "split": "test", "micro_f1": 0.2105263157894737, "micro_f1_iou05": 0.4210526315789474, "episodes": ["galaxea_037", "robointer_droid_000036", "galaxea_049"]}
 {"ts": 1792271037.1692128, "run_id": "RUN-b219c77e3c", "kind": "run_finished", "status": "ok"}
+{"ts": 1792271662.2816691, "run_id": null, "kind": "protocol_revised", "from": "v1 (agents saw GT-derived dev summaries; GT-gated promotion)", "to": "v2 label-free (agents and promotion use only label-free signals; GT used only for measurement)", "archived": "artifacts/superseded/v1_gt_feedback"}
+{"ts": 1792271896.060022, "run_id": "RUN-5b72c6b3af", "kind": "label_free_smoke", "note": "parse check of label-free assessment on dev pilot; no GT"}
+{"ts": 1792271896.064466, "run_id": "RUN-5b72c6b3af", "kind": "version_run_started", "version_id": "N000", "episodes": ["galaxea_011", "robointer_droid_000010"]}
+{"ts": 1792271896.516437, "run_id": "RUN-5b72c6b3af", "kind": "version_run_finished", "version_id": "N000", "statuses": {"galaxea_011": "ok", "robointer_droid_000010": "ok"}, "calls": 2}
+{"ts": 1792271899.740879, "run_id": "RUN-5b72c6b3af", "kind": "self_assessment", "eval_id": "SELF-12ab0a6463", "version_id": "N000", "split": "dev", "episodes": ["galaxea_011", "robointer_droid_000010"], "mean_self_score": 0.4827, "per_episode_self_score": {"galaxea_011": 0.2848, "robointer_droid_000010": 0.6806}, "component_means": {"telemetry_agreement": 0.5909, "visual_verification": 0.5, "duration_variability": 0.1724, "temporal_resolution": 0.5}}
+{"ts": 1792271899.742354, "run_id": "RUN-5b72c6b3af", "kind": "run_finished", "status": "ok"}
+{"ts": 1792271937.6758468, "run_id": "RUN-7e6a3013ed", "kind": "final_test", "pilot": true}
+{"ts": 1792271937.996953, "run_id": "RUN-7e6a3013ed", "kind": "run_finished", "status": "dry_run"}

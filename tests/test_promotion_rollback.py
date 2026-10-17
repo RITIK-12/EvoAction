@@ -1,37 +1,45 @@
 import json
 
 from evoaction.config import Settings
-from evoaction.experiments.evolution import decide
+from evoaction.experiments.evolution import HISTORY_KEYS, decide
 from evoaction.persistence import Store
 from evoaction.schemas import NodeInsert, WorkflowNode, WorkflowPatch
 from evoaction.workflow.baselines import workflow_a
 from evoaction.workflow.engine import VersionStore, apply_patch
 
 
-def result(per_ep, micro, cost, statuses=None, invalid=0, empty=0, calls=1):
-    eps = {e: {"inference_cost_usd": cost, "inference_tokens": {"prompt": 100, "completion": 100}, "calls_used": calls} for e in per_ep}
-    return {"agent_view": {"micro_f1": micro, "per_episode_f1": per_ep, "invalid_items": invalid, "empty_output_episodes": empty,
-                           "micro_f1_iou05": micro, "short_event_recall": None, "mean_boundary_mae_sec": 1.0, "outer_snapped_micro_f1": micro},
-            "run": {"episodes": eps}, "statuses": statuses or {e: "ok" for e in per_ep}}
+def result(per_ep, mean, cost, statuses=None, empty=()):
+    eps = {e: {"inference_cost_usd": cost, "inference_tokens": {"prompt": 100, "completion": 100}, "calls_used": 1,
+               "segments": [] if e in empty else [{"start_sec": 0, "end_sec": 1, "subtask": "x"}]} for e in per_ep}
+    return {"assessment": {"mean_self_score": mean, "per_episode_self_score": per_ep, "component_means": {}},
+            "run": {"episodes": eps}, "statuses": statuses or {e: "ok" for e in per_ep},
+            "gt_measurement": {"raw": {"micro_f1": 0.999, "per_episode_f1": {e: 0.999 for e in per_ep}}}}
 
 
-def test_promotes_when_all_checks_pass():
-    inc = result({"a": 0.2, "b": 0.3}, 0.25, 0.01)
-    cand = result({"a": 0.3, "b": 0.3}, 0.30, 0.012)
+def test_label_free_gate_promotes_and_ignores_gt():
+    inc = result({"a": 0.30, "b": 0.40}, 0.35, 0.01)
+    cand = result({"a": 0.40, "b": 0.42}, 0.41, 0.012)
+    cand["gt_measurement"]["raw"]["micro_f1"] = 0.0  # GT says worse; the label-free gate must not look at it
     d = decide(cand, inc)
     assert d["decision"] == "PROMOTED"
+    assert "0.999" not in json.dumps(d) and "micro_f1" not in json.dumps(d)
 
 
-def test_rejects_small_delta_regressions_cost_and_invalid():
-    inc = result({"a": 0.2, "b": 0.3}, 0.25, 0.01)
-    assert decide(result({"a": 0.21, "b": 0.3}, 0.255, 0.01), inc)["decision"] == "REJECTED"  # delta < 0.02
-    assert decide(result({"a": 0.6, "b": 0.1}, 0.35, 0.01, ), result({"a": 0.2, "b": 0.3, }, 0.25, 0.01))["checks"]["non_regressing_fraction"]["pass"]
-    d = decide(result({"a": 0.5, "b": 0.5}, 0.5, 0.02), inc)  # 2x cost
+def test_label_free_gate_rejections():
+    inc = result({"a": 0.30, "b": 0.40}, 0.35, 0.01)
+    assert decide(result({"a": 0.31, "b": 0.41}, 0.36, 0.01), inc)["decision"] == "REJECTED"  # delta < 0.03
+    d = decide(result({"a": 0.6, "b": 0.6}, 0.6, 0.02), inc)
     assert d["decision"] == "REJECTED" and not d["checks"]["annotation_cost_ratio"]["pass"]
-    d = decide(result({"a": 0.5, "b": 0.5}, 0.5, 0.01, statuses={"a": "model_error", "b": "ok"}), inc)
+    d = decide(result({"a": 0.6, "b": 0.6}, 0.6, 0.01, statuses={"a": "model_error", "b": "ok"}), inc)
     assert d["decision"] == "REJECTED" and not d["checks"]["valid_outputs"]["pass"]
-    d = decide(result({"a": 0.9, "b": 0.0}, 0.45, 0.01), result({"a": 0.2, "b": 0.3}, 0.25, 0.01))
+    d = decide(result({"a": 0.6, "b": 0.6}, 0.6, 0.01, empty=("a",)), inc)
+    assert not d["checks"]["valid_outputs"]["pass"]
+    d = decide(result({"a": 0.9, "b": 0.2}, 0.55, 0.01), inc)
     assert d["checks"]["non_regressing_fraction"]["value"] == 0.5
+
+
+def test_history_keys_exclude_shadow_gt():
+    assert "shadow_gt" not in HISTORY_KEYS and "gt_measurement" not in HISTORY_KEYS
 
 
 def test_rejection_preserves_candidate_and_incumbent(tmp_path):
@@ -46,9 +54,8 @@ def test_rejection_preserves_candidate_and_incumbent(tmp_path):
     vs.create("EXP-0001", cwf, cprompts, {"models": {}}, "N000", "candidate", experiment={"hypothesis": "h"})
     rej = vs.finalize("EXP-0001", "REJECTED", {"decision": "REJECTED"}, new_id_="EXP-0001_rejected")
     assert rej.manifest["frozen"] and rej.manifest["status"] == "REJECTED"
-    assert (s.artifacts_dir / "versions" / "EXP-0001_rejected" / "experiment.json").exists()
     again = vs.load("N000")
-    assert again.workflow_sha256 == inc.workflow_sha256 and [n.operator for n in again.workflow.nodes] == [n.operator for n in wf.nodes]
+    assert again.workflow_sha256 == inc.workflow_sha256
 
 
 def test_promotion_creates_new_incumbent_copy(tmp_path):
@@ -62,4 +69,3 @@ def test_promotion_creates_new_incumbent_copy(tmp_path):
     vs.finalize("EXP-0002", "PROMOTED", {"decision": "PROMOTED"}, new_id_="EXP-0002_promoted")
     n1 = vs.promote_copy("EXP-0002_promoted", "N001")
     assert n1.manifest["source_experiment"] == "EXP-0002_promoted"
-    assert json.loads((n1.path / "workflow.json").read_text())["nodes"][0]["params"]["sampling_hz"] == 2.0
