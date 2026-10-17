@@ -1,0 +1,113 @@
+{
+ "id": "EXP-0002",
+ "parent_version": "N001",
+ "hypothesis": "Increasing frames_per_sheet to 30 extends the temporal horizon of each contact sheet so the model can consider events beyond the first ~10 seconds, while raising local_hz to 5.0 allows sub\u2011second boundary proposals and reducing min_gap_sec in state_hint_detection yields more telemetry hints. Together these changes will improve telemetry agreement and visual verification, increase duration variability (less uniform segmentation), and preserve temporal resolution.",
+ "failure_slice": "Episodes where the incumbent\u2019s predictions stop after the first contact sheet (\u22480\u201110\u202fs) and produce uniformly spaced 1\u2011second boundaries, leading to low telemetry agreement and visual verification and low duration variability.",
+ "evidence_ids": [
+  "SELF-d11a2b6c1b",
+  "EV-14124a72d4",
+  "EV-51217a1ec3",
+  "EV-ee5e77aaf7",
+  "SELF-a441541077",
+  "EV-e0e3309022"
+ ],
+ "objective": "Raise the label\u2011free self\u2011score by \u22650.03 mean delta and have \u226550% of episodes non\u2011regressing on that score.",
+ "candidate_patch": {
+  "insert_nodes": [],
+  "remove_nodes": [],
+  "set_params": {
+   "sample": {
+    "frames_per_sheet": 30
+   },
+   "windows": {
+    "local_hz": 5.0
+   },
+   "hints": {
+    "min_gap_sec": 0.5
+   }
+  },
+  "set_when": {},
+  "set_depends_on": {},
+  "prompt_updates": {}
+ },
+ "expected_outcome": "Mean label\u2011free self\u2011score delta \u2265 0.03, \u226550% of episodes show non\u2011decreasing self\u2011score, and all episodes produce valid JSON outputs.",
+ "verification_plan": {
+  "metric": "label_free_self_score",
+  "split": "all_episodes",
+  "compare_to": "incumbent"
+ },
+ "stop_conditions": [
+  "Mean annotation cost per episode exceeds 0.005\u202fUSD",
+  "Any episode fails schema/monotonic validation in validate_export",
+  "Temporal_resolution component drops below 0.8"
+ ],
+ "authored_by": "nvidia/NVIDIA-Nemotron-3-Super-120B-A12B",
+ "task_ids": [
+  "TASK-4f5cd89a53",
+  "TASK-ea9fb0f42e",
+  "TASK-0eb525d8d7",
+  "TASK-49b94671a0"
+ ],
+ "protocol": "v3-macrodata",
+ "task_tree": [
+  {
+   "task_id": "TASK-4f5cd89a53",
+   "parent": null,
+   "depth": 1,
+   "question": "Does the incumbent's prediction only use the first contact sheet (first ~10 seconds) and ignore later sheets, leading to uniformly spaced early boundaries?",
+   "status": "done",
+   "finding": "The incumbent's predictions stop after the first ~6 seconds (first contact sheet) and do not use later sheets, resulting in uniformly spaced early boundaries (1\u2011second intervals) while later telemetry events occur beyond the predicted range.",
+   "implication": "Increase the temporal horizon of sampling (e.g., raise frames_per_sheet or sampling duration) or modify the prompt to encourage the model to consider later contact sheets, so predictions can capture events beyond the first ~10 seconds.",
+   "evidence_ids": [
+    "SELF-d11a2b6c1b",
+    "EV-14124a72d4",
+    "EV-51217a1ec3",
+    "EV-ee5e77aaf7"
+   ],
+   "dispatch_decision": null
+  },
+  {
+   "task_id": "TASK-ea9fb0f42e",
+   "parent": null,
+   "depth": 1,
+   "question": "What visual content is present at the incumbent's predicted early boundaries versus at actual gripper events, and does the vision model detect a manipulation state change at those times?",
+   "status": "done",
+   "finding": "At the incumbent's predicted early boundaries (1.0\u20115.0\u202fs), the vision model detected a manipulation state change at ~2.0\u202fs (gripper closes on pen inside mug). At the actual gripper events (~6.5\u202fs and 12.3\u202fs), the vision model detected a manipulation state change at the first event (~6.5\u202fs, gripper closes around pen); no frame evidence was provided for the second event.",
+   "implication": "The model produces early boundary predictions that precede real gripper events but still flags manipulation changes (possible false positives). To improve alignment, consider tightening the prompt to require explicit gripper\u2011object contact, incorporating telemetry agreement as a filter, or reducing the sampling rate to avoid over\u2011segmentation.",
+   "evidence_ids": [
+    "SELF-d11a2b6c1b",
+    "EV-b8101a0ca9",
+    "EV-135c1c4533"
+   ],
+   "dispatch_decision": null
+  },
+  {
+   "task_id": "TASK-0eb525d8d7",
+   "parent": null,
+   "depth": 1,
+   "question": "Are the incumbent's predicted boundaries aligned with the uniform contact\u2011sheet sampling grid (e.g., 1\u2011second increments) rather than actual manipulation events?",
+   "status": "done",
+   "finding": "The incumbent's predicted boundaries frequently align to a 1\u2011second uniform grid (e.g., [1.0,2.0,3.0,\u2026]) rather than to the actual manipulation events observed in telemetry, which occur at non\u2011integer times such as 7.9\u202fs and 13.7\u202fs.",
+   "implication": "Increase temporal resolution of the annotation pipeline (e.g., raise local_hz in inspect_transition_windows, reduce min_gap_sec, or allow sub\u2011second boundary proposals) so that predicted boundaries can follow actual gripper events rather than being forced to the contact\u2011sheet grid.",
+   "evidence_ids": [
+    "SELF-a441541077",
+    "EV-e0e3309022"
+   ],
+   "dispatch_decision": null
+  },
+  {
+   "task_id": "TASK-49b94671a0",
+   "parent": null,
+   "depth": 1,
+   "question": "Does the vision model confirm a manipulation state change at the incumbent's early predicted boundary (e.g., 2.0\u202fs)?",
+   "status": "done",
+   "finding": "The vision model detects a completed manipulation state change (gripper open/close) at ~2.2\u202fs within the 2\u2011second window centered on the predicted boundary of 2.0\u202fs for episodes robointer_droid_000008 and robointer_droid_000006, with high visual confidence (0.95 and 0.90).",
+   "implication": "Consider lowering the confidence_threshold in inspect_transition_windows or using vision confirmation as a gate to accept early predicted boundaries, since the vision model reliably validates state changes near the 2.0\u202fs boundary.",
+   "evidence_ids": [
+    "EV-3cd4746874",
+    "EV-bb03224c18"
+   ],
+   "dispatch_decision": null
+  }
+ ]
+}

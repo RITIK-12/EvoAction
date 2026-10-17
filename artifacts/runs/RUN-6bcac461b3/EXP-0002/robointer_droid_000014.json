@@ -1,0 +1,41 @@
+{
+ "episode_id": "robointer_droid_000014",
+ "version_id": "EXP-0002",
+ "segments": [
+  {
+   "start_sec": 0.0,
+   "end_sec": 1.0,
+   "subtask": "robot arm approaches the cloth on the countertop"
+  },
+  {
+   "start_sec": 1.0,
+   "end_sec": 2.0,
+   "subtask": "robot arm grasps the cloth"
+  },
+  {
+   "start_sec": 2.0,
+   "end_sec": 3.0,
+   "subtask": "robot arm lifts the cloth"
+  },
+  {
+   "start_sec": 3.0,
+   "end_sec": 4.0,
+   "subtask": "robot arm moves the cloth to the countertop shield"
+  },
+  {
+   "start_sec": 4.0,
+   "end_sec": 5.0,
+   "subtask": "robot arm places the cloth on the countertop shield"
+  },
+  {
+   "start_sec": 5.0,
+   "end_sec": 6.0,
+   "subtask": "robot arm releases the cloth"
+  },
+  {
+   "start_sec": 6.0,
+   "end_sec": 15.4,
+   "subtask": "robot arm retracts from the countertop shield"
+  }
+ ]
+}

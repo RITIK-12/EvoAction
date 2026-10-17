@@ -1,0 +1,21 @@
+{
+ "episode_id": "robointer_droid_000024",
+ "version_id": "EXP-0002",
+ "segments": [
+  {
+   "start_sec": 0.0,
+   "end_sec": 3.5,
+   "subtask": "approach and grasp tomato"
+  },
+  {
+   "start_sec": 3.5,
+   "end_sec": 10.0,
+   "subtask": "lift and move tomato to silver bowl"
+  },
+  {
+   "start_sec": 10.0,
+   "end_sec": 18.0,
+   "subtask": "place tomato inside silver bowl"
+  }
+ ]
+}

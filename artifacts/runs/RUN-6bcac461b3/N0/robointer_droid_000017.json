@@ -1,0 +1,36 @@
+{
+ "episode_id": "robointer_droid_000017",
+ "version_id": "N0",
+ "segments": [
+  {
+   "start_sec": 0.0,
+   "end_sec": 1.0,
+   "subtask": "approach pot"
+  },
+  {
+   "start_sec": 1.0,
+   "end_sec": 2.0,
+   "subtask": "grasp marker"
+  },
+  {
+   "start_sec": 2.0,
+   "end_sec": 3.0,
+   "subtask": "lift marker"
+  },
+  {
+   "start_sec": 3.0,
+   "end_sec": 4.0,
+   "subtask": "move to table"
+  },
+  {
+   "start_sec": 4.0,
+   "end_sec": 5.0,
+   "subtask": "place marker"
+  },
+  {
+   "start_sec": 5.0,
+   "end_sec": 6.0,
+   "subtask": "release marker"
+  }
+ ]
+}

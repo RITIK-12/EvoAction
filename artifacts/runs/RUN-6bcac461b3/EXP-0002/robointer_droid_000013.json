@@ -1,0 +1,36 @@
+{
+ "episode_id": "robointer_droid_000013",
+ "version_id": "EXP-0002",
+ "segments": [
+  {
+   "start_sec": 0.0,
+   "end_sec": 1.0,
+   "subtask": "The robot arm approaches the silver cup on the countertop."
+  },
+  {
+   "start_sec": 1.0,
+   "end_sec": 3.0,
+   "subtask": "The robot arm grasps the silver cup."
+  },
+  {
+   "start_sec": 3.0,
+   "end_sec": 5.0,
+   "subtask": "The robot arm lifts the silver cup from the countertop."
+  },
+  {
+   "start_sec": 5.0,
+   "end_sec": 8.0,
+   "subtask": "The robot arm moves the silver cup to the right side of the countertop."
+  },
+  {
+   "start_sec": 8.0,
+   "end_sec": 10.0,
+   "subtask": "The robot arm places the silver cup on the countertop."
+  },
+  {
+   "start_sec": 10.0,
+   "end_sec": 16.4,
+   "subtask": "The robot arm releases the silver cup and retracts."
+  }
+ ]
+}

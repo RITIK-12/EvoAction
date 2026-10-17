@@ -109,8 +109,12 @@ def _pooled(recs: list[dict[str, Any] | None]) -> dict[str, Any] | None:
     if not recs or any(not h for h in hs):
         return None
     sm = lambda k: sum(h.get(k) or 0 for h in hs)
-    return {"snapped_f1_075": _f1(sm("tp_snapped"), sm("n_pred"), sm("n_ref")), "raw_f1_075": _f1(sm("tp_raw"), sm("n_pred"), sm("n_ref")),
-            "snapped_f1_05": _f1(sm("tp05_snapped"), sm("n_pred"), sm("n_ref")), "n_pred": sm("n_pred"), "n_ref": sm("n_ref"),
+    # The evaluator drops a segment that snapping inverts, so snapped scores use its snapped prediction count;
+    # older records lack it, so derive it from the persisted snapped F1 and TP.
+    nps = sum(h["n_pred_snapped"] if h.get("n_pred_snapped") is not None else
+              (round(2 * h["tp_snapped"] / h["snapped_f1_075"] - h["n_ref"]) if h.get("snapped_f1_075") else h["n_pred"]) for h in hs)
+    return {"snapped_f1_075": _f1(sm("tp_snapped"), nps, sm("n_ref")), "raw_f1_075": _f1(sm("tp_raw"), sm("n_pred"), sm("n_ref")),
+            "snapped_f1_05": _f1(sm("tp05_snapped"), nps, sm("n_ref")), "n_pred": sm("n_pred"), "n_ref": sm("n_ref"),
             "episodes": sm("episodes"), "cost": sum((r or {}).get("annotation_cost_usd_total") or 0 for r in recs)}
 
 

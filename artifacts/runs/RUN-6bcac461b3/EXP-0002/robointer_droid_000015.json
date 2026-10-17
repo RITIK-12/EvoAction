@@ -1,0 +1,36 @@
+{
+ "episode_id": "robointer_droid_000015",
+ "version_id": "EXP-0002",
+ "segments": [
+  {
+   "start_sec": 0.0,
+   "end_sec": 1.0,
+   "subtask": "approach the silver cup"
+  },
+  {
+   "start_sec": 1.0,
+   "end_sec": 2.0,
+   "subtask": "grasp the silver cup"
+  },
+  {
+   "start_sec": 2.0,
+   "end_sec": 4.0,
+   "subtask": "lift the silver cup"
+  },
+  {
+   "start_sec": 4.0,
+   "end_sec": 6.0,
+   "subtask": "move the silver cup to the right"
+  },
+  {
+   "start_sec": 6.0,
+   "end_sec": 8.0,
+   "subtask": "place the silver cup on the counter"
+  },
+  {
+   "start_sec": 8.0,
+   "end_sec": 16.4,
+   "subtask": "release the silver cup"
+  }
+ ]
+}

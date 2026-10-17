@@ -1,0 +1,36 @@
+{
+ "episode_id": "robointer_droid_000001",
+ "version_id": "EXP-0001",
+ "segments": [
+  {
+   "start_sec": 0.0,
+   "end_sec": 1.0,
+   "subtask": "The robot arm is positioned over the bowl, preparing to move it."
+  },
+  {
+   "start_sec": 1.0,
+   "end_sec": 2.0,
+   "subtask": "The robot arm grasps the bowl and begins to lift it."
+  },
+  {
+   "start_sec": 2.0,
+   "end_sec": 3.0,
+   "subtask": "The robot arm moves the bowl to the right, positioning it over the new location."
+  },
+  {
+   "start_sec": 3.0,
+   "end_sec": 4.0,
+   "subtask": "The robot arm places the bowl down on the surface to the right."
+  },
+  {
+   "start_sec": 4.0,
+   "end_sec": 5.0,
+   "subtask": "The robot arm releases the bowl and begins to retract."
+  },
+  {
+   "start_sec": 5.0,
+   "end_sec": 10.4,
+   "subtask": "The robot arm completes its retraction and returns to a neutral position."
+  }
+ ]
+}

@@ -1,0 +1,81 @@
+{
+ "episode_id": "robointer_droid_000046",
+ "version_id": "N001",
+ "segments": [
+  {
+   "start_sec": 0.0,
+   "end_sec": 1.0,
+   "subtask": "robot arm approaches the green object on the counter"
+  },
+  {
+   "start_sec": 1.0,
+   "end_sec": 2.0,
+   "subtask": "robot arm grasps the green object"
+  },
+  {
+   "start_sec": 2.0,
+   "end_sec": 3.0,
+   "subtask": "robot arm lifts the green object and moves it toward the drawer"
+  },
+  {
+   "start_sec": 3.0,
+   "end_sec": 4.0,
+   "subtask": "robot arm places the green object into the drawer"
+  },
+  {
+   "start_sec": 4.0,
+   "end_sec": 5.0,
+   "subtask": "robot arm retracts from the drawer"
+  },
+  {
+   "start_sec": 5.0,
+   "end_sec": 6.0,
+   "subtask": "robot arm approaches the yellow object on the counter"
+  },
+  {
+   "start_sec": 6.0,
+   "end_sec": 7.0,
+   "subtask": "robot arm grasps the yellow object"
+  },
+  {
+   "start_sec": 7.0,
+   "end_sec": 8.0,
+   "subtask": "robot arm lifts the yellow object and moves it toward the drawer"
+  },
+  {
+   "start_sec": 8.0,
+   "end_sec": 9.0,
+   "subtask": "robot arm places the yellow object into the drawer"
+  },
+  {
+   "start_sec": 9.0,
+   "end_sec": 10.0,
+   "subtask": "robot arm retracts from the drawer"
+  },
+  {
+   "start_sec": 10.0,
+   "end_sec": 11.0,
+   "subtask": "robot arm approaches the drawer handle"
+  },
+  {
+   "start_sec": 11.0,
+   "end_sec": 12.0,
+   "subtask": "robot arm grasps the drawer handle"
+  },
+  {
+   "start_sec": 12.0,
+   "end_sec": 13.0,
+   "subtask": "robot arm pulls the drawer closed"
+  },
+  {
+   "start_sec": 13.0,
+   "end_sec": 14.0,
+   "subtask": "robot arm releases the drawer handle"
+  },
+  {
+   "start_sec": 14.0,
+   "end_sec": 36.5,
+   "subtask": "robot arm retracts from the drawer"
+  }
+ ]
+}

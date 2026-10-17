@@ -1,0 +1,116 @@
+{
+ "episode_id": "robointer_droid_000047",
+ "version_id": "EXP-0002",
+ "segments": [
+  {
+   "start_sec": 0.0,
+   "end_sec": 1.0,
+   "subtask": "The robot arm is positioned above the cabinet, preparing to pick up the building block toys."
+  },
+  {
+   "start_sec": 1.0,
+   "end_sec": 3.0,
+   "subtask": "The robot arm moves towards the building block toys on the cabinet and grasps one."
+  },
+  {
+   "start_sec": 3.0,
+   "end_sec": 5.0,
+   "subtask": "The robot arm lifts the building block toy from the cabinet and moves it towards the black bowl."
+  },
+  {
+   "start_sec": 5.0,
+   "end_sec": 7.0,
+   "subtask": "The robot arm places the building block toy into the black bowl."
+  },
+  {
+   "start_sec": 7.0,
+   "end_sec": 9.0,
+   "subtask": "The robot arm returns to the cabinet to pick up another building block toy."
+  },
+  {
+   "start_sec": 9.0,
+   "end_sec": 11.0,
+   "subtask": "The robot arm grasps another building block toy from the cabinet."
+  },
+  {
+   "start_sec": 11.0,
+   "end_sec": 13.0,
+   "subtask": "The robot arm lifts the second building block toy and moves it towards the black bowl."
+  },
+  {
+   "start_sec": 13.0,
+   "end_sec": 15.0,
+   "subtask": "The robot arm places the second building block toy into the black bowl."
+  },
+  {
+   "start_sec": 15.0,
+   "end_sec": 17.0,
+   "subtask": "The robot arm returns to the cabinet to pick up the third building block toy."
+  },
+  {
+   "start_sec": 17.0,
+   "end_sec": 19.0,
+   "subtask": "The robot arm grasps the third building block toy from the cabinet."
+  },
+  {
+   "start_sec": 19.0,
+   "end_sec": 21.0,
+   "subtask": "The robot arm lifts the third building block toy and moves it towards the black bowl."
+  },
+  {
+   "start_sec": 21.0,
+   "end_sec": 23.0,
+   "subtask": "The robot arm places the third building block toy into the black bowl."
+  },
+  {
+   "start_sec": 23.0,
+   "end_sec": 25.0,
+   "subtask": "The robot arm returns to the cabinet to pick up the fourth building block toy."
+  },
+  {
+   "start_sec": 25.0,
+   "end_sec": 27.0,
+   "subtask": "The robot arm grasps the fourth building block toy from the cabinet."
+  },
+  {
+   "start_sec": 27.0,
+   "end_sec": 29.0,
+   "subtask": "The robot arm lifts the fourth building block toy and moves it towards the black bowl."
+  },
+  {
+   "start_sec": 29.0,
+   "end_sec": 31.0,
+   "subtask": "The robot arm places the fourth building block toy into the black bowl."
+  },
+  {
+   "start_sec": 31.0,
+   "end_sec": 33.0,
+   "subtask": "The robot arm returns to the cabinet to pick up the fifth building block toy."
+  },
+  {
+   "start_sec": 33.0,
+   "end_sec": 35.0,
+   "subtask": "The robot arm grasps the fifth building block toy from the cabinet."
+  },
+  {
+   "start_sec": 35.0,
+   "end_sec": 37.0,
+   "subtask": "The robot arm lifts the fifth building block toy and moves it towards the black bowl."
+  },
+  {
+   "start_sec": 37.0,
+   "end_sec": 39.0,
+   "subtask": "The robot arm places the fifth building block toy into the black bowl."
+  },
+  {
+   "start_sec": 39.0,
+   "end_sec": 41.0,
+   "subtask": "The robot arm returns to the cabinet to pick up the sixth building block toy."
+  },
+  {
+   "start_sec": 41.0,
+   "end_sec": 43.1,
+   "subtask": "The robot arm grasps the sixth building block toy from the cabinet."
+  }
+ ]
+}

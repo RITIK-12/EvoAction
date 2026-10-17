@@ -69,7 +69,7 @@ class Store:
         self.db_path = db_path
         self.events_path = events_path
         self._lock = threading.RLock()
-        self.conn = sqlite3.connect(str(db_path), check_same_thread=False)
+        self.conn = sqlite3.connect(str(db_path), check_same_thread=False, timeout=120)
         self.conn.row_factory = sqlite3.Row
         self.conn.executescript(SCHEMA)
         self.conn.commit()

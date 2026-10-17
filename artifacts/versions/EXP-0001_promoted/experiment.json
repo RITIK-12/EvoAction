@@ -1,0 +1,155 @@
+{
+ "id": "EXP-0001",
+ "parent_version": "N0",
+ "hypothesis": "Adding a lightweight telemetry-guided refinement stage (state hint detection \u2192 inspect transition windows \u2192 refine intervals with thinking=False and reduced token budget \u2192 merge/filter) will correct the incumbent's early false-positive boundaries and enable detection of later gripper events, thereby increasing telemetry agreement and visual verification while preserving reasonable segment durations and temporal resolution.",
+ "failure_slice": "Episodes where the incumbent's predicted segments end before the last telemetry hint (i.e., missing manipulation events that occur after the first ~10 seconds).",
+ "evidence_ids": [
+  "SELF-d11a2b6c1b",
+  "EV-14124a72d4",
+  "EV-51217a1ec3",
+  "EV-ee5e77aaf7",
+  "EV-b8101a0ca9",
+  "EV-135c1c4533"
+ ],
+ "objective": "Increase the label-free self-score (weighted mean of telemetry_agreement, visual_verification, duration_variability, temporal_resolution).",
+ "candidate_patch": {
+  "insert_nodes": [
+   {
+    "node": {
+     "id": "hints",
+     "operator": "state_hint_detection",
+     "depends_on": [
+      "sample"
+     ],
+     "params": {
+      "signals": [
+       "gripper"
+      ],
+      "min_gap_sec": 0.8,
+      "pause_speed_quantile": 0.15,
+      "min_pause_sec": 0.3
+     },
+     "when": "always"
+    },
+    "rewire_dependents_of": null
+   },
+   {
+    "node": {
+     "id": "windows",
+     "operator": "inspect_transition_windows",
+     "depends_on": [
+      "annotate",
+      "hints"
+     ],
+     "params": {
+      "select": "near_hints",
+      "window_sec": 2.0,
+      "local_hz": 4.0,
+      "max_windows": 3,
+      "include_unmatched_hints": false,
+      "tile_px": 224,
+      "confidence_threshold": 0.7
+     },
+     "when": "always"
+    },
+    "rewire_dependents_of": null
+   },
+   {
+    "node": {
+     "id": "refine",
+     "operator": "refine_intervals",
+     "depends_on": [
+      "annotate",
+      "windows"
+     ],
+     "params": {
+      "prompt": "refine.md",
+      "thinking": false,
+      "max_tokens": 4096,
+      "temperature": 0.2,
+      "allow_insert": true,
+      "allow_delete": true
+     },
+     "when": "always"
+    },
+    "rewire_dependents_of": null
+   },
+   {
+    "node": {
+     "id": "merge",
+     "operator": "merge_filter_segments",
+     "depends_on": [
+      "refine"
+     ],
+     "params": {
+      "min_duration_sec": 0.4,
+      "max_gap_sec": 1.0,
+      "tile_full_episode": true,
+      "merge_same_label": false
+     },
+     "when": "always"
+    },
+    "rewire_dependents_of": null
+   }
+  ],
+  "remove_nodes": [],
+  "set_params": {},
+  "set_when": {},
+  "set_depends_on": {
+   "export": [
+    "merge"
+   ]
+  },
+  "prompt_updates": {}
+ },
+ "expected_outcome": "Mean label-free self-score delta \u2265 0.03 relative to incumbent, with at least 50% of episodes non-regressing on that score.",
+ "verification_plan": {
+  "metric": "label_free_self_score",
+  "split": "validation",
+  "compare_to": "incumbent"
+ },
+ "stop_conditions": [
+  "Mean label-free self-score delta < 0.03",
+  "Less than 50% of episodes show non-regressing label-free self-score",
+  "Validation fails (non\u2011monotonic segments, schema violations, or missing export)"
+ ],
+ "authored_by": "nvidia/NVIDIA-Nemotron-3-Super-120B-A12B",
+ "task_ids": [
+  "TASK-4f5cd89a53",
+  "TASK-ea9fb0f42e"
+ ],
+ "protocol": "v3-macrodata",
+ "task_tree": [
+  {
+   "task_id": "TASK-4f5cd89a53",
+   "parent": null,
+   "depth": 1,
+   "question": "Does the incumbent's prediction only use the first contact sheet (first ~10 seconds) and ignore later sheets, leading to uniformly spaced early boundaries?",
+   "status": "done",
+   "finding": "The incumbent's predictions stop after the first ~6 seconds (first contact sheet) and do not use later sheets, resulting in uniformly spaced early boundaries (1\u2011second intervals) while later telemetry events occur beyond the predicted range.",
+   "implication": "Increase the temporal horizon of sampling (e.g., raise frames_per_sheet or sampling duration) or modify the prompt to encourage the model to consider later contact sheets, so predictions can capture events beyond the first ~10 seconds.",
+   "evidence_ids": [
+    "SELF-d11a2b6c1b",
+    "EV-14124a72d4",
+    "EV-51217a1ec3",
+    "EV-ee5e77aaf7"
+   ],
+   "dispatch_decision": null
+  },
+  {
+   "task_id": "TASK-ea9fb0f42e",
+   "parent": null,
+   "depth": 1,
+   "question": "What visual content is present at the incumbent's predicted early boundaries versus at actual gripper events, and does the vision model detect a manipulation state change at those times?",
+   "status": "done",
+   "finding": "At the incumbent's predicted early boundaries (1.0\u20115.0\u202fs), the vision model detected a manipulation state change at ~2.0\u202fs (gripper closes on pen inside mug). At the actual gripper events (~6.5\u202fs and 12.3\u202fs), the vision model detected a manipulation state change at the first event (~6.5\u202fs, gripper closes around pen); no frame evidence was provided for the second event.",
+   "implication": "The model produces early boundary predictions that precede real gripper events but still flags manipulation changes (possible false positives). To improve alignment, consider tightening the prompt to require explicit gripper\u2011object contact, incorporating telemetry agreement as a filter, or reducing the sampling rate to avoid over\u2011segmentation.",
+   "evidence_ids": [
+    "SELF-d11a2b6c1b",
+    "EV-b8101a0ca9",
+    "EV-135c1c4533"
+   ],
+   "dispatch_decision": null
+  }
+ ]
+}

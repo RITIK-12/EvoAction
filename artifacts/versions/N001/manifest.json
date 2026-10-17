@@ -1,0 +1,19 @@
+{
+ "id": "N001",
+ "parent_id": "N0",
+ "status": "incumbent",
+ "frozen": true,
+ "created_at": 1792275683.0858471,
+ "workflow_sha256": "47f7e32e3e1cb8b2f803f69adef659cb0f52381a7b28e0c1960e756cb26586af",
+ "files": {
+  "workflow.json": "88f832fb62f9cab49d7338279e502c4b51aa806a21aad24d61838e1fe9edc5ef",
+  "config.json": "53e574e73406ebc1eca87fbcf0b8e8a6ca099986a8f08b3dcead2bf810f60cd5",
+  "prompt.md": "4d8af6bfb619f1858738fd9924718e5d9d3207d790f7d1950a0352606b71683e",
+  "refine.md": "f478372773f8a0131d0ff6188feb5e649b2fa6a6cde4379fa9a918b370f4df3b",
+  "experiment.json": "3ac7d0d4ae0e12f447f10419a075ffc2126609dc6b88677509b146254b816da5",
+  "validation_report.json": "5b2affea700e09ea36c8bd7ac5da647f96ece81f56308e19a1516e4576571047"
+ },
+ "frozen_at": 1792275692.017785,
+ "original_id": "EXP-0001",
+ "source_experiment": "EXP-0001_promoted"
+}

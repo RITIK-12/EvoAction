@@ -1,0 +1,41 @@
+{
+ "episode_id": "robointer_droid_000060",
+ "version_id": "EXP-0001",
+ "segments": [
+  {
+   "start_sec": 0.0,
+   "end_sec": 10.0,
+   "subtask": "The robot arm approaches the white plug on the wooden table."
+  },
+  {
+   "start_sec": 10.0,
+   "end_sec": 20.0,
+   "subtask": "The robot arm grasps the white plug and lifts it from the table."
+  },
+  {
+   "start_sec": 20.0,
+   "end_sec": 30.0,
+   "subtask": "The robot arm moves the plug towards the power strip on the table."
+  },
+  {
+   "start_sec": 30.0,
+   "end_sec": 40.0,
+   "subtask": "The robot arm positions the plug above the power strip socket."
+  },
+  {
+   "start_sec": 40.0,
+   "end_sec": 50.0,
+   "subtask": "The robot arm inserts the plug into the power strip socket."
+  },
+  {
+   "start_sec": 50.0,
+   "end_sec": 60.0,
+   "subtask": "The robot arm releases the plug and begins to retract."
+  },
+  {
+   "start_sec": 60.0,
+   "end_sec": 75.9,
+   "subtask": "The robot arm moves away from the power strip and returns to its starting position."
+  }
+ ]
+}

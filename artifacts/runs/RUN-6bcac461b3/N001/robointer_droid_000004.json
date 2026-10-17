@@ -1,0 +1,36 @@
+{
+ "episode_id": "robointer_droid_000004",
+ "version_id": "N001",
+ "segments": [
+  {
+   "start_sec": 0.0,
+   "end_sec": 1.0,
+   "subtask": "The robot arm approaches the can on the table."
+  },
+  {
+   "start_sec": 1.0,
+   "end_sec": 3.0,
+   "subtask": "The robot arm grasps the black lid on top of the can."
+  },
+  {
+   "start_sec": 3.0,
+   "end_sec": 5.0,
+   "subtask": "The robot arm lifts the black lid off the can."
+  },
+  {
+   "start_sec": 5.0,
+   "end_sec": 7.0,
+   "subtask": "The robot arm moves the black lid over to the table surface."
+  },
+  {
+   "start_sec": 7.0,
+   "end_sec": 9.0,
+   "subtask": "The robot arm places the black lid on the table."
+  },
+  {
+   "start_sec": 9.0,
+   "end_sec": 11.3,
+   "subtask": "The robot arm releases the black lid and retracts."
+  }
+ ]
+}

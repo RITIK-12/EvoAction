@@ -1,0 +1,31 @@
+{
+ "episode_id": "robointer_droid_000042",
+ "version_id": "EXP-0002",
+ "segments": [
+  {
+   "start_sec": 0.0,
+   "end_sec": 1.0,
+   "subtask": "The robot arm approaches the grey plate with the glass cup on it."
+  },
+  {
+   "start_sec": 1.0,
+   "end_sec": 3.0,
+   "subtask": "The robot arm grasps the glass cup on the grey plate."
+  },
+  {
+   "start_sec": 3.0,
+   "end_sec": 5.0,
+   "subtask": "The robot arm lifts the glass cup from the grey plate."
+  },
+  {
+   "start_sec": 5.0,
+   "end_sec": 7.0,
+   "subtask": "The robot arm moves the glass cup away from the grey plate."
+  },
+  {
+   "start_sec": 7.0,
+   "end_sec": 31.2,
+   "subtask": "The robot arm places the glass cup on the white table."
+  }
+ ]
+}

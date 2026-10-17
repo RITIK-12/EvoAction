@@ -1,0 +1,41 @@
+{
+ "episode_id": "robointer_droid_000057",
+ "version_id": "EXP-0001",
+ "segments": [
+  {
+   "start_sec": 0.0,
+   "end_sec": 1.0,
+   "subtask": "approach the object"
+  },
+  {
+   "start_sec": 1.0,
+   "end_sec": 2.0,
+   "subtask": "grasp the object"
+  },
+  {
+   "start_sec": 2.0,
+   "end_sec": 10.0,
+   "subtask": "lift the object"
+  },
+  {
+   "start_sec": 10.0,
+   "end_sec": 15.0,
+   "subtask": "move the object to the box"
+  },
+  {
+   "start_sec": 15.0,
+   "end_sec": 16.0,
+   "subtask": "place the object in the box"
+  },
+  {
+   "start_sec": 16.0,
+   "end_sec": 17.0,
+   "subtask": "release the object"
+  },
+  {
+   "start_sec": 17.0,
+   "end_sec": 74.5,
+   "subtask": "retract the arm"
+  }
+ ]
+}

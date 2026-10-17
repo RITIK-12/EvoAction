@@ -1,0 +1,31 @@
+{
+ "episode_id": "robointer_droid_000022",
+ "version_id": "EXP-0002",
+ "segments": [
+  {
+   "start_sec": 0.0,
+   "end_sec": 1.0,
+   "subtask": "Approach the stuffed pineapple on the table"
+  },
+  {
+   "start_sec": 1.0,
+   "end_sec": 5.0,
+   "subtask": "Grasp the stuffed pineapple"
+  },
+  {
+   "start_sec": 5.0,
+   "end_sec": 10.0,
+   "subtask": "Lift the stuffed pineapple from the table"
+  },
+  {
+   "start_sec": 10.0,
+   "end_sec": 15.0,
+   "subtask": "Move the stuffed pineapple toward the oven"
+  },
+  {
+   "start_sec": 15.0,
+   "end_sec": 18.7,
+   "subtask": "Place the stuffed pineapple beside the oven"
+  }
+ ]
+}

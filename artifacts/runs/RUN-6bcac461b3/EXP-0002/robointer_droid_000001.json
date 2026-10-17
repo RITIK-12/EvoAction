@@ -1,0 +1,31 @@
+{
+ "episode_id": "robointer_droid_000001",
+ "version_id": "EXP-0002",
+ "segments": [
+  {
+   "start_sec": 0.0,
+   "end_sec": 2.0,
+   "subtask": "Approach the bowl on the table"
+  },
+  {
+   "start_sec": 2.0,
+   "end_sec": 4.0,
+   "subtask": "Grasp the bowl"
+  },
+  {
+   "start_sec": 4.0,
+   "end_sec": 7.0,
+   "subtask": "Lift and move the bowl to the right"
+  },
+  {
+   "start_sec": 7.0,
+   "end_sec": 9.0,
+   "subtask": "Place the bowl on the right side of the table"
+  },
+  {
+   "start_sec": 9.0,
+   "end_sec": 10.4,
+   "subtask": "Release the bowl and retreat"
+  }
+ ]
+}

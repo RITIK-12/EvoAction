@@ -1,0 +1,36 @@
+{
+ "episode_id": "robointer_droid_000056",
+ "version_id": "N001",
+ "segments": [
+  {
+   "start_sec": 0.0,
+   "end_sec": 1.0,
+   "subtask": "The robot arm approaches the blue bowl on the table."
+  },
+  {
+   "start_sec": 1.0,
+   "end_sec": 3.0,
+   "subtask": "The robot arm grasps the blue bowl and lifts it."
+  },
+  {
+   "start_sec": 3.0,
+   "end_sec": 5.0,
+   "subtask": "The robot arm moves the blue bowl over the small crate."
+  },
+  {
+   "start_sec": 5.0,
+   "end_sec": 7.0,
+   "subtask": "The robot arm tilts the blue bowl to pour half of its contents into the small crate."
+  },
+  {
+   "start_sec": 7.0,
+   "end_sec": 8.0,
+   "subtask": "The robot arm places the blue bowl back on the table."
+  },
+  {
+   "start_sec": 8.0,
+   "end_sec": 64.7,
+   "subtask": "The robot arm retracts and moves away from the crate."
+  }
+ ]
+}

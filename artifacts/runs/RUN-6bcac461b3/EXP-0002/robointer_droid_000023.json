@@ -1,0 +1,46 @@
+{
+ "episode_id": "robointer_droid_000023",
+ "version_id": "EXP-0002",
+ "segments": [
+  {
+   "start_sec": 0.0,
+   "end_sec": 1.0,
+   "subtask": "The robot arm is positioned above the white tray, preparing to interact with the cup lid."
+  },
+  {
+   "start_sec": 1.0,
+   "end_sec": 3.0,
+   "subtask": "The robot arm moves down and grasps the cup lid on the white tray."
+  },
+  {
+   "start_sec": 3.0,
+   "end_sec": 5.0,
+   "subtask": "The robot arm lifts the cup lid from the tray and begins moving it to the right."
+  },
+  {
+   "start_sec": 5.0,
+   "end_sec": 7.0,
+   "subtask": "The robot arm continues moving the cup lid to the right, positioning it over the adjacent area."
+  },
+  {
+   "start_sec": 7.0,
+   "end_sec": 9.0,
+   "subtask": "The robot arm places the cup lid down on the right side of the tray."
+  },
+  {
+   "start_sec": 9.0,
+   "end_sec": 11.0,
+   "subtask": "The robot arm releases the cup lid and begins to retract from the tray."
+  },
+  {
+   "start_sec": 11.0,
+   "end_sec": 13.0,
+   "subtask": "The robot arm completes its retraction and returns to a neutral position above the tray."
+  },
+  {
+   "start_sec": 13.0,
+   "end_sec": 18.1,
+   "subtask": "The robot arm remains stationary, indicating the completion of the task."
+  }
+ ]
+}

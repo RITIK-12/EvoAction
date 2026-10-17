@@ -1,0 +1,36 @@
+{
+ "episode_id": "robointer_droid_000015",
+ "version_id": "EXP-0001",
+ "segments": [
+  {
+   "start_sec": 0.0,
+   "end_sec": 1.0,
+   "subtask": "The robot is positioned near the counter with a silver cup visible on the left side of the counter."
+  },
+  {
+   "start_sec": 1.0,
+   "end_sec": 3.0,
+   "subtask": "The robot arm moves toward the silver cup and begins to grasp it."
+  },
+  {
+   "start_sec": 3.0,
+   "end_sec": 5.0,
+   "subtask": "The robot successfully grasps the silver cup and lifts it from the counter."
+  },
+  {
+   "start_sec": 5.0,
+   "end_sec": 7.0,
+   "subtask": "The robot moves the silver cup from the left side of the counter toward the right side."
+  },
+  {
+   "start_sec": 7.0,
+   "end_sec": 9.0,
+   "subtask": "The robot places the silver cup on the right side of the counter."
+  },
+  {
+   "start_sec": 9.0,
+   "end_sec": 16.4,
+   "subtask": "The robot releases the silver cup and begins to retract its arm."
+  }
+ ]
+}

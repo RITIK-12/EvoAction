@@ -1,0 +1,31 @@
+{
+ "episode_id": "robointer_droid_000010",
+ "version_id": "EXP-0001",
+ "segments": [
+  {
+   "start_sec": 0.0,
+   "end_sec": 1.0,
+   "subtask": "The robot arm is positioned above the blue object on the table, preparing to pick it up."
+  },
+  {
+   "start_sec": 1.0,
+   "end_sec": 3.0,
+   "subtask": "The robot arm descends and grasps the blue object, lifting it from the table surface."
+  },
+  {
+   "start_sec": 3.0,
+   "end_sec": 6.5,
+   "subtask": "The robot arm moves the blue object towards the open drawer, positioning it above the drawer opening."
+  },
+  {
+   "start_sec": 6.5,
+   "end_sec": 8.0,
+   "subtask": "The robot arm lowers the blue object into the drawer and releases it, completing the placement."
+  },
+  {
+   "start_sec": 8.0,
+   "end_sec": 15.2,
+   "subtask": "The robot arm retracts and moves away from the drawer, finishing the task."
+  }
+ ]
+}

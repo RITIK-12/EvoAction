@@ -1,0 +1,66 @@
+{
+ "episode_id": "robointer_droid_000050",
+ "version_id": "EXP-0002",
+ "segments": [
+  {
+   "start_sec": 0.0,
+   "end_sec": 1.0,
+   "subtask": "approach the building block toys on the top of the cabinet"
+  },
+  {
+   "start_sec": 1.0,
+   "end_sec": 3.0,
+   "subtask": "grasp the first building block toy"
+  },
+  {
+   "start_sec": 3.0,
+   "end_sec": 5.0,
+   "subtask": "lift the first building block toy"
+  },
+  {
+   "start_sec": 5.0,
+   "end_sec": 7.0,
+   "subtask": "move the first building block toy to the black bowl"
+  },
+  {
+   "start_sec": 7.0,
+   "end_sec": 9.0,
+   "subtask": "place the first building block toy in the black bowl"
+  },
+  {
+   "start_sec": 9.0,
+   "end_sec": 11.0,
+   "subtask": "release the first building block toy"
+  },
+  {
+   "start_sec": 11.0,
+   "end_sec": 13.0,
+   "subtask": "approach the second building block toy"
+  },
+  {
+   "start_sec": 13.0,
+   "end_sec": 15.0,
+   "subtask": "grasp the second building block toy"
+  },
+  {
+   "start_sec": 15.0,
+   "end_sec": 17.0,
+   "subtask": "lift the second building block toy"
+  },
+  {
+   "start_sec": 17.0,
+   "end_sec": 19.0,
+   "subtask": "move the second building block toy to the black bowl"
+  },
+  {
+   "start_sec": 19.0,
+   "end_sec": 21.0,
+   "subtask": "place the second building block toy in the black bowl"
+  },
+  {
+   "start_sec": 21.0,
+   "end_sec": 43.1,
+   "subtask": "release the second building block toy"
+  }
+ ]
+}

@@ -1,0 +1,36 @@
+{
+ "episode_id": "robointer_droid_000033",
+ "version_id": "EXP-0002",
+ "segments": [
+  {
+   "start_sec": 0.0,
+   "end_sec": 1.0,
+   "subtask": "Open the drawer to access the pink and silver measuring spoon."
+  },
+  {
+   "start_sec": 1.0,
+   "end_sec": 2.0,
+   "subtask": "Reach into the open drawer to locate and grasp the pink and silver measuring spoon."
+  },
+  {
+   "start_sec": 2.0,
+   "end_sec": 3.0,
+   "subtask": "Securely grasp the pink and silver measuring spoon and lift it from the drawer."
+  },
+  {
+   "start_sec": 3.0,
+   "end_sec": 4.0,
+   "subtask": "Carry the measuring spoon from the drawer to the kitchen counter."
+  },
+  {
+   "start_sec": 4.0,
+   "end_sec": 5.0,
+   "subtask": "Place the pink and silver measuring spoon on the kitchen counter."
+  },
+  {
+   "start_sec": 5.0,
+   "end_sec": 27.7,
+   "subtask": "Release the measuring spoon onto the counter, completing the task."
+  }
+ ]
+}

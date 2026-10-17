@@ -1,0 +1,11 @@
+{
+ "episode_id": "robointer_droid_000012",
+ "version_id": "EXP-0002",
+ "segments": [
+  {
+   "start_sec": 0.0,
+   "end_sec": 15.2,
+   "subtask": "The robot arm moves towards the blue object on the workbench."
+  }
+ ]
+}

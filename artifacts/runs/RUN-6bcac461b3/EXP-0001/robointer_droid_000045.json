@@ -1,0 +1,31 @@
+{
+ "episode_id": "robointer_droid_000045",
+ "version_id": "EXP-0001",
+ "segments": [
+  {
+   "start_sec": 0.0,
+   "end_sec": 1.0,
+   "subtask": "approach the desktop items"
+  },
+  {
+   "start_sec": 1.0,
+   "end_sec": 3.0,
+   "subtask": "grasp the desktop items"
+  },
+  {
+   "start_sec": 3.0,
+   "end_sec": 5.0,
+   "subtask": "move the desktop items to the drawer"
+  },
+  {
+   "start_sec": 5.0,
+   "end_sec": 7.0,
+   "subtask": "place the desktop items in the drawer"
+  },
+  {
+   "start_sec": 7.0,
+   "end_sec": 36.5,
+   "subtask": "close the drawer"
+  }
+ ]
+}

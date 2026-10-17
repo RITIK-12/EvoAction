@@ -1,0 +1,31 @@
+{
+ "episode_id": "robointer_droid_000016",
+ "version_id": "EXP-0002",
+ "segments": [
+  {
+   "start_sec": 0.0,
+   "end_sec": 1.0,
+   "subtask": "The robot arm is positioned above the table, preparing to interact with the jar."
+  },
+  {
+   "start_sec": 1.0,
+   "end_sec": 5.0,
+   "subtask": "The robot arm moves down and grasps the jar, lifting it slightly."
+  },
+  {
+   "start_sec": 5.0,
+   "end_sec": 10.0,
+   "subtask": "The robot arm positions the jar and begins to manipulate it, possibly adjusting its orientation."
+  },
+  {
+   "start_sec": 10.0,
+   "end_sec": 15.0,
+   "subtask": "The robot arm continues to hold and adjust the jar, preparing for the next step."
+  },
+  {
+   "start_sec": 15.0,
+   "end_sec": 16.5,
+   "subtask": "The robot arm places the jar down on the table and releases it."
+  }
+ ]
+}

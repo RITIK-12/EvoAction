@@ -1,0 +1,36 @@
+{
+ "episode_id": "robointer_droid_000008",
+ "version_id": "EXP-0002",
+ "segments": [
+  {
+   "start_sec": 0.0,
+   "end_sec": 1.0,
+   "subtask": "approach bottle"
+  },
+  {
+   "start_sec": 1.0,
+   "end_sec": 3.0,
+   "subtask": "grasp bottle"
+  },
+  {
+   "start_sec": 3.0,
+   "end_sec": 5.0,
+   "subtask": "lift bottle"
+  },
+  {
+   "start_sec": 5.0,
+   "end_sec": 7.0,
+   "subtask": "move bottle to mug"
+  },
+  {
+   "start_sec": 7.0,
+   "end_sec": 9.0,
+   "subtask": "place bottle in mug"
+  },
+  {
+   "start_sec": 9.0,
+   "end_sec": 13.8,
+   "subtask": "release bottle"
+  }
+ ]
+}

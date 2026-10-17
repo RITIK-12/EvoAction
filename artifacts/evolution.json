@@ -1,0 +1,7078 @@
+{
+ "run_id": "RUN-6bcac461b3",
+ "protocol": "v3-macrodata",
+ "episode_set": "droid50",
+ "gate": {
+  "signal": "label-free-v1",
+  "min_self_score_delta": 0.03,
+  "min_nonregressing_fraction": 0.5,
+  "require_valid_outputs": true,
+  "cost_policy": "no per-episode cost cap; total cost is recorded per recursion (iteration) and per version over the same 50 episodes",
+  "note": "label-free gate predeclared before the v3 run; ground truth is never consulted for promotion"
+ },
+ "label_free_score": {
+  "version": "label-free-v1",
+  "components": {
+   "telemetry_agreement": "F1 between predicted interior boundaries and gripper open/close transitions from robot telemetry (tolerance 0.75 s)",
+   "visual_verification": "fraction of predicted interior boundaries where the Crusoe vision model, shown a close-up 2 s frame strip, confirms a manipulation state change completes",
+   "duration_variability": "min(1, CV(segment durations) / 0.5); evenly spaced segments (an artifact of tiled sampling) score low",
+   "temporal_resolution": "1 - fraction of segments shorter than two sampled frames of the workflow's own sampling rate"
+  },
+  "weights": {
+   "telemetry_agreement": 0.35,
+   "visual_verification": 0.35,
+   "duration_variability": 0.15,
+   "temporal_resolution": 0.15
+  },
+  "aggregation": "weighted mean over the components available for an episode (weights renormalized), then mean over episodes",
+  "gt_access": "none"
+ },
+ "episode_ids": [
+  "robointer_droid_000001",
+  "robointer_droid_000002",
+  "robointer_droid_000003",
+  "robointer_droid_000004",
+  "robointer_droid_000005",
+  "robointer_droid_000006",
+  "robointer_droid_000007",
+  "robointer_droid_000008",
+  "robointer_droid_000009",
+  "robointer_droid_000010",
+  "robointer_droid_000011",
+  "robointer_droid_000012",
+  "robointer_droid_000013",
+  "robointer_droid_000014",
+  "robointer_droid_000015",
+  "robointer_droid_000016",
+  "robointer_droid_000017",
+  "robointer_droid_000019",
+  "robointer_droid_000021",
+  "robointer_droid_000022",
+  "robointer_droid_000023",
+  "robointer_droid_000024",
+  "robointer_droid_000025",
+  "robointer_droid_000027",
+  "robointer_droid_000028",
+  "robointer_droid_000029",
+  "robointer_droid_000030",
+  "robointer_droid_000032",
+  "robointer_droid_000033",
+  "robointer_droid_000034",
+  "robointer_droid_000035",
+  "robointer_droid_000036",
+  "robointer_droid_000037",
+  "robointer_droid_000038",
+  "robointer_droid_000039",
+  "robointer_droid_000042",
+  "robointer_droid_000043",
+  "robointer_droid_000044",
+  "robointer_droid_000045",
+  "robointer_droid_000046",
+  "robointer_droid_000047",
+  "robointer_droid_000050",
+  "robointer_droid_000055",
+  "robointer_droid_000056",
+  "robointer_droid_000057",
+  "robointer_droid_000058",
+  "robointer_droid_000059",
+  "robointer_droid_000060",
+  "robointer_droid_000061",
+  "robointer_droid_000062"
+ ],
+ "iterations": [
+  {
+   "iteration": 1,
+   "incumbent": "N0",
+   "incumbent_label_free": 0.3362,
+   "incumbent_headline_gt": {
+    "snapped_f1_075": 0.08085106382978724,
+    "raw_f1_075": 0.012765957446808512,
+    "snapped_f1_05": 0.17872340425531916,
+    "raw_f1_05": 0.0425531914893617,
+    "tp_snapped": 19,
+    "tp_raw": 3,
+    "tp05_snapped": 42,
+    "tp05_raw": 10,
+    "n_pred": 320,
+    "n_ref": 150,
+    "invalid_items": 0,
+    "empty_output_episodes": 0,
+    "mean_boundary_mae_sec": 6.995135714285714,
+    "episodes": 50,
+    "per_episode_snapped_f1": {
+     "robointer_droid_000001": 0.25,
+     "robointer_droid_000002": 0.0,
+     "robointer_droid_000003": 0.0,
+     "robointer_droid_000004": 0.0,
+     "robointer_droid_000005": 0.4,
+     "robointer_droid_000006": 0.0,
+     "robointer_droid_000007": 0.25,
+     "robointer_droid_000008": 0.0,
+     "robointer_droid_000009": 0.0,
+     "robointer_droid_000010": 0.5,
+     "robointer_droid_000011": 0.0,
+     "robointer_droid_000012": 0.2222222222222222,
+     "robointer_droid_000013": 0.22222222222222224,
+     "robointer_droid_000014": 0.28571428571428575,
+     "robointer_droid_000015": 0.25,
+     "robointer_droid_000016": 0.28571428571428575,
+     "robointer_droid_000017": 0.0,
+     "robointer_droid_000019": 0.28571428571428575,
+     "robointer_droid_000021": 0.25,
+     "robointer_droid_000022": 0.28571428571428575,
+     "robointer_droid_000023": 0.0,
+     "robointer_droid_000024": 0.28571428571428575,
+     "robointer_droid_000025": 0.0,
+     "robointer_droid_000027": 0.28571428571428575,
+     "robointer_droid_000028": 0.1818181818181818,
+     "robointer_droid_000029": 0.0,
+     "robointer_droid_000030": 0.0,
+     "robointer_droid_000032": 0.0,
+     "robointer_droid_000033": 0.0,
+     "robointer_droid_000034": 0.0,
+     "robointer_droid_000035": 0.0,
+     "robointer_droid_000036": 0.0,
+     "robointer_droid_000037": 0.0,
+     "robointer_droid_000038": 0.0,
+     "robointer_droid_000039": 0.0,
+     "robointer_droid_000042": 0.25,
+     "robointer_droid_000043": 0.2,
+     "robointer_droid_000044": 0.28571428571428575,
+     "robointer_droid_000045": 0.0,
+     "robointer_droid_000046": 0.0,
+     "robointer_droid_000047": 0.0,
+     "robointer_droid_000050": 0.0,
+     "robointer_droid_000055": 0.0,
+     "robointer_droid_000056": 0.0,
+     "robointer_droid_000057": 0.0,
+     "robointer_droid_000058": 0.0,
+     "robointer_droid_000059": 0.0,
+     "robointer_droid_000060": 0.0,
+     "robointer_droid_000061": 0.0,
+     "robointer_droid_000062": 0.0
+    }
+   },
+   "plan": {
+    "failure_summary": "The incumbent produces uniformly spaced early boundaries (approximately 1-second intervals) regardless of where actual manipulation state changes occur. This yields near-zero telemetry agreement and visual verification, while duration_variability and temporal_resolution scores are high due to the regularity. The model appears to ignore visual and temporal cues from the contact sheets after the first few seconds, likely defaulting to a simple heuristic.",
+    "investigations": [
+     {
+      "question": "Does the incumbent's prediction only use the first contact sheet (first ~10 seconds) and ignore later sheets, leading to uniformly spaced early boundaries?",
+      "tools_allowed": [
+       "episode_predictions",
+       "telemetry_hints",
+       "sampling_coverage"
+      ],
+      "tool_requests": [
+       {
+        "tool": "episode_predictions",
+        "args": {
+         "episode_id": "robointer_droid_000006"
+        }
+       },
+       {
+        "tool": "telemetry_hints",
+        "args": {
+         "episode_id": "robointer_droid_000006",
+         "signals": [
+          "gripper"
+         ]
+        }
+       },
+       {
+        "tool": "sampling_coverage",
+        "args": {
+         "episode_id": "robointer_droid_000006",
+         "sampling_hz": 2.0
+        }
+       }
+      ]
+     },
+     {
+      "question": "What visual content is present at the incumbent's predicted early boundaries versus at actual gripper events, and does the vision model detect a manipulation state change at those times?",
+      "tools_allowed": [
+       "inspect_frames"
+      ],
+      "tool_requests": [
+       {
+        "tool": "inspect_frames",
+        "args": {
+         "episode_id": "robointer_droid_000006",
+         "center_sec": 2.0,
+         "window_sec": 2.0,
+         "local_hz": 5,
+         "question": "Is there a manipulation state change (e.g., gripper open/close, object placement) visible in this 2-second frame strip centered at 2.0 seconds?"
+        }
+       },
+       {
+        "tool": "inspect_frames",
+        "args": {
+         "episode_id": "robointer_droid_000006",
+         "center_sec": 6.5,
+         "window_sec": 2.0,
+         "local_hz": 5,
+         "question": "Is there a manipulation state change visible in this 2-second frame strip centered at the gripper close event at ~6.5 seconds?"
+        }
+       }
+      ]
+     }
+    ],
+    "call_id": "CALL-4e279a7ed1",
+    "model": "nvidia/NVIDIA-Nemotron-3-Super-120B-A12B"
+   },
+   "proposal_record": {
+    "exp_id": "EXP-0001",
+    "attempts": [
+     {
+      "call_id": "CALL-5ddee19d6e",
+      "errors": [],
+      "raw": {
+       "hypothesis": "Adding a telemetry-guided refinement stage (state hint detection \u2192 inspect transition windows \u2192 refine intervals \u2192 merge/filter) will correct the incumbent's early false-positive boundaries and enable detection of later gripper events, thereby increasing telemetry agreement and visual verification while preserving reasonable segment durations and temporal resolution.",
+       "failure_slice": "Episodes where the incumbent's predicted segments end before the last telemetry hint (i.e., missing manipulation events that occur after the first ~10 seconds).",
+       "evidence_ids": [
+        "SELF-d11a2b6c1b",
+        "EV-14124a72d4",
+        "EV-51217a1ec3",
+        "EV-ee5e77aaf7",
+        "EV-b8101a0ca9",
+        "EV-135c1c4533"
+       ],
+       "objective": "Increase the label-free self-score (weighted mean of telemetry_agreement, visual_verification, duration_variability, temporal_resolution).",
+       "candidate_patch": {
+        "insert_nodes": [
+         {
+          "node": {
+           "id": "hints",
+           "operator": "state_hint_detection",
+           "depends_on": [
+            "sample"
+           ],
+           "params": {
+            "signals": [
+             "gripper"
+            ],
+            "min_gap_sec": 0.8,
+            "pause_speed_quantile": 0.15,
+            "min_pause_sec": 0.3
+           },
+           "when": "has_telemetry"
+          },
+          "rewire_dependents_of": null
+         },
+         {
+          "node": {
+           "id": "windows",
+           "operator": "inspect_transition_windows",
+           "depends_on": [
+            "annotate",
+            "hints"
+           ],
+           "params": {
+            "select": "near_hints",
+            "window_sec": 2.0,
+            "local_hz": 4.0,
+            "max_windows": 8,
+            "include_unmatched_hints": true,
+            "tile_px": 224,
+            "confidence_threshold": 0.7
+           },
+           "when": "always"
+          },
+          "rewire_dependents_of": null
+         },
+         {
+          "node": {
+           "id": "refine",
+           "operator": "refine_intervals",
+           "depends_on": [
+            "annotate",
+            "windows"
+           ],
+           "params": {
+            "prompt": "refine.md",
+            "thinking": true,
+            "max_tokens": 16384,
+            "temperature": 0.2,
+            "allow_insert": true,
+            "allow_delete": true
+           },
+           "when": "always"
+          },
+          "rewire_dependents_of": null
+         },
+         {
+          "node": {
+           "id": "merge",
+           "operator": "merge_filter_segments",
+           "depends_on": [
+            "refine"
+           ],
+           "params": {
+            "min_duration_sec": 0.4,
+            "max_gap_sec": 1.0,
+            "tile_full_episode": true,
+            "merge_same_label": false
+           },
+           "when": "always"
+          },
+          "rewire_dependents_of": null
+         }
+        ],
+        "set_when": {
+         "hints": "has_telemetry"
+        },
+        "set_depends_on": {
+         "export": [
+          "merge"
+         ]
+        }
+       },
+       "expected_outcome": "Mean label-free self-score delta \u2265 0.03 relative to incumbent, with at least 50% of episodes non-regressing on that score.",
+       "verification_plan": {
+        "metric": "label_free_self_score",
+        "split": "validation",
+        "compare_to": "incumbent"
+       },
+       "stop_conditions": [
+        "Mean label-free self-score delta < 0.03",
+        "Less than 50% of episodes show non-regressing label-free self-score",
+        "Validation fails (non\u2011monotonic segments, schema violations, or missing export)"
+       ]
+      }
+     },
+     {
+      "call_id": "CALL-0477511248",
+      "errors": [],
+      "raw": {
+       "hypothesis": "Adding a lightweight telemetry-guided refinement stage (state hint detection \u2192 inspect transition windows \u2192 refine intervals with thinking=False and reduced token budget \u2192 merge/filter) will correct the incumbent's early false-positive boundaries and enable detection of later gripper events, thereby increasing telemetry agreement and visual verification while preserving reasonable segment durations and temporal resolution.",
+       "failure_slice": "Episodes where the incumbent's predicted segments end before the last telemetry hint (i.e., missing manipulation events that occur after the first ~10 seconds).",
+       "evidence_ids": [
+        "SELF-d11a2b6c1b",
+        "EV-14124a72d4",
+        "EV-51217a1ec3",
+        "EV-ee5e77aaf7",
+        "EV-b8101a0ca9",
+        "EV-135c1c4533"
+       ],
+       "objective": "Increase the label-free self-score (weighted mean of telemetry_agreement, visual_verification, duration_variability, temporal_resolution).",
+       "candidate_patch": {
+        "insert_nodes": [
+         {
+          "node": {
+           "id": "hints",
+           "operator": "state_hint_detection",
+           "depends_on": [
+            "sample"
+           ],
+           "params": {
+            "signals": [
+             "gripper"
+            ],
+            "min_gap_sec": 0.8,
+            "pause_speed_quantile": 0.15,
+            "min_pause_sec": 0.3
+           },
+           "when": "always"
+          },
+          "rewire_dependents_of": null
+         },
+         {
+          "node": {
+           "id": "windows",
+           "operator": "inspect_transition_windows",
+           "depends_on": [
+            "annotate",
+            "hints"
+           ],
+           "params": {
+            "select": "near_hints",
+            "window_sec": 2.0,
+            "local_hz": 4.0,
+            "max_windows": 3,
+            "include_unmatched_hints": false,
+            "tile_px": 224,
+            "confidence_threshold": 0.7
+           },
+           "when": "always"
+          },
+          "rewire_dependents_of": null
+         },
+         {
+          "node": {
+           "id": "refine",
+           "operator": "refine_intervals",
+           "depends_on": [
+            "annotate",
+            "windows"
+           ],
+           "params": {
+            "prompt": "refine.md",
+            "thinking": false,
+            "max_tokens": 4096,
+            "temperature": 0.2,
+            "allow_insert": true,
+            "allow_delete": true
+           },
+           "when": "always"
+          },
+          "rewire_dependents_of": null
+         },
+         {
+          "node": {
+           "id": "merge",
+           "operator": "merge_filter_segments",
+           "depends_on": [
+            "refine"
+           ],
+           "params": {
+            "min_duration_sec": 0.4,
+            "max_gap_sec": 1.0,
+            "tile_full_episode": true,
+            "merge_same_label": false
+           },
+           "when": "always"
+          },
+          "rewire_dependents_of": null
+         }
+        ],
+        "remove_nodes": [],
+        "set_params": {},
+        "set_when": {},
+        "set_depends_on": {
+         "export": [
+          "merge"
+         ]
+        },
+        "prompt_updates": {}
+       },
+       "expected_outcome": "Mean label-free self-score delta \u2265 0.03 relative to incumbent, with at least 50% of episodes non-regressing on that score.",
+       "verification_plan": {
+        "metric": "label_free_self_score",
+        "split": "validation",
+        "compare_to": "incumbent"
+       },
+       "stop_conditions": [
+        "Mean label-free self-score delta < 0.03",
+        "Less than 50% of episodes show non-regressing label-free self-score",
+        "Validation fails (non\u2011monotonic segments, schema violations, or missing export)"
+       ]
+      },
+      "after_critique": true
+     }
+    ],
+    "critique": {
+     "call_id": "CALL-7f3847f67d",
+     "verdict": "revise",
+     "issues": [
+      "The refine step uses thinking=True with a large token budget, which previously caused invalid JSON and high latency (40-170s) and may lead to frequent failures and excessive cost.",
+      "The inspect_transition_windows operator can invoke up to 8 vision calls per episode, multiplying vision call cost and latency without a clear bound on benefit.",
+      "The label-free self-score could be gamed by simply aligning segments to telemetry hints rather than improving true annotation quality; there is no planned validation against held-out labeled data or manual spot-check.",
+      "No contingency plan is described for cases where hint detection yields no hints or an excessive number of hints, which could cause degenerate or empty outputs."
+     ],
+     "required_changes": "Replace thinking=True in the refine_intervals node with thinking=False and reduce max_tokens to a reliable limit (e.g., 4096 tokens) to match the incumbent's reliable performance; cap the number of transition windows in inspect_transition_windows to a lower, adaptive number (e.g., max 3 windows) or make it dependent on hint confidence; add an ablation checkpoint to evaluate the contribution of hint detection versus refinement; include a fallback to the incumbent's output if the refine step fails to produce valid JSON or if vision calls exceed a predefined latency/budget threshold; and augment verification with a small set of manually labeled episodes to ensure that gains in the label-free self-score reflect true annotation improvements rather than metric gaming."
+    },
+    "status": "valid",
+    "proposal": {
+     "id": "EXP-0001",
+     "parent_version": "N0",
+     "hypothesis": "Adding a lightweight telemetry-guided refinement stage (state hint detection \u2192 inspect transition windows \u2192 refine intervals with thinking=False and reduced token budget \u2192 merge/filter) will correct the incumbent's early false-positive boundaries and enable detection of later gripper events, thereby increasing telemetry agreement and visual verification while preserving reasonable segment durations and temporal resolution.",
+     "failure_slice": "Episodes where the incumbent's predicted segments end before the last telemetry hint (i.e., missing manipulation events that occur after the first ~10 seconds).",
+     "evidence_ids": [
+      "SELF-d11a2b6c1b",
+      "EV-14124a72d4",
+      "EV-51217a1ec3",
+      "EV-ee5e77aaf7",
+      "EV-b8101a0ca9",
+      "EV-135c1c4533"
+     ],
+     "objective": "Increase the label-free self-score (weighted mean of telemetry_agreement, visual_verification, duration_variability, temporal_resolution).",
+     "candidate_patch": {
+      "insert_nodes": [
+       {
+        "node": {
+         "id": "hints",
+         "operator": "state_hint_detection",
+         "depends_on": [
+          "sample"
+         ],
+         "params": {
+          "signals": [
+           "gripper"
+          ],
+          "min_gap_sec": 0.8,
+          "pause_speed_quantile": 0.15,
+          "min_pause_sec": 0.3
+         },
+         "when": "always"
+        },
+        "rewire_dependents_of": null
+       },
+       {
+        "node": {
+         "id": "windows",
+         "operator": "inspect_transition_windows",
+         "depends_on": [
+          "annotate",
+          "hints"
+         ],
+         "params": {
+          "select": "near_hints",
+          "window_sec": 2.0,
+          "local_hz": 4.0,
+          "max_windows": 3,
+          "include_unmatched_hints": false,
+          "tile_px": 224,
+          "confidence_threshold": 0.7
+         },
+         "when": "always"
+        },
+        "rewire_dependents_of": null
+       },
+       {
+        "node": {
+         "id": "refine",
+         "operator": "refine_intervals",
+         "depends_on": [
+          "annotate",
+          "windows"
+         ],
+         "params": {
+          "prompt": "refine.md",
+          "thinking": false,
+          "max_tokens": 4096,
+          "temperature": 0.2,
+          "allow_insert": true,
+          "allow_delete": true
+         },
+         "when": "always"
+        },
+        "rewire_dependents_of": null
+       },
+       {
+        "node": {
+         "id": "merge",
+         "operator": "merge_filter_segments",
+         "depends_on": [
+          "refine"
+         ],
+         "params": {
+          "min_duration_sec": 0.4,
+          "max_gap_sec": 1.0,
+          "tile_full_episode": true,
+          "merge_same_label": false
+         },
+         "when": "always"
+        },
+        "rewire_dependents_of": null
+       }
+      ],
+      "remove_nodes": [],
+      "set_params": {},
+      "set_when": {},
+      "set_depends_on": {
+       "export": [
+        "merge"
+       ]
+      },
+      "prompt_updates": {}
+     },
+     "expected_outcome": "Mean label-free self-score delta \u2265 0.03 relative to incumbent, with at least 50% of episodes non-regressing on that score.",
+     "verification_plan": {
+      "metric": "label_free_self_score",
+      "split": "validation",
+      "compare_to": "incumbent"
+     },
+     "stop_conditions": [
+      "Mean label-free self-score delta < 0.03",
+      "Less than 50% of episodes show non-regressing label-free self-score",
+      "Validation fails (non\u2011monotonic segments, schema violations, or missing export)"
+     ],
+     "authored_by": "nvidia/NVIDIA-Nemotron-3-Super-120B-A12B",
+     "task_ids": [
+      "TASK-4f5cd89a53",
+      "TASK-ea9fb0f42e"
+     ]
+    }
+   },
+   "decision": {
+    "decision": "PROMOTED",
+    "gate": {
+     "signal": "label-free-v1",
+     "min_self_score_delta": 0.03,
+     "min_nonregressing_fraction": 0.5,
+     "require_valid_outputs": true,
+     "cost_policy": "no per-episode cost cap; total cost is recorded per recursion (iteration) and per version over the same 50 episodes",
+     "note": "label-free gate predeclared before the v3 run; ground truth is never consulted for promotion"
+    },
+    "checks": {
+     "self_score_delta": {
+      "value": 0.0815,
+      "threshold": 0.03,
+      "pass": true
+     },
+     "non_regressing_fraction": {
+      "value": 0.96,
+      "threshold": 0.5,
+      "pass": true
+     },
+     "valid_outputs": {
+      "value": {
+       "bad_status": {},
+       "empty_output_episodes": []
+      },
+      "pass": true
+     }
+    },
+    "paired_self_score": {
+     "episodes": [
+      "robointer_droid_000001",
+      "robointer_droid_000002",
+      "robointer_droid_000003",
+      "robointer_droid_000004",
+      "robointer_droid_000005",
+      "robointer_droid_000006",
+      "robointer_droid_000007",
+      "robointer_droid_000008",
+      "robointer_droid_000009",
+      "robointer_droid_000010",
+      "robointer_droid_000011",
+      "robointer_droid_000012",
+      "robointer_droid_000013",
+      "robointer_droid_000014",
+      "robointer_droid_000015",
+      "robointer_droid_000016",
+      "robointer_droid_000017",
+      "robointer_droid_000019",
+      "robointer_droid_000021",
+      "robointer_droid_000022",
+      "robointer_droid_000023",
+      "robointer_droid_000024",
+      "robointer_droid_000025",
+      "robointer_droid_000027",
+      "robointer_droid_000028",
+      "robointer_droid_000029",
+      "robointer_droid_000030",
+      "robointer_droid_000032",
+      "robointer_droid_000033",
+      "robointer_droid_000034",
+      "robointer_droid_000035",
+      "robointer_droid_000036",
+      "robointer_droid_000037",
+      "robointer_droid_000038",
+      "robointer_droid_000039",
+      "robointer_droid_000042",
+      "robointer_droid_000043",
+      "robointer_droid_000044",
+      "robointer_droid_000045",
+      "robointer_droid_000046",
+      "robointer_droid_000047",
+      "robointer_droid_000050",
+      "robointer_droid_000055",
+      "robointer_droid_000056",
+      "robointer_droid_000057",
+      "robointer_droid_000058",
+      "robointer_droid_000059",
+      "robointer_droid_000060",
+      "robointer_droid_000061",
+      "robointer_droid_000062"
+     ],
+     "per_episode_delta": {
+      "robointer_droid_000001": 0.15000000000000002,
+      "robointer_droid_000002": 0.15000000000000002,
+      "robointer_droid_000003": 0.00820000000000004,
+      "robointer_droid_000004": 0.004300000000000026,
+      "robointer_droid_000005": -0.08500000000000002,
+      "robointer_droid_000006": 0.15,
+      "robointer_droid_000007": 0.06510000000000005,
+      "robointer_droid_000008": 0.0,
+      "robointer_droid_000009": 0.0030999999999999917,
+      "robointer_droid_000010": -0.20730000000000004,
+      "robointer_droid_000011": 0.15,
+      "robointer_droid_000012": 0.06520000000000004,
+      "robointer_droid_000013": 0.15000000000000002,
+      "robointer_droid_000014": 0.08330000000000004,
+      "robointer_droid_000015": 0.06520000000000004,
+      "robointer_droid_000016": 0.0,
+      "robointer_droid_000017": 0.15,
+      "robointer_droid_000019": 0.08329999999999999,
+      "robointer_droid_000021": 0.06519999999999998,
+      "robointer_droid_000022": 0.05510000000000004,
+      "robointer_droid_000023": 0.08340000000000003,
+      "robointer_droid_000024": 0.0,
+      "robointer_droid_000025": 0.08340000000000003,
+      "robointer_droid_000027": 0.05510000000000004,
+      "robointer_droid_000028": 0.15000000000000002,
+      "robointer_droid_000029": 0.1256,
+      "robointer_droid_000030": 0.0,
+      "robointer_droid_000032": 0.10259999999999997,
+      "robointer_droid_000033": 0.10010000000000002,
+      "robointer_droid_000034": 0.15,
+      "robointer_droid_000035": 0.05509999999999998,
+      "robointer_droid_000036": 0.15000000000000002,
+      "robointer_droid_000037": 0.15,
+      "robointer_droid_000038": 0.15000000000000002,
+      "robointer_droid_000039": 0.06509999999999999,
+      "robointer_droid_000042": 0.04469999999999996,
+      "robointer_droid_000043": 0.15,
+      "robointer_droid_000044": 0.15,
+      "robointer_droid_000045": 0.08330000000000004,
+      "robointer_droid_000046": 0.14999999999999997,
+      "robointer_droid_000047": 0.14999999999999997,
+      "robointer_droid_000050": 0.15,
+      "robointer_droid_000055": 0.15,
+      "robointer_droid_000056": 0.06509999999999999,
+      "robointer_droid_000057": 0.0,
+      "robointer_droid_000058": 0.1499999999999999,
+      "robointer_droid_000059": 0.0,
+      "robointer_droid_000060": 0.05709999999999993,
+      "robointer_droid_000061": 0.10010000000000002,
+      "robointer_droid_000062": 0.15
+     },
+     "non_regressing_fraction": 0.96,
+     "improved": 42,
+     "regressed": 2,
+     "mean_delta": 0.08152799999999999
+    },
+    "label_free": {
+     "candidate_self_score": 0.4177,
+     "incumbent_self_score": 0.3362,
+     "candidate_components": {
+      "telemetry_agreement": 0.1884,
+      "visual_verification": 0.1847,
+      "duration_variability": 0.912,
+      "temporal_resolution": 1.0
+     },
+     "incumbent_components": {
+      "telemetry_agreement": 0.1884,
+      "visual_verification": 0.2,
+      "duration_variability": 0.3335,
+      "temporal_resolution": 1.0
+     }
+    },
+    "uncertainty": "n=50 episodes (same set for both versions); label-free proxy, not ground truth",
+    "candidate_usage": {
+     "calls": 135,
+     "cache_hits": 97,
+     "prompt_tokens": 42141,
+     "completion_tokens": 3539,
+     "cost_usd": 0.019119,
+     "model_latency_s": 277.74
+    },
+    "topology_change": true,
+    "new_incumbent": "N001"
+   },
+   "shadow_gt": {
+    "candidate": {
+     "snapped_f1_075": 0.07659574468085106,
+     "raw_f1_075": 0.0425531914893617,
+     "snapped_f1_05": 0.17872340425531916,
+     "raw_f1_05": 0.16595744680851063,
+     "tp_snapped": 18,
+     "tp_raw": 10,
+     "tp05_snapped": 42,
+     "tp05_raw": 39,
+     "n_pred": 320,
+     "n_ref": 150,
+     "invalid_items": 0,
+     "empty_output_episodes": 0,
+     "mean_boundary_mae_sec": 4.997204190476191,
+     "episodes": 50,
+     "per_episode_snapped_f1": {
+      "robointer_droid_000001": 0.25,
+      "robointer_droid_000002": 0.0,
+      "robointer_droid_000003": 0.0,
+      "robointer_droid_000004": 0.0,
+      "robointer_droid_000005": 0.4,
+      "robointer_droid_000006": 0.0,
+      "robointer_droid_000007": 0.25,
+      "robointer_droid_000008": 0.0,
+      "robointer_droid_000009": 0.0,
+      "robointer_droid_000010": 0.25,
+      "robointer_droid_000011": 0.0,
+      "robointer_droid_000012": 0.2222222222222222,
+      "robointer_droid_000013": 0.22222222222222224,
+      "robointer_droid_000014": 0.28571428571428575,
+      "robointer_droid_000015": 0.25,
+      "robointer_droid_000016": 0.28571428571428575,
+      "robointer_droid_000017": 0.0,
+      "robointer_droid_000019": 0.28571428571428575,
+      "robointer_droid_000021": 0.25,
+      "robointer_droid_000022": 0.28571428571428575,
+      "robointer_droid_000023": 0.0,
+      "robointer_droid_000024": 0.28571428571428575,
+      "robointer_droid_000025": 0.0,
+      "robointer_droid_000027": 0.28571428571428575,
+      "robointer_droid_000028": 0.1818181818181818,
+      "robointer_droid_000029": 0.0,
+      "robointer_droid_000030": 0.0,
+      "robointer_droid_000032": 0.0,
+      "robointer_droid_000033": 0.0,
+      "robointer_droid_000034": 0.0,
+      "robointer_droid_000035": 0.0,
+      "robointer_droid_000036": 0.0,
+      "robointer_droid_000037": 0.0,
+      "robointer_droid_000038": 0.0,
+      "robointer_droid_000039": 0.0,
+      "robointer_droid_000042": 0.25,
+      "robointer_droid_000043": 0.2,
+      "robointer_droid_000044": 0.28571428571428575,
+      "robointer_droid_000045": 0.0,
+      "robointer_droid_000046": 0.0,
+      "robointer_droid_000047": 0.0,
+      "robointer_droid_000050": 0.0,
+      "robointer_droid_000055": 0.0,
+      "robointer_droid_000056": 0.0,
+      "robointer_droid_000057": 0.0,
+      "robointer_droid_000058": 0.0,
+      "robointer_droid_000059": 0.0,
+      "robointer_droid_000060": 0.0,
+      "robointer_droid_000061": 0.0,
+      "robointer_droid_000062": 0.0
+     }
+    },
+    "incumbent": {
+     "snapped_f1_075": 0.08085106382978724,
+     "raw_f1_075": 0.012765957446808512,
+     "snapped_f1_05": 0.17872340425531916,
+     "raw_f1_05": 0.0425531914893617,
+     "tp_snapped": 19,
+     "tp_raw": 3,
+     "tp05_snapped": 42,
+     "tp05_raw": 10,
+     "n_pred": 320,
+     "n_ref": 150,
+     "invalid_items": 0,
+     "empty_output_episodes": 0,
+     "mean_boundary_mae_sec": 6.995135714285714,
+     "episodes": 50,
+     "per_episode_snapped_f1": {
+      "robointer_droid_000001": 0.25,
+      "robointer_droid_000002": 0.0,
+      "robointer_droid_000003": 0.0,
+      "robointer_droid_000004": 0.0,
+      "robointer_droid_000005": 0.4,
+      "robointer_droid_000006": 0.0,
+      "robointer_droid_000007": 0.25,
+      "robointer_droid_000008": 0.0,
+      "robointer_droid_000009": 0.0,
+      "robointer_droid_000010": 0.5,
+      "robointer_droid_000011": 0.0,
+      "robointer_droid_000012": 0.2222222222222222,
+      "robointer_droid_000013": 0.22222222222222224,
+      "robointer_droid_000014": 0.28571428571428575,
+      "robointer_droid_000015": 0.25,
+      "robointer_droid_000016": 0.28571428571428575,
+      "robointer_droid_000017": 0.0,
+      "robointer_droid_000019": 0.28571428571428575,
+      "robointer_droid_000021": 0.25,
+      "robointer_droid_000022": 0.28571428571428575,
+      "robointer_droid_000023": 0.0,
+      "robointer_droid_000024": 0.28571428571428575,
+      "robointer_droid_000025": 0.0,
+      "robointer_droid_000027": 0.28571428571428575,
+      "robointer_droid_000028": 0.1818181818181818,
+      "robointer_droid_000029": 0.0,
+      "robointer_droid_000030": 0.0,
+      "robointer_droid_000032": 0.0,
+      "robointer_droid_000033": 0.0,
+      "robointer_droid_000034": 0.0,
+      "robointer_droid_000035": 0.0,
+      "robointer_droid_000036": 0.0,
+      "robointer_droid_000037": 0.0,
+      "robointer_droid_000038": 0.0,
+      "robointer_droid_000039": 0.0,
+      "robointer_droid_000042": 0.25,
+      "robointer_droid_000043": 0.2,
+      "robointer_droid_000044": 0.28571428571428575,
+      "robointer_droid_000045": 0.0,
+      "robointer_droid_000046": 0.0,
+      "robointer_droid_000047": 0.0,
+      "robointer_droid_000050": 0.0,
+      "robointer_droid_000055": 0.0,
+      "robointer_droid_000056": 0.0,
+      "robointer_droid_000057": 0.0,
+      "robointer_droid_000058": 0.0,
+      "robointer_droid_000059": 0.0,
+      "robointer_droid_000060": 0.0,
+      "robointer_droid_000061": 0.0,
+      "robointer_droid_000062": 0.0
+     }
+    }
+   },
+   "recursion_cost": {
+    "by_role": {
+     "nemotron": {
+      "calls": 6,
+      "cache_hits": 0,
+      "cost_usd": 0.03438,
+      "prompt_tokens": 26384,
+      "completion_tokens": 11027
+     },
+     "vision": {
+      "calls": 236,
+      "cache_hits": 194,
+      "cost_usd": 0.022541,
+      "prompt_tokens": 47986,
+      "completion_tokens": 4451
+     }
+    },
+    "total_cost_usd": 0.056921
+   }
+  },
+  {
+   "iteration": 2,
+   "incumbent": "N001",
+   "incumbent_label_free": 0.4177,
+   "incumbent_headline_gt": {
+    "snapped_f1_075": 0.07659574468085106,
+    "raw_f1_075": 0.0425531914893617,
+    "snapped_f1_05": 0.17872340425531916,
+    "raw_f1_05": 0.16595744680851063,
+    "tp_snapped": 18,
+    "tp_raw": 10,
+    "tp05_snapped": 42,
+    "tp05_raw": 39,
+    "n_pred": 320,
+    "n_ref": 150,
+    "invalid_items": 0,
+    "empty_output_episodes": 0,
+    "mean_boundary_mae_sec": 4.997204190476191,
+    "episodes": 50,
+    "per_episode_snapped_f1": {
+     "robointer_droid_000001": 0.25,
+     "robointer_droid_000002": 0.0,
+     "robointer_droid_000003": 0.0,
+     "robointer_droid_000004": 0.0,
+     "robointer_droid_000005": 0.4,
+     "robointer_droid_000006": 0.0,
+     "robointer_droid_000007": 0.25,
+     "robointer_droid_000008": 0.0,
+     "robointer_droid_000009": 0.0,
+     "robointer_droid_000010": 0.25,
+     "robointer_droid_000011": 0.0,
+     "robointer_droid_000012": 0.2222222222222222,
+     "robointer_droid_000013": 0.22222222222222224,
+     "robointer_droid_000014": 0.28571428571428575,
+     "robointer_droid_000015": 0.25,
+     "robointer_droid_000016": 0.28571428571428575,
+     "robointer_droid_000017": 0.0,
+     "robointer_droid_000019": 0.28571428571428575,
+     "robointer_droid_000021": 0.25,
+     "robointer_droid_000022": 0.28571428571428575,
+     "robointer_droid_000023": 0.0,
+     "robointer_droid_000024": 0.28571428571428575,
+     "robointer_droid_000025": 0.0,
+     "robointer_droid_000027": 0.28571428571428575,
+     "robointer_droid_000028": 0.1818181818181818,
+     "robointer_droid_000029": 0.0,
+     "robointer_droid_000030": 0.0,
+     "robointer_droid_000032": 0.0,
+     "robointer_droid_000033": 0.0,
+     "robointer_droid_000034": 0.0,
+     "robointer_droid_000035": 0.0,
+     "robointer_droid_000036": 0.0,
+     "robointer_droid_000037": 0.0,
+     "robointer_droid_000038": 0.0,
+     "robointer_droid_000039": 0.0,
+     "robointer_droid_000042": 0.25,
+     "robointer_droid_000043": 0.2,
+     "robointer_droid_000044": 0.28571428571428575,
+     "robointer_droid_000045": 0.0,
+     "robointer_droid_000046": 0.0,
+     "robointer_droid_000047": 0.0,
+     "robointer_droid_000050": 0.0,
+     "robointer_droid_000055": 0.0,
+     "robointer_droid_000056": 0.0,
+     "robointer_droid_000057": 0.0,
+     "robointer_droid_000058": 0.0,
+     "robointer_droid_000059": 0.0,
+     "robointer_droid_000060": 0.0,
+     "robointer_droid_000061": 0.0,
+     "robointer_droid_000062": 0.0
+    }
+   },
+   "plan": {
+    "failure_summary": "The incumbent predicts many early, uniformly spaced boundaries (\u22481\u2011second intervals) that do not align with gripper open/close events from telemetry, yielding low telemetry_agreement (0.188) and visual_verification (0.185). The duration_variability component is high (0.912) indicating an artifact of overly regular segmentation, likely caused by the initial annotate step producing grid\u2011aligned boundaries rather than event\u2011driven ones.",
+    "investigations": [
+     {
+      "question": "Are the incumbent's predicted boundaries aligned with the uniform contact\u2011sheet sampling grid (e.g., 1\u2011second increments) rather than actual manipulation events?",
+      "tools_allowed": [
+       "episode_predictions",
+       "telemetry_hints"
+      ],
+      "tool_requests": [
+       {
+        "tool": "episode_predictions",
+        "args": {
+         "episode_id": "robointer_droid_000008"
+        }
+       },
+       {
+        "tool": "telemetry_hints",
+        "args": {
+         "episode_id": "robointer_droid_000008",
+         "signals": [
+          "gripper"
+         ]
+        }
+       }
+      ]
+     },
+     {
+      "question": "Does the vision model confirm a manipulation state change at the incumbent's early predicted boundary (e.g., 2.0\u202fs)?",
+      "tools_allowed": [
+       "inspect_frames"
+      ],
+      "tool_requests": [
+       {
+        "tool": "inspect_frames",
+        "args": {
+         "episode_id": "robointer_droid_000008",
+         "center_sec": 2.0,
+         "window_sec": 2.0,
+         "local_hz": 4.0,
+         "question": "Does this 2\u2011second frame strip show a completed manipulation state change such as gripper open/close, object placement/release, or a tool starting/stopping a surface change?"
+        }
+       }
+      ]
+     }
+    ],
+    "call_id": "CALL-66ebade8c0",
+    "model": "nvidia/NVIDIA-Nemotron-3-Super-120B-A12B"
+   },
+   "proposal_record": {
+    "exp_id": "EXP-0002",
+    "attempts": [
+     {
+      "call_id": "CALL-950b1ff34e",
+      "errors": [],
+      "raw": {
+       "hypothesis": "Increasing frames_per_sheet to 30 extends the temporal horizon of each contact sheet so the model can consider events beyond the first ~10 seconds, while raising local_hz to 5.0 allows sub\u2011second boundary proposals and reducing min_gap_sec in state_hint_detection yields more telemetry hints. Together these changes will improve telemetry agreement and visual verification, increase duration variability (less uniform segmentation), and preserve temporal resolution.",
+       "failure_slice": "Episodes where the incumbent\u2019s predictions stop after the first contact sheet (\u22480\u201110\u202fs) and produce uniformly spaced 1\u2011second boundaries, leading to low telemetry agreement and visual verification and low duration variability.",
+       "evidence_ids": [
+        "SELF-d11a2b6c1b",
+        "EV-14124a72d4",
+        "EV-51217a1ec3",
+        "EV-ee5e77aaf7",
+        "SELF-a441541077",
+        "EV-e0e3309022"
+       ],
+       "objective": "Raise the label\u2011free self\u2011score by \u22650.03 mean delta and have \u226550% of episodes non\u2011regressing on that score.",
+       "candidate_patch": {
+        "set_params": {
+         "sample": {
+          "frames_per_sheet": 30
+         },
+         "windows": {
+          "local_hz": 5.0
+         },
+         "hints": {
+          "min_gap_sec": 0.5
+         }
+        }
+       },
+       "expected_outcome": "Mean label\u2011free self\u2011score delta \u2265 0.03, \u226550% of episodes show non\u2011decreasing self\u2011score, and all episodes produce valid JSON outputs.",
+       "verification_plan": {
+        "metric": "label_free_self_score",
+        "split": "all_episodes",
+        "compare_to": "incumbent"
+       },
+       "stop_conditions": [
+        "Mean annotation cost per episode exceeds 0.005\u202fUSD",
+        "Any episode fails schema/monotonic validation in validate_export",
+        "Temporal_resolution component drops below 0.8"
+       ]
+      }
+     }
+    ],
+    "critique": {
+     "call_id": "CALL-1624bfa1aa",
+     "verdict": "approve",
+     "issues": [],
+     "required_changes": ""
+    },
+    "status": "valid",
+    "proposal": {
+     "id": "EXP-0002",
+     "parent_version": "N001",
+     "hypothesis": "Increasing frames_per_sheet to 30 extends the temporal horizon of each contact sheet so the model can consider events beyond the first ~10 seconds, while raising local_hz to 5.0 allows sub\u2011second boundary proposals and reducing min_gap_sec in state_hint_detection yields more telemetry hints. Together these changes will improve telemetry agreement and visual verification, increase duration variability (less uniform segmentation), and preserve temporal resolution.",
+     "failure_slice": "Episodes where the incumbent\u2019s predictions stop after the first contact sheet (\u22480\u201110\u202fs) and produce uniformly spaced 1\u2011second boundaries, leading to low telemetry agreement and visual verification and low duration variability.",
+     "evidence_ids": [
+      "SELF-d11a2b6c1b",
+      "EV-14124a72d4",
+      "EV-51217a1ec3",
+      "EV-ee5e77aaf7",
+      "SELF-a441541077",
+      "EV-e0e3309022"
+     ],
+     "objective": "Raise the label\u2011free self\u2011score by \u22650.03 mean delta and have \u226550% of episodes non\u2011regressing on that score.",
+     "candidate_patch": {
+      "insert_nodes": [],
+      "remove_nodes": [],
+      "set_params": {
+       "sample": {
+        "frames_per_sheet": 30
+       },
+       "windows": {
+        "local_hz": 5.0
+       },
+       "hints": {
+        "min_gap_sec": 0.5
+       }
+      },
+      "set_when": {},
+      "set_depends_on": {},
+      "prompt_updates": {}
+     },
+     "expected_outcome": "Mean label\u2011free self\u2011score delta \u2265 0.03, \u226550% of episodes show non\u2011decreasing self\u2011score, and all episodes produce valid JSON outputs.",
+     "verification_plan": {
+      "metric": "label_free_self_score",
+      "split": "all_episodes",
+      "compare_to": "incumbent"
+     },
+     "stop_conditions": [
+      "Mean annotation cost per episode exceeds 0.005\u202fUSD",
+      "Any episode fails schema/monotonic validation in validate_export",
+      "Temporal_resolution component drops below 0.8"
+     ],
+     "authored_by": "nvidia/NVIDIA-Nemotron-3-Super-120B-A12B",
+     "task_ids": [
+      "TASK-4f5cd89a53",
+      "TASK-ea9fb0f42e",
+      "TASK-0eb525d8d7",
+      "TASK-49b94671a0"
+     ]
+    }
+   },
+   "decision": {
+    "decision": "REJECTED",
+    "gate": {
+     "signal": "label-free-v1",
+     "min_self_score_delta": 0.03,
+     "min_nonregressing_fraction": 0.5,
+     "require_valid_outputs": true,
+     "cost_policy": "no per-episode cost cap; total cost is recorded per recursion (iteration) and per version over the same 50 episodes",
+     "note": "label-free gate predeclared before the v3 run; ground truth is never consulted for promotion"
+    },
+    "checks": {
+     "self_score_delta": {
+      "value": -0.0249,
+      "threshold": 0.03,
+      "pass": false
+     },
+     "non_regressing_fraction": {
+      "value": 0.58,
+      "threshold": 0.5,
+      "pass": true
+     },
+     "valid_outputs": {
+      "value": {
+       "bad_status": {},
+       "empty_output_episodes": []
+      },
+      "pass": true
+     }
+    },
+    "paired_self_score": {
+     "episodes": [
+      "robointer_droid_000001",
+      "robointer_droid_000002",
+      "robointer_droid_000003",
+      "robointer_droid_000004",
+      "robointer_droid_000005",
+      "robointer_droid_000006",
+      "robointer_droid_000007",
+      "robointer_droid_000008",
+      "robointer_droid_000009",
+      "robointer_droid_000010",
+      "robointer_droid_000011",
+      "robointer_droid_000012",
+      "robointer_droid_000013",
+      "robointer_droid_000014",
+      "robointer_droid_000015",
+      "robointer_droid_000016",
+      "robointer_droid_000017",
+      "robointer_droid_000019",
+      "robointer_droid_000021",
+      "robointer_droid_000022",
+      "robointer_droid_000023",
+      "robointer_droid_000024",
+      "robointer_droid_000025",
+      "robointer_droid_000027",
+      "robointer_droid_000028",
+      "robointer_droid_000029",
+      "robointer_droid_000030",
+      "robointer_droid_000032",
+      "robointer_droid_000033",
+      "robointer_droid_000034",
+      "robointer_droid_000035",
+      "robointer_droid_000036",
+      "robointer_droid_000037",
+      "robointer_droid_000038",
+      "robointer_droid_000039",
+      "robointer_droid_000042",
+      "robointer_droid_000043",
+      "robointer_droid_000044",
+      "robointer_droid_000045",
+      "robointer_droid_000046",
+      "robointer_droid_000047",
+      "robointer_droid_000050",
+      "robointer_droid_000055",
+      "robointer_droid_000056",
+      "robointer_droid_000057",
+      "robointer_droid_000058",
+      "robointer_droid_000059",
+      "robointer_droid_000060",
+      "robointer_droid_000061",
+      "robointer_droid_000062"
+     ],
+     "per_episode_delta": {
+      "robointer_droid_000001": 0.057699999999999974,
+      "robointer_droid_000002": -0.008500000000000008,
+      "robointer_droid_000003": 0.12879999999999997,
+      "robointer_droid_000004": 0.058199999999999974,
+      "robointer_droid_000005": 0.029100000000000015,
+      "robointer_droid_000006": 0.03839999999999999,
+      "robointer_droid_000007": -0.30770000000000003,
+      "robointer_droid_000008": 0.06919999999999998,
+      "robointer_droid_000009": -0.04249999999999998,
+      "robointer_droid_000010": 0.15170000000000006,
+      "robointer_droid_000011": 0.11670000000000003,
+      "robointer_droid_000012": -0.3792,
+      "robointer_droid_000013": -0.10000000000000003,
+      "robointer_droid_000014": -0.3025,
+      "robointer_droid_000015": 0.0,
+      "robointer_droid_000016": 0.0,
+      "robointer_droid_000017": 0.0,
+      "robointer_droid_000019": 0.0,
+      "robointer_droid_000021": -0.16999999999999998,
+      "robointer_droid_000022": -0.13240000000000002,
+      "robointer_droid_000023": -0.0403,
+      "robointer_droid_000024": -0.12319999999999998,
+      "robointer_droid_000025": -0.11670000000000003,
+      "robointer_droid_000027": -0.10000000000000003,
+      "robointer_droid_000028": -0.11670000000000003,
+      "robointer_droid_000029": -0.08079999999999998,
+      "robointer_droid_000030": -0.23970000000000002,
+      "robointer_droid_000032": -0.06359999999999999,
+      "robointer_droid_000033": -0.07,
+      "robointer_droid_000034": 0.0,
+      "robointer_droid_000035": -0.06919999999999998,
+      "robointer_droid_000036": 0.0,
+      "robointer_droid_000037": 0.0,
+      "robointer_droid_000038": 0.0,
+      "robointer_droid_000039": 0.0,
+      "robointer_droid_000042": 0.0,
+      "robointer_droid_000043": -0.06919999999999998,
+      "robointer_droid_000044": 0.0,
+      "robointer_droid_000045": 0.11280000000000001,
+      "robointer_droid_000046": 0.3657,
+      "robointer_droid_000047": -0.022999999999999965,
+      "robointer_droid_000050": 0.09140000000000004,
+      "robointer_droid_000055": 0.0,
+      "robointer_droid_000056": 0.07,
+      "robointer_droid_000057": 0.0,
+      "robointer_droid_000058": 0.0,
+      "robointer_droid_000059": 0.0,
+      "robointer_droid_000060": 0.034499999999999975,
+      "robointer_droid_000061": -0.016199999999999992,
+      "robointer_droid_000062": 0.0
+     },
+     "non_regressing_fraction": 0.58,
+     "improved": 13,
+     "regressed": 21,
+     "mean_delta": -0.024943999999999997
+    },
+    "label_free": {
+     "candidate_self_score": 0.3928,
+     "incumbent_self_score": 0.4177,
+     "candidate_components": {
+      "telemetry_agreement": 0.1522,
+      "visual_verification": 0.1855,
+      "duration_variability": 0.8243,
+      "temporal_resolution": 1.0
+     },
+     "incumbent_components": {
+      "telemetry_agreement": 0.1884,
+      "visual_verification": 0.1847,
+      "duration_variability": 0.912,
+      "temporal_resolution": 1.0
+     }
+    },
+    "uncertainty": "n=50 episodes (same set for both versions); label-free proxy, not ground truth",
+    "candidate_usage": {
+     "calls": 128,
+     "cache_hits": 8,
+     "prompt_tokens": 205163,
+     "completion_tokens": 28587,
+     "cost_usd": 0.113863,
+     "model_latency_s": 259.85
+    },
+    "topology_change": false,
+    "rollback": "incumbent remains N001; candidate preserved as EXP-0002_rejected"
+   },
+   "shadow_gt": {
+    "candidate": {
+     "snapped_f1_075": 0.07375271149674621,
+     "raw_f1_075": 0.05206073752711497,
+     "snapped_f1_05": 0.19522776572668113,
+     "raw_f1_05": 0.19088937093275485,
+     "tp_snapped": 17,
+     "tp_raw": 12,
+     "tp05_snapped": 45,
+     "tp05_raw": 44,
+     "n_pred": 311,
+     "n_ref": 150,
+     "invalid_items": 0,
+     "empty_output_episodes": 0,
+     "mean_boundary_mae_sec": 4.69419561904762,
+     "episodes": 50,
+     "per_episode_snapped_f1": {
+      "robointer_droid_000001": 0.0,
+      "robointer_droid_000002": 0.0,
+      "robointer_droid_000003": 0.28571428571428575,
+      "robointer_droid_000004": 0.25,
+      "robointer_droid_000005": 0.4,
+      "robointer_droid_000006": 0.0,
+      "robointer_droid_000007": 0.0,
+      "robointer_droid_000008": 0.25,
+      "robointer_droid_000009": 0.0,
+      "robointer_droid_000010": 0.28571428571428575,
+      "robointer_droid_000011": 0.28571428571428575,
+      "robointer_droid_000012": 0.0,
+      "robointer_droid_000013": 0.25,
+      "robointer_droid_000014": 0.22222222222222224,
+      "robointer_droid_000015": 0.25,
+      "robointer_droid_000016": 0.28571428571428575,
+      "robointer_droid_000017": 0.0,
+      "robointer_droid_000019": 0.0,
+      "robointer_droid_000021": 0.0,
+      "robointer_droid_000022": 0.0,
+      "robointer_droid_000023": 0.0,
+      "robointer_droid_000024": 0.4,
+      "robointer_droid_000025": 0.25,
+      "robointer_droid_000027": 0.28571428571428575,
+      "robointer_droid_000028": 0.0,
+      "robointer_droid_000029": 0.0,
+      "robointer_droid_000030": 0.0,
+      "robointer_droid_000032": 0.0,
+      "robointer_droid_000033": 0.0,
+      "robointer_droid_000034": 0.0,
+      "robointer_droid_000035": 0.6666666666666666,
+      "robointer_droid_000036": 0.0,
+      "robointer_droid_000037": 0.0,
+      "robointer_droid_000038": 0.0,
+      "robointer_droid_000039": 0.2222222222222222,
+      "robointer_droid_000042": 0.0,
+      "robointer_droid_000043": 0.0,
+      "robointer_droid_000044": 0.28571428571428575,
+      "robointer_droid_000045": 0.0,
+      "robointer_droid_000046": 0.0,
+      "robointer_droid_000047": 0.0,
+      "robointer_droid_000050": 0.1,
+      "robointer_droid_000055": 0.0,
+      "robointer_droid_000056": 0.0,
+      "robointer_droid_000057": 0.0,
+      "robointer_droid_000058": 0.0,
+      "robointer_droid_000059": 0.0,
+      "robointer_droid_000060": 0.0,
+      "robointer_droid_000061": 0.0,
+      "robointer_droid_000062": 0.0
+     }
+    },
+    "incumbent": {
+     "snapped_f1_075": 0.07659574468085106,
+     "raw_f1_075": 0.0425531914893617,
+     "snapped_f1_05": 0.17872340425531916,
+     "raw_f1_05": 0.16595744680851063,
+     "tp_snapped": 18,
+     "tp_raw": 10,
+     "tp05_snapped": 42,
+     "tp05_raw": 39,
+     "n_pred": 320,
+     "n_ref": 150,
+     "invalid_items": 0,
+     "empty_output_episodes": 0,
+     "mean_boundary_mae_sec": 4.997204190476191,
+     "episodes": 50,
+     "per_episode_snapped_f1": {
+      "robointer_droid_000001": 0.25,
+      "robointer_droid_000002": 0.0,
+      "robointer_droid_000003": 0.0,
+      "robointer_droid_000004": 0.0,
+      "robointer_droid_000005": 0.4,
+      "robointer_droid_000006": 0.0,
+      "robointer_droid_000007": 0.25,
+      "robointer_droid_000008": 0.0,
+      "robointer_droid_000009": 0.0,
+      "robointer_droid_000010": 0.25,
+      "robointer_droid_000011": 0.0,
+      "robointer_droid_000012": 0.2222222222222222,
+      "robointer_droid_000013": 0.22222222222222224,
+      "robointer_droid_000014": 0.28571428571428575,
+      "robointer_droid_000015": 0.25,
+      "robointer_droid_000016": 0.28571428571428575,
+      "robointer_droid_000017": 0.0,
+      "robointer_droid_000019": 0.28571428571428575,
+      "robointer_droid_000021": 0.25,
+      "robointer_droid_000022": 0.28571428571428575,
+      "robointer_droid_000023": 0.0,
+      "robointer_droid_000024": 0.28571428571428575,
+      "robointer_droid_000025": 0.0,
+      "robointer_droid_000027": 0.28571428571428575,
+      "robointer_droid_000028": 0.1818181818181818,
+      "robointer_droid_000029": 0.0,
+      "robointer_droid_000030": 0.0,
+      "robointer_droid_000032": 0.0,
+      "robointer_droid_000033": 0.0,
+      "robointer_droid_000034": 0.0,
+      "robointer_droid_000035": 0.0,
+      "robointer_droid_000036": 0.0,
+      "robointer_droid_000037": 0.0,
+      "robointer_droid_000038": 0.0,
+      "robointer_droid_000039": 0.0,
+      "robointer_droid_000042": 0.25,
+      "robointer_droid_000043": 0.2,
+      "robointer_droid_000044": 0.28571428571428575,
+      "robointer_droid_000045": 0.0,
+      "robointer_droid_000046": 0.0,
+      "robointer_droid_000047": 0.0,
+      "robointer_droid_000050": 0.0,
+      "robointer_droid_000055": 0.0,
+      "robointer_droid_000056": 0.0,
+      "robointer_droid_000057": 0.0,
+      "robointer_droid_000058": 0.0,
+      "robointer_droid_000059": 0.0,
+      "robointer_droid_000060": 0.0,
+      "robointer_droid_000061": 0.0,
+      "robointer_droid_000062": 0.0
+     }
+    }
+   },
+   "recursion_cost": {
+    "by_role": {
+     "nemotron": {
+      "calls": 7,
+      "cache_hits": 0,
+      "cost_usd": 0.029641,
+      "prompt_tokens": 29725,
+      "completion_tokens": 8635
+     },
+     "vision": {
+      "calls": 265,
+      "cache_hits": 143,
+      "cost_usd": 0.114317,
+      "prompt_tokens": 206090,
+      "completion_tokens": 28683
+     }
+    },
+    "total_cost_usd": 0.143958
+   }
+  }
+ ],
+ "task_tree": [
+  {
+   "id": "TASK-4f5cd89a53",
+   "parent_task_id": null,
+   "depth": 1,
+   "question": "Does the incumbent's prediction only use the first contact sheet (first ~10 seconds) and ignore later sheets, leading to uniformly spaced early boundaries?",
+   "evidence_ids": [
+    "SELF-d11a2b6c1b",
+    "EV-14124a72d4",
+    "EV-51217a1ec3",
+    "EV-ee5e77aaf7"
+   ],
+   "tools_allowed": [
+    "episode_predictions",
+    "telemetry_hints",
+    "sampling_coverage"
+   ],
+   "budget": {
+    "tool_requests": [
+     {
+      "tool": "episode_predictions",
+      "args": {
+       "episode_id": "robointer_droid_000006"
+      }
+     },
+     {
+      "tool": "telemetry_hints",
+      "args": {
+       "episode_id": "robointer_droid_000006",
+       "signals": [
+        "gripper"
+       ]
+      }
+     },
+     {
+      "tool": "sampling_coverage",
+      "args": {
+       "episode_id": "robointer_droid_000006",
+       "sampling_hz": 2.0
+      }
+     }
+    ],
+    "max_tool_rounds": 2,
+    "why": ""
+   },
+   "status": "done",
+   "result": {
+    "finding": "The incumbent's predictions stop after the first ~6 seconds (first contact sheet) and do not use later sheets, resulting in uniformly spaced early boundaries (1\u2011second intervals) while later telemetry events occur beyond the predicted range.",
+    "evidence_ids": [
+     "SELF-d11a2b6c1b",
+     "EV-14124a72d4",
+     "EV-51217a1ec3",
+     "EV-ee5e77aaf7"
+    ],
+    "confidence": 0.95,
+    "implication_for_workflow": "Increase the temporal horizon of sampling (e.g., raise frames_per_sheet or sampling duration) or modify the prompt to encourage the model to consider later contact sheets, so predictions can capture events beyond the first ~10 seconds.",
+    "call_id": "CALL-a81ce5a28c",
+    "uncited_ids_dropped": [],
+    "new_question_requests": []
+   },
+   "new_questions": [],
+   "model_used": "nvidia/NVIDIA-Nemotron-3-Super-120B-A12B",
+   "run_id": "RUN-6bcac461b3"
+  },
+  {
+   "id": "TASK-ea9fb0f42e",
+   "parent_task_id": null,
+   "depth": 1,
+   "question": "What visual content is present at the incumbent's predicted early boundaries versus at actual gripper events, and does the vision model detect a manipulation state change at those times?",
+   "evidence_ids": [
+    "SELF-d11a2b6c1b",
+    "EV-b8101a0ca9",
+    "EV-135c1c4533"
+   ],
+   "tools_allowed": [
+    "inspect_frames"
+   ],
+   "budget": {
+    "tool_requests": [
+     {
+      "tool": "inspect_frames",
+      "args": {
+       "episode_id": "robointer_droid_000006",
+       "center_sec": 2.0,
+       "window_sec": 2.0,
+       "local_hz": 5,
+       "question": "Is there a manipulation state change (e.g., gripper open/close, object placement) visible in this 2-second frame strip centered at 2.0 seconds?"
+      }
+     },
+     {
+      "tool": "inspect_frames",
+      "args": {
+       "episode_id": "robointer_droid_000006",
+       "center_sec": 6.5,
+       "window_sec": 2.0,
+       "local_hz": 5,
+       "question": "Is there a manipulation state change visible in this 2-second frame strip centered at the gripper close event at ~6.5 seconds?"
+      }
+     }
+    ],
+    "max_tool_rounds": 2,
+    "why": ""
+   },
+   "status": "done",
+   "result": {
+    "finding": "At the incumbent's predicted early boundaries (1.0\u20115.0\u202fs), the vision model detected a manipulation state change at ~2.0\u202fs (gripper closes on pen inside mug). At the actual gripper events (~6.5\u202fs and 12.3\u202fs), the vision model detected a manipulation state change at the first event (~6.5\u202fs, gripper closes around pen); no frame evidence was provided for the second event.",
+    "evidence_ids": [
+     "SELF-d11a2b6c1b",
+     "EV-b8101a0ca9",
+     "EV-135c1c4533"
+    ],
+    "confidence": 0.92,
+    "implication_for_workflow": "The model produces early boundary predictions that precede real gripper events but still flags manipulation changes (possible false positives). To improve alignment, consider tightening the prompt to require explicit gripper\u2011object contact, incorporating telemetry agreement as a filter, or reducing the sampling rate to avoid over\u2011segmentation.",
+    "call_id": "CALL-3b092a9e8a",
+    "uncited_ids_dropped": [],
+    "new_question_requests": []
+   },
+   "new_questions": [],
+   "model_used": "nvidia/NVIDIA-Nemotron-3-Super-120B-A12B",
+   "run_id": "RUN-6bcac461b3"
+  },
+  {
+   "id": "TASK-0eb525d8d7",
+   "parent_task_id": null,
+   "depth": 1,
+   "question": "Are the incumbent's predicted boundaries aligned with the uniform contact\u2011sheet sampling grid (e.g., 1\u2011second increments) rather than actual manipulation events?",
+   "evidence_ids": [
+    "SELF-a441541077",
+    "EV-6ec5794956",
+    "EV-e0e3309022"
+   ],
+   "tools_allowed": [
+    "episode_predictions",
+    "telemetry_hints"
+   ],
+   "budget": {
+    "tool_requests": [
+     {
+      "tool": "episode_predictions",
+      "args": {
+       "episode_id": "robointer_droid_000008"
+      }
+     },
+     {
+      "tool": "telemetry_hints",
+      "args": {
+       "episode_id": "robointer_droid_000008",
+       "signals": [
+        "gripper"
+       ]
+      }
+     }
+    ],
+    "max_tool_rounds": 2,
+    "why": ""
+   },
+   "status": "done",
+   "result": {
+    "finding": "The incumbent's predicted boundaries frequently align to a 1\u2011second uniform grid (e.g., [1.0,2.0,3.0,\u2026]) rather than to the actual manipulation events observed in telemetry, which occur at non\u2011integer times such as 7.9\u202fs and 13.7\u202fs.",
+    "evidence_ids": [
+     "SELF-a441541077",
+     "EV-e0e3309022"
+    ],
+    "confidence": 0.92,
+    "implication_for_workflow": "Increase temporal resolution of the annotation pipeline (e.g., raise local_hz in inspect_transition_windows, reduce min_gap_sec, or allow sub\u2011second boundary proposals) so that predicted boundaries can follow actual gripper events rather than being forced to the contact\u2011sheet grid.",
+    "call_id": "CALL-be1d57dc9f",
+    "uncited_ids_dropped": [],
+    "new_question_requests": []
+   },
+   "new_questions": [],
+   "model_used": "nvidia/NVIDIA-Nemotron-3-Super-120B-A12B",
+   "run_id": "RUN-6bcac461b3"
+  },
+  {
+   "id": "TASK-49b94671a0",
+   "parent_task_id": null,
+   "depth": 1,
+   "question": "Does the vision model confirm a manipulation state change at the incumbent's early predicted boundary (e.g., 2.0\u202fs)?",
+   "evidence_ids": [
+    "SELF-a441541077",
+    "EV-3cd4746874",
+    "EV-bb03224c18"
+   ],
+   "tools_allowed": [
+    "inspect_frames"
+   ],
+   "budget": {
+    "tool_requests": [
+     {
+      "tool": "inspect_frames",
+      "args": {
+       "episode_id": "robointer_droid_000008",
+       "center_sec": 2.0,
+       "window_sec": 2.0,
+       "local_hz": 4.0,
+       "question": "Does this 2\u2011second frame strip show a completed manipulation state change such as gripper open/close, object placement/release, or a tool starting/stopping a surface change?"
+      }
+     }
+    ],
+    "max_tool_rounds": 2,
+    "why": ""
+   },
+   "status": "done",
+   "result": {
+    "finding": "The vision model detects a completed manipulation state change (gripper open/close) at ~2.2\u202fs within the 2\u2011second window centered on the predicted boundary of 2.0\u202fs for episodes robointer_droid_000008 and robointer_droid_000006, with high visual confidence (0.95 and 0.90).",
+    "evidence_ids": [
+     "EV-3cd4746874",
+     "EV-bb03224c18"
+    ],
+    "confidence": 0.93,
+    "implication_for_workflow": "Consider lowering the confidence_threshold in inspect_transition_windows or using vision confirmation as a gate to accept early predicted boundaries, since the vision model reliably validates state changes near the 2.0\u202fs boundary.",
+    "call_id": "CALL-fc4ddb5ff3",
+    "uncited_ids_dropped": [],
+    "new_question_requests": []
+   },
+   "new_questions": [],
+   "model_used": "nvidia/NVIDIA-Nemotron-3-Super-120B-A12B",
+   "run_id": "RUN-6bcac461b3"
+  }
+ ],
+ "dispatch_decisions": [
+  {
+   "task_id": "TASK-4f5cd89a53",
+   "parent_task_id": null,
+   "depth": 1,
+   "question": "Does the incumbent's prediction only use the first contact sheet (first ~10 seconds) and ignore later sheets, leading to uniformly spaced early boundaries?",
+   "decision": "accepted"
+  },
+  {
+   "task_id": "TASK-ea9fb0f42e",
+   "parent_task_id": null,
+   "depth": 1,
+   "question": "What visual content is present at the incumbent's predicted early boundaries versus at actual gripper events, and does the vision model detect a manipulation state change at those times?",
+   "decision": "accepted"
+  },
+  {
+   "task_id": "TASK-0eb525d8d7",
+   "parent_task_id": null,
+   "depth": 1,
+   "question": "Are the incumbent's predicted boundaries aligned with the uniform contact\u2011sheet sampling grid (e.g., 1\u2011second increments) rather than actual manipulation events?",
+   "decision": "accepted"
+  },
+  {
+   "task_id": "TASK-49b94671a0",
+   "parent_task_id": null,
+   "depth": 1,
+   "question": "Does the vision model confirm a manipulation state change at the incumbent's early predicted boundary (e.g., 2.0\u202fs)?",
+   "decision": "accepted"
+  }
+ ],
+ "max_depth_reached": 1,
+ "task_status": {
+  "finished": [
+   "TASK-4f5cd89a53",
+   "TASK-ea9fb0f42e",
+   "TASK-0eb525d8d7",
+   "TASK-49b94671a0"
+  ],
+  "unfinished": [],
+  "not_dispatched": []
+ },
+ "evidence": {
+  "SELF-d11a2b6c1b": {
+   "id": "SELF-d11a2b6c1b",
+   "tool": "self_assessment",
+   "args": {
+    "version": "N0"
+   },
+   "result": {
+    "definition": "label-free-v1",
+    "mean_self_score": 0.3362,
+    "per_episode_self_score": {
+     "robointer_droid_000001": 0.25,
+     "robointer_droid_000002": 0.25,
+     "robointer_droid_000003": 0.3348,
+     "robointer_droid_000004": 0.311,
+     "robointer_droid_000005": 0.454,
+     "robointer_droid_000006": 0.15,
+     "robointer_droid_000007": 0.5849,
+     "robointer_droid_000008": 0.2308,
+     "robointer_droid_000009": 0.8061,
+     "robointer_droid_000010": 0.7115,
+     "robointer_droid_000011": 0.15,
+     "robointer_droid_000012": 0.5448,
+     "robointer_droid_000013": 0.25,
+     "robointer_droid_000014": 0.6192,
+     "robointer_droid_000015": 0.3515,
+     "robointer_droid_000016": 0.5042,
+     "robointer_droid_000017": 0.15,
+     "robointer_droid_000019": 0.2167,
+     "robointer_droid_000021": 0.4048,
+     "robointer_droid_000022": 0.3449,
+     "robointer_droid_000023": 0.3333,
+     "robointer_droid_000024": 0.5417,
+     "robointer_droid_000025": 0.3333,
+     "robointer_droid_000027": 0.3449,
+     "robointer_droid_000028": 0.2667,
+     "robointer_droid_000029": 0.4661,
+     "robointer_droid_000030": 0.634,
+     "robointer_droid_000032": 0.261,
+     "robointer_droid_000033": 0.2699,
+     "robointer_droid_000034": 0.15,
+     "robointer_droid_000035": 0.2449,
+     "robointer_droid_000036": 0.2577,
+     "robointer_droid_000037": 0.15,
+     "robointer_droid_000038": 0.29,
+     "robointer_droid_000039": 0.2349,
+     "robointer_droid_000042": 0.2553,
+     "robointer_droid_000043": 0.15,
+     "robointer_droid_000044": 0.15,
+     "robointer_droid_000045": 0.5317,
+     "robointer_droid_000046": 0.2958,
+     "robointer_droid_000047": 0.2,
+     "robointer_droid_000050": 0.206,
+     "robointer_droid_000055": 0.15,
+     "robointer_droid_000056": 0.2349,
+     "robointer_droid_000057": 0.3972,
+     "robointer_droid_000058": 0.5389,
+     "robointer_droid_000059": 0.37,
+     "robointer_droid_000060": 0.5117,
+     "robointer_droid_000061": 0.2699,
+     "robointer_droid_000062": 0.15
+    },
+    "component_means": {
+     "telemetry_agreement": 0.1884,
+     "visual_verification": 0.2,
+     "duration_variability": 0.3335,
+     "temporal_resolution": 1.0
+    },
+    "episodes": {
+     "robointer_droid_000001": {
+      "episode_id": "robointer_droid_000001",
+      "self_score": 0.25,
+      "component_values": {
+       "telemetry_agreement": 0.2857,
+       "visual_verification": 0.0,
+       "duration_variability": 0.0,
+       "temporal_resolution": 1.0
+      },
+      "components": {
+       "telemetry_agreement": {
+        "f1": 0.2857,
+        "precision": 0.2,
+        "recall": 0.5,
+        "gripper_events": 2,
+        "boundaries": 5
+       },
+       "visual_verification": {
+        "rate": 0.0,
+        "confirmed": 0,
+        "checked": 5,
+        "mean_offset_to_confirmed_change_sec": null
+       },
+       "duration_variability": {
+        "score": 0.0,
+        "cv": 0.0,
+        "n_segments": 6
+       },
+       "temporal_resolution": {
+        "score": 1.0,
+        "sub_resolution_segments": 0,
+        "min_resolvable_sec": 1.0
+       }
+      },
+      "n_segments": 6,
+      "predicted_boundaries": [
+       1.0,
+       2.0,
+       3.0,
+       4.0,
+       5.0
+      ],
+      "gripper_events": [
+       4.2,
+       9.2
+      ]
+     },
+     "robointer_droid_000002": {
+      "episode_id": "robointer_droid_000002",
+      "self_score": 0.25,
+      "component_values": {
+       "telemetry_agreement": 0.2857,
+       "visual_verification": 0.0,
+       "duration_variability": 0.0,
+       "temporal_resolution": 1.0
+      },
+      "components": {
+       "telemetry_agreement": {
+        "f1": 0.2857,
+        "precision": 0.2,
+        "recall": 0.5,
+        "gripper_events": 2,
+        "boundaries": 5
+       },
+       "visual_verification": {
+        "rate": 0.0,
+        "confirmed": 0,
+        "checked": 5,
+        "mean_offset_to_confirmed_change_sec": null
+       },
+       "duration_variability": {
+        "score": 0.0,
+        "cv": 0.0,
+        "n_segments": 6
+       },
+       "temporal_resolution": {
+        "score": 1.0,
+        "sub_resolution_segments": 0,
+        "min_resolvable_sec": 1.0
+       }
+      },
+      "n_segments": 6,
+      "predicted_boundaries": [
+       1.0,
+       2.0,
+       3.0,
+       4.0,
+       5.0
+      ],
+      "gripper_events": [
+       5.4,
+       10.3
+      ]
+     },
+     "robointer_droid_000003": {
+      "episode_id": "robointer_droid_000003",
+      "self_score": 0.3348,
+      "component_values": {
+       "telemetry_agreement": 0.2857,
+       "visual_verification": 0.0,
+       "duration_variability": 0.5657,
+       "temporal_resolution": 1.0
+      },
+      "components": {
+       "telemetry_agreement": {
+        "f1": 0.2857,
+        "precision": 0.2,
+        "recall": 0.5,
+        "gripper_events": 2,
+        "boundaries": 5
+       },
+       "visual_verification": {
+        "rate": 0.0,
+        "confirmed": 0,
+        "checked": 5,
+        "mean_offset_to_confirmed_change_sec": null
+       },
+       "duration_variability": {
+        "score": 0.5657,
+        "cv": 0.2828,
+        "n_segments": 6
+       },
+       "temporal_resolution": {
+        "score": 1.0,
+        "sub_resolution_segments": 0,
+        "min_resolvable_sec": 1.0
+       }
+      },
+      "n_segments": 6,
+      "predicted_boundaries": [
+       1.0,
+       2.0,
+       4.0,
+       6.0,
+       8.0
+      ],
+      "gripper_events": [
+       4.2,
+       9.2
+      ]
+     },
+     "robointer_droid_000004": {
+      "episode_id": "robointer_droid_000004",
+      "self_score": 0.311,
+      "component_values": {
+       "telemetry_agreement": 0.2857,
+       "visual_verification": 0.0,
+       "duration_variability": 0.4066,
+       "temporal_resolution": 1.0
+      },
+      "components": {
+       "telemetry_agreement": {
+        "f1": 0.2857,
+        "precision": 0.2,
+        "recall": 0.5,
+        "gripper_events": 2,
+        "boundaries": 5
+       },
+       "visual_verification": {
+        "rate": 0.0,
+        "confirmed": 0,
+        "checked": 5,
+        "mean_offset_to_confirmed_change_sec": null
+       },
+       "duration_variability": {
+        "score": 0.4066,
+        "cv": 0.2033,
+        "n_segments": 6
+       },
+       "temporal_resolution": {
+        "score": 1.0,
+        "sub_resolution_segments": 0,
+        "min_resolvable_sec": 1.0
+       }
+      },
+      "n_segments": 6,
+      "predicted_boundaries": [
+       1.0,
+       3.0,
+       5.0,
+       7.0,
+       9.0
+      ],
+      "gripper_events": [
+       5.4,
+       10.3
+      ]
+     },
+     "robointer_droid_000005": {
+      "episode_id": "robointer_droid_000005",
+      "self_score": 0.454,
+      "component_values": {
+       "telemetry_agreement": 0.0,
+       "visual_verification": 0.5,
+       "duration_variability": 0.8602,
+       "temporal_resolution": 1.0
+      },
+      "components": {
+       "telemetry_agreement": {
+        "f1": 0.0,
+        "precision": 0.0,
+        "recall": 0.0,
+        "gripper_events": 2,
+        "boundaries": 2
+       },
+       "visual_verification": {
+        "rate": 0.5,
+        "confirmed": 1,
+        "checked": 2,
+        "mean_offset_to_confirmed_change_sec": 0.0
+       },
+       "duration_variability": {
+        "score": 0.8602,
+        "cv": 0.4301,
+        "n_segments": 3
+       },
+       "temporal_resolution": {
+        "score": 1.0,
+        "sub_resolution_segments": 0,
+        "min_resolvable_sec": 1.0
+       }
+      },
+      "n_segments": 3,
+      "predicted_boundaries": [
+       5.0,
+       8.5
+      ],
+      "gripper_events": [
+       6.5,
+       12.3
+      ]
+     },
+     "robointer_droid_000006": {
+      "episode_id": "robointer_droid_000006",
+      "self_score": 0.15,
+      "component_values": {
+       "telemetry_agreement": 0.0,
+       "visual_verification": 0.0,
+       "duration_variability": 0.0,
+       "temporal_resolution": 1.0
+      },
+      "components": {
+       "telemetry_agreement": {
+        "f1": 0.0,
+        "precision": 0.0,
+        "recall": 0.0,
+        "gripper_events": 2,
+        "boundaries": 5
+       },
+       "visual_verification": {
+        "rate": 0.0,
+        "confirmed": 0,
+        "checked": 5,
+        "mean_offset_to_confirmed_change_sec": null
+       },
+       "duration_variability": {
+        "score": 0.0,
+        "cv": 0.0,
+        "n_segments": 6
+       },
+       "temporal_resolution": {
+        "score": 1.0,
+        "sub_resolution_segments": 0,
+        "min_resolvable_sec": 1.0
+       }
+      },
+      "n_segments": 6,
+      "predicted_boundaries": [
+       1.0,
+       2.0,
+       3.0,
+       4.0,
+       5.0
+      ],
+      "gripper_events": [
+       6.5,
+       12.3
+      ]
+     },
+     "robointer_droid_000007": {
+      "episode_id": "robointer_droid_000007",
+      "self_score": 0.5849,
+      "component_values": {
+       "telemetry_agreement": 0.0,
+       "visual_verification": 1.0,
+       "duration_variability": 0.5657,
+       "temporal_resolution": 1.0
+      },
+      "components": {
+       "telemetry_agreement": {
+        "f1": 0.0,
+        "precision": 0.0,
+        "recall": 0.0,
+        "gripper_events": 2,
+        "boundaries": 5
+       },
+       "visual_verification": {
+        "rate": 1.0,
+        "confirmed": 5,
+        "checked": 5,
+        "mean_offset_to_confirmed_change_sec": 0.0
+       },
+       "duration_variability": {
+        "score": 0.5657,
+        "cv": 0.2828,
+        "n_segments": 6
+       },
+       "temporal_resolution": {
+        "score": 1.0,
+        "sub_resolution_segments": 0,
+        "min_resolvable_sec": 1.0
+       }
+      },
+      "n_segments": 6,
+      "predicted_boundaries": [
+       1.0,
+       3.0,
+       5.0,
+       7.0,
+       9.0
+      ],
+      "gripper_events": [
+       7.9,
+       13.7
+      ]
+     },
+     "robointer_droid_000008": {
+      "episode_id": "robointer_droid_000008",
+      "self_score": 0.2308,
+      "component_values": {
+       "telemetry_agreement": 0.0,
+       "visual_verification": null,
+       "duration_variability": 0.0,
+       "temporal_resolution": 1.0
+      },
+      "components": {
+       "telemetry_agreement": {
+        "f1": 0.0,
+        "precision": 0.0,
+        "recall": 0.0,
+        "gripper_events": 2,
+        "boundaries": 0
+       },
+       "visual_verification": null,
+       "duration_variability": {
+        "score": 0.0,
+        "cv": 0.0,
+        "n_segments": 1
+       },
+       "temporal_resolution": {
+        "score": 1.0,
+        "sub_resolution_segments": 0,
+        "min_resolvable_sec": 1.0
+       }
+      },
+      "n_segments": 1,
+      "predicted_boundaries": [],
+      "gripper_events": [
+       7.9,
+       13.7
+      ]
+     },
+     "robointer_droid_000009": {
+      "episode_id": "robointer_droid_000009",
+      "self_score": 0.8061,
+      "component_values": {
+       "telemetry_agreement": 0.5,
+       "visual_verification": 1.0,
+       "duration_variability": 0.8743,
+       "temporal_resolution": 1.0
+      },
+      "components": {
+       "telemetry_agreement": {
+        "f1": 0.5,
+        "precision": 0.3333,
+        "recall": 1.0,
+        "gripper_events": 1,
+        "boundaries": 3
+       },
+       "visual_verification": {
+        "rate": 1.0,
+        "confirmed": 3,
+        "checked": 3,
+        "mean_offset_to_confirmed_change_sec": 0.0
+       },
+       "duration_variability": {
+        "score": 0.8743,
+        "cv": 0.4372,
+        "n_segments": 4
+       },
+       "temporal_resolution": {
+        "score": 1.0,
+        "sub_resolution_segments": 0,
+        "min_resolvable_sec": 1.0
+       }
+      },
+      "n_segments": 4,
+      "predicted_boundaries": [
+       1.0,
+       5.0,
+       10.0
+      ],
+      "gripper_events": [
+       5.0
+      ]
+     },
+     "robointer_droid_000010": {
+      "episode_id": "robointer_droid_000010",
+      "self_score": 0.7115,
+      "component_values": {
+       "telemetry_agreement": 0.3333,
+       "visual_verification": 1.0,
+       "duration_variability": 0.6325,
+       "temporal_resolution": 1.0
+      },
+      "components": {
+       "telemetry_agreement": {
+        "f1": 0.3333,
+        "precision": 0.25,
+        "recall": 0.5,
+        "gripper_events": 2,
+        "boundaries": 4
+       },
+       "visual_verification": {
+        "rate": 1.0,
+        "confirmed": 4,
+        "checked": 4,
+        "mean_offset_to_confirmed_change_sec": 0.0
+       },
+       "duration_variability": {
+        "score": 0.6325,
+        "cv": 0.3162,
+        "n_segments": 5
+       },
+       "temporal_resolution": {
+        "score": 1.0,
+        "sub_resolution_segments": 0,
+        "min_resolvable_sec": 1.0
+       }
+      },
+      "n_segments": 5,
+      "predicted_boundaries": [
+       1.0,
+       3.0,
+       6.0,
+       8.0
+      ],
+      "gripper_events": [
+       5.0,
+       8.1
+      ]
+     },
+     "robointer_droid_000011": {
+      "episode_id": "robointer_droid_000011",
+      "self_score": 0.15,
+      "component_values": {
+       "telemetry_agreement": 0.0,
+       "visual_verification": 0.0,
+       "duration_variability": 0.0,
+       "temporal_resolution": 1.0
+      },
+      "components": {
+       "telemetry_agreement": {
+        "f1": 0.0,
+        "precision": 0.0,
+        "recall": 0.0,
+        "gripper_events": 2,
+        "boundaries": 5
+       },
+       "visual_verification": {
+        "rate": 0.0,
+        "confirmed": 0,
+        "checked": 5,
+        "mean_offset_to_confirmed_change_sec": null
+       },
+       "duration_variability": {
+        "score": 0.0,
+        "cv": 0.0,
+        "n_segments": 6
+       },
+       "temporal_resolution": {
+        "score": 1.0,
+        "sub_resolution_segments": 0,
+        "min_resolvable_sec": 1.0
+       }
+      },
+      "n_segments": 6,
+      "predicted_boundaries": [
+       1.0,
+       2.0,
+       3.0,
+       4.0,
+       5.0
+      ],
+      "gripper_events": [
+       9.7,
+       16.1
+      ]
+     },
+     "robointer_droid_000012": {
+      "episode_id": "robointer_droid_000012",
+      "self_score": 0.5448,
+      "component_values": {
+       "telemetry_agreement": 0.2857,
+       "visual_verification": 0.6,
+       "duration_variability": 0.5657,
+       "temporal_resolution": 1.0
+      },
+      "components": {
+       "telemetry_agreement": {
+        "f1": 0.2857,
+        "precision": 0.2,
+        "recall": 0.5,
+        "gripper_events": 2,
+        "boundaries": 5
+       },
+       "visual_verification": {
+        "rate": 0.6,
+        "confirmed": 3,
+        "checked": 5,
+        "mean_offset_to_confirmed_change_sec": 0.0
+       },
+       "duration_variability": {
+        "score": 0.5657,
+        "cv": 0.2828,
+        "n_segments": 6
+       },
+       "temporal_resolution": {
+        "score": 1.0,
+        "sub_resolution_segments": 0,
+        "min_resolvable_sec": 1.0
+       }
+      },
+      "n_segments": 6,
+      "predicted_boundaries": [
+       1.0,
+       3.0,
+       5.0,
+       7.0,
+       9.0
+      ],
+      "gripper_events": [
+       5.0,
+       8.1
+      ]
+     },
+     "robointer_droid_000013": {
+      "episode_id": "robointer_droid_000013",
+      "self_score": 0.25,
+      "component_values": {
+       "telemetry_agreement": 0.2857,
+       "visual_verification": 0.0,
+       "duration_variability": 0.0,
+       "temporal_resolution": 1.0
+      },
+      "components": {
+       "telemetry_agreement": {
+        "f1": 0.2857,
+        "precision": 0.1667,
+        "recall": 1.0,
+        "gripper_events": 1,
+        "boundaries": 6
+       },
+       "visual_verification": {
+        "rate": 0.0,
+        "confirmed": 0,
+        "checked": 6,
+        "mean_offset_to_confirmed_change_sec": null
+       },
+       "duration_variability": {
+        "score": 0.0,
+        "cv": 0.0,
+        "n_segments": 7
+       },
+       "temporal_resolution": {
+        "score": 1.0,
+        "sub_resolution_segments": 0,
+        "min_resolvable_sec": 1.0
+       }
+      },
+      "n_segments": 7,
+      "predicted_boundaries": [
+       1.0,
+       2.0,
+       3.0,
+       4.0,
+       5.0,
+       6.0
+      ],
+      "gripper_events": [
+       6.5
+      ]
+     },
+     "robointer_droid_000014": {
+      "episode_id": "robointer_droid_000014",
+      "self_score": 0.6192,
+      "component_values": {
+       "telemetry_agreement": 0.4,
+       "visual_verification": 0.75,
+       "duration_variability": 0.4444,
+       "temporal_resolution": 1.0
+      },
+      "components": {
+       "telemetry_agreement": {
+        "f1": 0.4,
+        "precision": 0.25,
+        "recall": 1.0,
+        "gripper_events": 1,
+        "boundaries": 4
+       },
+       "visual_verification": {
+        "rate": 0.75,
+        "confirmed": 3,
+        "checked": 4,
+        "mean_offset_to_confirmed_change_sec": 0.0
+       },
+       "duration_variability": {
+        "score": 0.4444,
+        "cv": 0.2222,
+        "n_segments": 5
+       },
+       "temporal_resolution": {
+        "score": 1.0,
+        "sub_resolution_segments": 0,
+        "min_resolvable_sec": 1.0
+       }
+      },
+      "n_segments": 5,
+      "predicted_boundaries": [
+       1.0,
+       3.0,
+       5.0,
+       7.0
+      ],
+      "gripper_events": [
+       5.0
+      ]
+     },
+     "robointer_droid_000015": {
+      "episode_id": "robointer_droid_000015",
+      "self_score": 0.3515,
+      "component_values": {
+       "telemetry_agreement": 0.3333,
+       "visual_verification": 0.0,
+       "duration_variability": 0.5657,
+       "temporal_resolution": 1.0
+      },
+      "components": {
+       "telemetry_agreement": {
+        "f1": 0.3333,
+        "precision": 0.2,
+        "recall": 1.0,
+        "gripper_events": 1,
+        "boundaries": 5
+       },
+       "visual_verification": {
+        "rate": 0.0,
+        "confirmed": 0,
+        "checked": 5,
+        "mean_offset_to_confirmed_change_sec": null
+       },
+       "duration_variability": {
+        "score": 0.5657,
+        "cv": 0.2828,
+        "n_segments": 6
+       },
+       "temporal_resolution": {
+        "score": 1.0,
+        "sub_resolution_segments": 0,
+        "min_resolvable_sec": 1.0
+       }
+      },
+      "n_segments": 6,
+      "predicted_boundaries": [
+       1.0,
+       3.0,
+       5.0,
+       7.0,
+       9.0
+      ],
+      "gripper_events": [
+       6.5
+      ]
+     },
+     "robointer_droid_000016": {
+      "episode_id": "robointer_droid_000016",
+      "self_score": 0.5042,
+      "component_values": {
+       "telemetry_agreement": 0.3333,
+       "visual_verification": 0.25,
+       "duration_variability": 1.0,
+       "temporal_resolution": 1.0
+      },
+      "components": {
+       "telemetry_agreement": {
+        "f1": 0.3333,
+        "precision": 0.25,
+        "recall": 0.5,
+        "gripper_events": 2,
+        "boundaries": 4
+       },
+       "visual_verification": {
+        "rate": 0.25,
+        "confirmed": 1,
+        "checked": 4,
+        "mean_offset_to_confirmed_change_sec": 0.0
+       },
+       "duration_variability": {
+        "score": 1.0,
+        "cv": 0.5214,
+        "n_segments": 5
+       },
+       "temporal_resolution": {
+        "score": 1.0,
+        "sub_resolution_segments": 0,
+        "min_resolvable_sec": 1.0
+       }
+      },
+      "n_segments": 5,
+      "predicted_boundaries": [
+       1.0,
+       5.0,
+       10.0,
+       15.0
+      ],
+      "gripper_events": [
+       9.7,
+       16.1
+      ]
+     },
+     "robointer_droid_000017": {
+      "episode_id": "robointer_droid_000017",
+      "self_score": 0.15,
+      "component_values": {
+       "telemetry_agreement": 0.0,
+       "visual_verification": 0.0,
+       "duration_variability": 0.0,
+       "temporal_resolution": 1.0
+      },
+      "components": {
+       "telemetry_agreement": {
+        "f1": 0.0,
+        "precision": 0.0,
+        "recall": 0.0,
+        "gripper_events": 2,
+        "boundaries": 5
+       },
+       "visual_verification": {
+        "rate": 0.0,
+        "confirmed": 0,
+        "checked": 5,
+        "mean_offset_to_confirmed_change_sec": null
+       },
+       "duration_variability": {
+        "score": 0.0,
+        "cv": 0.0,
+        "n_segments": 6
+       },
+       "temporal_resolution": {
+        "score": 1.0,
+        "sub_resolution_segments": 0,
+        "min_resolvable_sec": 1.0
+       }
+      },
+      "n_segments": 6,
+      "predicted_boundaries": [
+       1.0,
+       2.0,
+       3.0,
+       4.0,
+       5.0
+      ],
+      "gripper_events": [
+       6.2,
+       14.3
+      ]
+     },
+     "robointer_droid_000019": {
+      "episode_id": "robointer_droid_000019",
+      "self_score": 0.2167,
+      "component_values": {
+       "telemetry_agreement": 0.0,
+       "visual_verification": 0.0,
+       "duration_variability": 0.4444,
+       "temporal_resolution": 1.0
+      },
+      "components": {
+       "telemetry_agreement": {
+        "f1": 0.0,
+        "precision": 0.0,
+        "recall": 0.0,
+        "gripper_events": 2,
+        "boundaries": 4
+       },
+       "visual_verification": {
+        "rate": 0.0,
+        "confirmed": 0,
+        "checked": 4,
+        "mean_offset_to_confirmed_change_sec": null
+       },
+       "duration_variability": {
+        "score": 0.4444,
+        "cv": 0.2222,
+        "n_segments": 5
+       },
+       "temporal_resolution": {
+        "score": 1.0,
+        "sub_resolution_segments": 0,
+        "min_resolvable_sec": 1.0
+       }
+      },
+      "n_segments": 5,
+      "predicted_boundaries": [
+       1.0,
+       3.0,
+       5.0,
+       7.0
+      ],
+      "gripper_events": [
+       6.2,
+       14.3
+      ]
+     },
+     "robointer_droid_000021": {
+      "episode_id": "robointer_droid_000021",
+      "self_score": 0.4048,
+      "component_values": {
+       "telemetry_agreement": 0.2857,
+       "visual_verification": 0.2,
+       "duration_variability": 0.5657,
+       "temporal_resolution": 1.0
+      },
+      "components": {
+       "telemetry_agreement": {
+        "f1": 0.2857,
+        "precision": 0.2,
+        "recall": 0.5,
+        "gripper_events": 2,
+        "boundaries": 5
+       },
+       "visual_verification": {
+        "rate": 0.2,
+        "confirmed": 1,
+        "checked": 5,
+        "mean_offset_to_confirmed_change_sec": 0.0
+       },
+       "duration_variability": {
+        "score": 0.5657,
+        "cv": 0.2828,
+        "n_segments": 6
+       },
+       "temporal_resolution": {
+        "score": 1.0,
+        "sub_resolution_segments": 0,
+        "min_resolvable_sec": 1.0
+       }
+      },
+      "n_segments": 6,
+      "predicted_boundaries": [
+       1.0,
+       3.0,
+       5.0,
+       7.0,
+       9.0
+      ],
+      "gripper_events": [
+       9.0,
+       15.2
+      ]
+     },
+     "robointer_droid_000022": {
+      "episode_id": "robointer_droid_000022",
+      "self_score": 0.3449,
+      "component_values": {
+       "telemetry_agreement": 0.2857,
+       "visual_verification": 0.0,
+       "duration_variability": 0.6325,
+       "temporal_resolution": 1.0
+      },
+      "components": {
+       "telemetry_agreement": {
+        "f1": 0.2857,
+        "precision": 0.25,
+        "recall": 0.3333,
+        "gripper_events": 3,
+        "boundaries": 4
+       },
+       "visual_verification": {
+        "rate": 0.0,
+        "confirmed": 0,
+        "checked": 4,
+        "mean_offset_to_confirmed_change_sec": null
+       },
+       "duration_variability": {
+        "score": 0.6325,
+        "cv": 0.3162,
+        "n_segments": 5
+       },
+       "temporal_resolution": {
+        "score": 1.0,
+        "sub_resolution_segments": 0,
+        "min_resolvable_sec": 1.0
+       }
+      },
+      "n_segments": 5,
+      "predicted_boundaries": [
+       1.0,
+       3.0,
+       6.0,
+       8.0
+      ],
+      "gripper_events": [
+       7.8,
+       14.2,
+       17.6
+      ]
+     },
+     "robointer_droid_000023": {
+      "episode_id": "robointer_droid_000023",
+      "self_score": 0.3333,
+      "component_values": {
+       "telemetry_agreement": 0.3333,
+       "visual_verification": 0.0,
+       "duration_variability": 0.4444,
+       "temporal_resolution": 1.0
+      },
+      "components": {
+       "telemetry_agreement": {
+        "f1": 0.3333,
+        "precision": 0.25,
+        "recall": 0.5,
+        "gripper_events": 2,
+        "boundaries": 4
+       },
+       "visual_verification": {
+        "rate": 0.0,
+        "confirmed": 0,
+        "checked": 4,
+        "mean_offset_to_confirmed_change_sec": null
+       },
+       "duration_variability": {
+        "score": 0.4444,
+        "cv": 0.2222,
+        "n_segments": 5
+       },
+       "temporal_resolution": {
+        "score": 1.0,
+        "sub_resolution_segments": 0,
+        "min_resolvable_sec": 1.0
+       }
+      },
+      "n_segments": 5,
+      "predicted_boundaries": [
+       1.0,
+       3.0,
+       5.0,
+       7.0
+      ],
+      "gripper_events": [
+       6.9,
+       16.7
+      ]
+     },
+     "robointer_droid_000024": {
+      "episode_id": "robointer_droid_000024",
+      "self_score": 0.5417,
+      "component_values": {
+       "telemetry_agreement": 0.3333,
+       "visual_verification": 0.5,
+       "duration_variability": 0.6667,
+       "temporal_resolution": 1.0
+      },
+      "components": {
+       "telemetry_agreement": {
+        "f1": 0.3333,
+        "precision": 0.25,
+        "recall": 0.5,
+        "gripper_events": 2,
+        "boundaries": 4
+       },
+       "visual_verification": {
+        "rate": 0.5,
+        "confirmed": 2,
+        "checked": 4,
+        "mean_offset_to_confirmed_change_sec": 0.15
+       },
+       "duration_variability": {
+        "score": 0.6667,
+        "cv": 0.3333,
+        "n_segments": 5
+       },
+       "temporal_resolution": {
+        "score": 1.0,
+        "sub_resolution_segments": 0,
+        "min_resolvable_sec": 1.0
+       }
+      },
+      "n_segments": 5,
+      "predicted_boundaries": [
+       3.0,
+       5.0,
+       10.0,
+       15.0
+      ],
+      "gripper_events": [
+       9.0,
+       15.2
+      ]
+     },
+     "robointer_droid_000025": {
+      "episode_id": "robointer_droid_000025",
+      "self_score": 0.3333,
+      "component_values": {
+       "telemetry_agreement": 0.3333,
+       "visual_verification": 0.0,
+       "duration_variability": 0.4444,
+       "temporal_resolution": 1.0
+      },
+      "components": {
+       "telemetry_agreement": {
+        "f1": 0.3333,
+        "precision": 0.25,
+        "recall": 0.5,
+        "gripper_events": 2,
+        "boundaries": 4
+       },
+       "visual_verification": {
+        "rate": 0.0,
+        "confirmed": 0,
+        "checked": 4,
+        "mean_offset_to_confirmed_change_sec": null
+       },
+       "duration_variability": {
+        "score": 0.4444,
+        "cv": 0.2222,
+        "n_segments": 5
+       },
+       "temporal_resolution": {
+        "score": 1.0,
+        "sub_resolution_segments": 0,
+        "min_resolvable_sec": 1.0
+       }
+      },
+      "n_segments": 5,
+      "predicted_boundaries": [
+       1.0,
+       3.0,
+       5.0,
+       7.0
+      ],
+      "gripper_events": [
+       6.9,
+       16.7
+      ]
+     },
+     "robointer_droid_000027": {
+      "episode_id": "robointer_droid_000027",
+      "self_score": 0.3449,
+      "component_values": {
+       "telemetry_agreement": 0.2857,
+       "visual_verification": 0.0,
+       "duration_variability": 0.6325,
+       "temporal_resolution": 1.0
+      },
+      "components": {
+       "telemetry_agreement": {
+        "f1": 0.2857,
+        "precision": 0.25,
+        "recall": 0.3333,
+        "gripper_events": 3,
+        "boundaries": 4
+       },
+       "visual_verification": {
+        "rate": 0.0,
+        "confirmed": 0,
+        "checked": 4,
+        "mean_offset_to_confirmed_change_sec": null
+       },
+       "duration_variability": {
+        "score": 0.6325,
+        "cv": 0.3162,
+        "n_segments": 5
+       },
+       "temporal_resolution": {
+        "score": 1.0,
+        "sub_resolution_segments": 0,
+        "min_resolvable_sec": 1.0
+       }
+      },
+      "n_segments": 5,
+      "predicted_boundaries": [
+       1.0,
+       3.0,
+       5.0,
+       8.0
+      ],
+      "gripper_events": [
+       7.8,
+       14.2,
+       17.6
+      ]
+     },
+     "robointer_droid_000028": {
+      "episode_id": "robointer_droid_000028",
+      "self_score": 0.2667,
+      "component_values": {
+       "telemetry_agreement": 0.3333,
+       "visual_verification": 0.0,
+       "duration_variability": 0.0,
+       "temporal_resolution": 1.0
+      },
+      "components": {
+       "telemetry_agreement": {
+        "f1": 0.3333,
+        "precision": 0.25,
+        "recall": 0.5,
+        "gripper_events": 2,
+        "boundaries": 8
+       },
+       "visual_verification": {
+        "rate": 0.0,
+        "confirmed": 0,
+        "checked": 8,
+        "mean_offset_to_confirmed_change_sec": null
+       },
+       "duration_variability": {
+        "score": 0.0,
+        "cv": 0.0,
+        "n_segments": 9
+       },
+       "temporal_resolution": {
+        "score": 1.0,
+        "sub_resolution_segments": 0,
+        "min_resolvable_sec": 1.0
+       }
+      },
+      "n_segments": 9,
+      "predicted_boundaries": [
+       1.0,
+       2.0,
+       3.0,
+       4.0,
+       5.0,
+       6.0,
+       7.0,
+       8.0
+      ],
+      "gripper_events": [
+       7.6,
+       16.9
+      ]
+     },
+     "robointer_droid_000029": {
+      "episode_id": "robointer_droid_000029",
+      "self_score": 0.4661,
+      "component_values": {
+       "telemetry_agreement": 0.3333,
+       "visual_verification": 0.5,
+       "duration_variability": 0.1633,
+       "temporal_resolution": 1.0
+      },
+      "components": {
+       "telemetry_agreement": {
+        "f1": 0.3333,
+        "precision": 0.5,
+        "recall": 0.25,
+        "gripper_events": 4,
+        "boundaries": 2
+       },
+       "visual_verification": {
+        "rate": 0.5,
+        "confirmed": 1,
+        "checked": 2,
+        "mean_offset_to_confirmed_change_sec": 0.0
+       },
+       "duration_variability": {
+        "score": 0.1633,
+        "cv": 0.0816,
+        "n_segments": 3
+       },
+       "temporal_resolution": {
+        "score": 1.0,
+        "sub_resolution_segments": 0,
+        "min_resolvable_sec": 1.0
+       }
+      },
+      "n_segments": 3,
+      "predicted_boundaries": [
+       5.5,
+       10.0
+      ],
+      "gripper_events": [
+       10.0,
+       12.6,
+       13.5,
+       22.9
+      ]
+     },
+     "robointer_droid_000030": {
+      "episode_id": "robointer_droid_000030",
+      "self_score": 0.634,
+      "component_values": {
+       "telemetry_agreement": 0.25,
+       "visual_verification": 1.0,
+       "duration_variability": 0.3103,
+       "temporal_resolution": 1.0
+      },
+      "components": {
+       "telemetry_agreement": {
+        "f1": 0.25,
+        "precision": 0.25,
+        "recall": 0.25,
+        "gripper_events": 4,
+        "boundaries": 4
+       },
+       "visual_verification": {
+        "rate": 1.0,
+        "confirmed": 4,
+        "checked": 4,
+        "mean_offset_to_confirmed_change_sec": 0.0
+       },
+       "duration_variability": {
+        "score": 0.3103,
+        "cv": 0.1552,
+        "n_segments": 5
+       },
+       "temporal_resolution": {
+        "score": 1.0,
+        "sub_resolution_segments": 0,
+        "min_resolvable_sec": 1.0
+       }
+      },
+      "n_segments": 5,
+      "predicted_boundaries": [
+       5.0,
+       10.0,
+       15.0,
+       20.0
+      ],
+      "gripper_events": [
+       10.0,
+       12.6,
+       13.5,
+       22.9
+      ]
+     },
+     "robointer_droid_000032": {
+      "episode_id": "robointer_droid_000032",
+      "self_score": 0.261,
+      "component_values": {
+       "telemetry_agreement": 0.1818,
+       "visual_verification": 0.0,
+       "duration_variability": 0.3158,
+       "temporal_resolution": 1.0
+      },
+      "components": {
+       "telemetry_agreement": {
+        "f1": 0.1818,
+        "precision": 0.1111,
+        "recall": 0.5,
+        "gripper_events": 2,
+        "boundaries": 9
+       },
+       "visual_verification": {
+        "rate": 0.0,
+        "confirmed": 0,
+        "checked": 8,
+        "mean_offset_to_confirmed_change_sec": null
+       },
+       "duration_variability": {
+        "score": 0.3158,
+        "cv": 0.1579,
+        "n_segments": 10
+       },
+       "temporal_resolution": {
+        "score": 1.0,
+        "sub_resolution_segments": 0,
+        "min_resolvable_sec": 1.0
+       }
+      },
+      "n_segments": 10,
+      "predicted_boundaries": [
+       1.0,
+       3.0,
+       5.0,
+       7.0,
+       9.0,
+       11.0,
+       13.0,
+       15.0,
+       17.0
+      ],
+      "gripper_events": [
+       11.3,
+       25.4
+      ]
+     },
+     "robointer_droid_000033": {
+      "episode_id": "robointer_droid_000033",
+      "self_score": 0.2699,
+      "component_values": {
+       "telemetry_agreement": 0.2,
+       "visual_verification": 0.0,
+       "duration_variability": 0.3328,
+       "temporal_resolution": 1.0
+      },
+      "components": {
+       "telemetry_agreement": {
+        "f1": 0.2,
+        "precision": 0.125,
+        "recall": 0.5,
+        "gripper_events": 2,
+        "boundaries": 8
+       },
+       "visual_verification": {
+        "rate": 0.0,
+        "confirmed": 0,
+        "checked": 8,
+        "mean_offset_to_confirmed_change_sec": null
+       },
+       "duration_variability": {
+        "score": 0.3328,
+        "cv": 0.1664,
+        "n_segments": 9
+       },
+       "temporal_resolution": {
+        "score": 1.0,
+        "sub_resolution_segments": 0,
+        "min_resolvable_sec": 1.0
+       }
+      },
+      "n_segments": 9,
+      "predicted_boundaries": [
+       1.0,
+       3.0,
+       5.0,
+       7.0,
+       9.0,
+       11.0,
+       13.0,
+       15.0
+      ],
+      "gripper_events": [
+       11.3,
+       25.4
+      ]
+     },
+     "robointer_droid_000034": {
+      "episode_id": "robointer_droid_000034",
+      "self_score": 0.15,
+      "component_values": {
+       "telemetry_agreement": 0.0,
+       "visual_verification": 0.0,
+       "duration_variability": 0.0,
+       "temporal_resolution": 1.0
+      },
+      "components": {
+       "telemetry_agreement": {
+        "f1": 0.0,
+        "precision": 0.0,
+        "recall": 0.0,
+        "gripper_events": 2,
+        "boundaries": 7
+       },
+       "visual_verification": {
+        "rate": 0.0,
+        "confirmed": 0,
+        "checked": 7,
+        "mean_offset_to_confirmed_change_sec": null
+       },
+       "duration_variability": {
+        "score": 0.0,
+        "cv": 0.0,
+        "n_segments": 8
+       },
+       "temporal_resolution": {
+        "score": 1.0,
+        "sub_resolution_segments": 0,
+        "min_resolvable_sec": 1.0
+       }
+      },
+      "n_segments": 8,
+      "predicted_boundaries": [
+       1.0,
+       2.0,
+       3.0,
+       4.0,
+       5.0,
+       6.0,
+       7.0
+      ],
+      "gripper_events": [
+       19.1,
+       27.1
+      ]
+     },
+     "robointer_droid_000035": {
+      "episode_id": "robointer_droid_000035",
+      "self_score": 0.2449,
+      "component_values": {
+       "telemetry_agreement": 0.0,
+       "visual_verification": 0.0,
+       "duration_variability": 0.6325,
+       "temporal_resolution": 1.0
+      },
+      "components": {
+       "telemetry_agreement": {
+        "f1": 0.0,
+        "precision": 0.0,
+        "recall": 0.0,
+        "gripper_events": 2,
+        "boundaries": 4
+       },
+       "visual_verification": {
+        "rate": 0.0,
+        "confirmed": 0,
+        "checked": 4,
+        "mean_offset_to_confirmed_change_sec": null
+       },
+       "duration_variability": {
+        "score": 0.6325,
+        "cv": 0.3162,
+        "n_segments": 5
+       },
+       "temporal_resolution": {
+        "score": 1.0,
+        "sub_resolution_segments": 0,
+        "min_resolvable_sec": 1.0
+       }
+      },
+      "n_segments": 5,
+      "predicted_boundaries": [
+       1.0,
+       3.0,
+       5.0,
+       8.0
+      ],
+      "gripper_events": [
+       19.1,
+       27.1
+      ]
+     },
+     "robointer_droid_000036": {
+      "episode_id": "robointer_droid_000036",
+      "self_score": 0.2577,
+      "component_values": {
+       "telemetry_agreement": 0.3077,
+       "visual_verification": 0.0,
+       "duration_variability": 0.0,
+       "temporal_resolution": 1.0
+      },
+      "components": {
+       "telemetry_agreement": {
+        "f1": 0.3077,
+        "precision": 0.2222,
+        "recall": 0.5,
+        "gripper_events": 2,
+        "boundaries": 9
+       },
+       "visual_verification": {
+        "rate": 0.0,
+        "confirmed": 0,
+        "checked": 8,
+        "mean_offset_to_confirmed_change_sec": null
+       },
+       "duration_variability": {
+        "score": 0.0,
+        "cv": 0.0,
+        "n_segments": 10
+       },
+       "temporal_resolution": {
+        "score": 1.0,
+        "sub_resolution_segments": 0,
+        "min_resolvable_sec": 1.0
+       }
+      },
+      "n_segments": 10,
+      "predicted_boundaries": [
+       1.0,
+       2.0,
+       3.0,
+       4.0,
+       5.0,
+       6.0,
+       7.0,
+       8.0,
+       9.0
+      ],
+      "gripper_events": [
+       5.7,
+       26.8
+      ]
+     },
+     "robointer_droid_000037": {
+      "episode_id": "robointer_droid_000037",
+      "self_score": 0.15,
+      "component_values": {
+       "telemetry_agreement": 0.0,
+       "visual_verification": 0.0,
+       "duration_variability": 0.0,
+       "temporal_resolution": 1.0
+      },
+      "components": {
+       "telemetry_agreement": {
+        "f1": 0.0,
+        "precision": 0.0,
+        "recall": 0.0,
+        "gripper_events": 4,
+        "boundaries": 5
+       },
+       "visual_verification": {
+        "rate": 0.0,
+        "confirmed": 0,
+        "checked": 5,
+        "mean_offset_to_confirmed_change_sec": null
+       },
+       "duration_variability": {
+        "score": 0.0,
+        "cv": 0.0,
+        "n_segments": 6
+       },
+       "temporal_resolution": {
+        "score": 1.0,
+        "sub_resolution_segments": 0,
+        "min_resolvable_sec": 1.0
+       }
+      },
+      "n_segments": 6,
+      "predicted_boundaries": [
+       1.0,
+       2.0,
+       3.0,
+       4.0,
+       5.0
+      ],
+      "gripper_events": [
+       10.8,
+       19.7,
+       20.6,
+       27.5
+      ]
+     },
+     "robointer_droid_000038": {
+      "episode_id": "robointer_droid_000038",
+      "self_score": 0.29,
+      "component_values": {
+       "telemetry_agreement": 0.4,
+       "visual_verification": 0.0,
+       "duration_variability": 0.0,
+       "temporal_resolution": 1.0
+      },
+      "components": {
+       "telemetry_agreement": {
+        "f1": 0.4,
+        "precision": 0.3333,
+        "recall": 0.5,
+        "gripper_events": 2,
+        "boundaries": 6
+       },
+       "visual_verification": {
+        "rate": 0.0,
+        "confirmed": 0,
+        "checked": 6,
+        "mean_offset_to_confirmed_change_sec": null
+       },
+       "duration_variability": {
+        "score": 0.0,
+        "cv": 0.0,
+        "n_segments": 7
+       },
+       "temporal_resolution": {
+        "score": 1.0,
+        "sub_resolution_segments": 0,
+        "min_resolvable_sec": 1.0
+       }
+      },
+      "n_segments": 7,
+      "predicted_boundaries": [
+       1.0,
+       2.0,
+       3.0,
+       4.0,
+       5.0,
+       6.0
+      ],
+      "gripper_events": [
+       5.7,
+       26.8
+      ]
+     },
+     "robointer_droid_000039": {
+      "episode_id": "robointer_droid_000039",
+      "self_score": 0.2349,
+      "component_values": {
+       "telemetry_agreement": 0.0,
+       "visual_verification": 0.0,
+       "duration_variability": 0.5657,
+       "temporal_resolution": 1.0
+      },
+      "components": {
+       "telemetry_agreement": {
+        "f1": 0.0,
+        "precision": 0.0,
+        "recall": 0.0,
+        "gripper_events": 4,
+        "boundaries": 5
+       },
+       "visual_verification": {
+        "rate": 0.0,
+        "confirmed": 0,
+        "checked": 5,
+        "mean_offset_to_confirmed_change_sec": null
+       },
+       "duration_variability": {
+        "score": 0.5657,
+        "cv": 0.2828,
+        "n_segments": 6
+       },
+       "temporal_resolution": {
+        "score": 1.0,
+        "sub_resolution_segments": 0,
+        "min_resolvable_sec": 1.0
+       }
+      },
+      "n_segments": 6,
+      "predicted_boundaries": [
+       1.0,
+       3.0,
+       5.0,
+       7.0,
+       8.0
+      ],
+      "gripper_events": [
+       10.8,
+       19.7,
+       20.6,
+       27.5
+      ]
+     },
+     "robointer_droid_000042": {
+      "episode_id": "robointer_droid_000042",
+      "self_score": 0.2553,
+      "component_values": {
+       "telemetry_agreement": 0.0,
+       "visual_verification": 0.0,
+       "duration_variability": 0.702,
+       "temporal_resolution": 1.0
+      },
+      "components": {
+       "telemetry_agreement": {
+        "f1": 0.0,
+        "precision": 0.0,
+        "recall": 0.0,
+        "gripper_events": 2,
+        "boundaries": 5
+       },
+       "visual_verification": {
+        "rate": 0.0,
+        "confirmed": 0,
+        "checked": 5,
+        "mean_offset_to_confirmed_change_sec": null
+       },
+       "duration_variability": {
+        "score": 0.702,
+        "cv": 0.351,
+        "n_segments": 6
+       },
+       "temporal_resolution": {
+        "score": 1.0,
+        "sub_resolution_segments": 0,
+        "min_resolvable_sec": 1.0
+       }
+      },
+      "n_segments": 6,
+      "predicted_boundaries": [
+       1.0,
+       5.0,
+       10.0,
+       15.0,
+       20.0
+      ],
+      "gripper_events": [
+       16.1,
+       28.3
+      ]
+     },
+     "robointer_droid_000043": {
+      "episode_id": "robointer_droid_000043",
+      "self_score": 0.15,
+      "component_values": {
+       "telemetry_agreement": 0.0,
+       "visual_verification": 0.0,
+       "duration_variability": 0.0,
+       "temporal_resolution": 1.0
+      },
+      "components": {
+       "telemetry_agreement": {
+        "f1": 0.0,
+        "precision": 0.0,
+        "recall": 0.0,
+        "gripper_events": 2,
+        "boundaries": 7
+       },
+       "visual_verification": {
+        "rate": 0.0,
+        "confirmed": 0,
+        "checked": 7,
+        "mean_offset_to_confirmed_change_sec": null
+       },
+       "duration_variability": {
+        "score": 0.0,
+        "cv": 0.0,
+        "n_segments": 8
+       },
+       "temporal_resolution": {
+        "score": 1.0,
+        "sub_resolution_segments": 0,
+        "min_resolvable_sec": 1.0
+       }
+      },
+      "n_segments": 8,
+      "predicted_boundaries": [
+       1.0,
+       2.0,
+       3.0,
+       4.0,
+       5.0,
+       6.0,
+       7.0
+      ],
+      "gripper_events": [
+       7.8,
+       30.0
+      ]
+     },
+     "robointer_droid_000044": {
+      "episode_id": "robointer_droid_000044",
+      "self_score": 0.15,
+      "component_values": {
+       "telemetry_agreement": 0.0,
+       "visual_verification": 0.0,
+       "duration_variability": 0.0,
+       "temporal_resolution": 1.0
+      },
+      "components": {
+       "telemetry_agreement": {
+        "f1": 0.0,
+        "precision": 0.0,
+        "recall": 0.0,
+        "gripper_events": 2,
+        "boundaries": 4
+       },
+       "visual_verification": {
+        "rate": 0.0,
+        "confirmed": 0,
+        "checked": 4,
+        "mean_offset_to_confirmed_change_sec": null
+       },
+       "duration_variability": {
+        "score": 0.0,
+        "cv": 0.0,
+        "n_segments": 5
+       },
+       "temporal_resolution": {
+        "score": 1.0,
+        "sub_resolution_segments": 0,
+        "min_resolvable_sec": 1.0
+       }
+      },
+      "n_segments": 5,
+      "predicted_boundaries": [
+       1.0,
+       2.0,
+       3.0,
+       4.0
+      ],
+      "gripper_events": [
+       7.8,
+       30.0
+      ]
+     },
+     "robointer_droid_000045": {
+      "episode_id": "robointer_droid_000045",
+      "self_score": 0.5317,
+      "component_values": {
+       "telemetry_agreement": 0.4,
+       "visual_verification": 0.5,
+       "duration_variability": 0.4444,
+       "temporal_resolution": 1.0
+      },
+      "components": {
+       "telemetry_agreement": {
+        "f1": 0.4,
+        "precision": 0.5,
+        "recall": 0.3333,
+        "gripper_events": 6,
+        "boundaries": 4
+       },
+       "visual_verification": {
+        "rate": 0.5,
+        "confirmed": 2,
+        "checked": 4,
+        "mean_offset_to_confirmed_change_sec": 0.0
+       },
+       "duration_variability": {
+        "score": 0.4444,
+        "cv": 0.2222,
+        "n_segments": 5
+       },
+       "temporal_resolution": {
+        "score": 1.0,
+        "sub_resolution_segments": 0,
+        "min_resolvable_sec": 1.0
+       }
+      },
+      "n_segments": 5,
+      "predicted_boundaries": [
+       1.0,
+       3.0,
+       5.0,
+       7.0
+      ],
+      "gripper_events": [
+       5.2,
+       7.4,
+       10.4,
+       14.9,
+       19.7,
+       23.1
+      ]
+     },
+     "robointer_droid_000046": {
+      "episode_id": "robointer_droid_000046",
+      "self_score": 0.2958,
+      "component_values": {
+       "telemetry_agreement": 0.4167,
+       "visual_verification": 0.0,
+       "duration_variability": 0.0,
+       "temporal_resolution": 1.0
+      },
+      "components": {
+       "telemetry_agreement": {
+        "f1": 0.4167,
+        "precision": 0.3571,
+        "recall": 0.5,
+        "gripper_events": 6,
+        "boundaries": 14
+       },
+       "visual_verification": {
+        "rate": 0.0,
+        "confirmed": 0,
+        "checked": 8,
+        "mean_offset_to_confirmed_change_sec": null
+       },
+       "duration_variability": {
+        "score": 0.0,
+        "cv": 0.0,
+        "n_segments": 15
+       },
+       "temporal_resolution": {
+        "score": 1.0,
+        "sub_resolution_segments": 0,
+        "min_resolvable_sec": 1.0
+       }
+      },
+      "n_segments": 15,
+      "predicted_boundaries": [
+       1.0,
+       2.0,
+       3.0,
+       4.0,
+       5.0,
+       6.0,
+       7.0,
+       8.0,
+       9.0,
+       10.0,
+       11.0,
+       12.0,
+       13.0,
+       14.0
+      ],
+      "gripper_events": [
+       5.2,
+       7.4,
+       10.4,
+       14.9,
+       19.7,
+       23.1
+      ]
+     },
+     "robointer_droid_000047": {
+      "episode_id": "robointer_droid_000047",
+      "self_score": 0.2,
+      "component_values": {
+       "telemetry_agreement": 0.1429,
+       "visual_verification": 0.0,
+       "duration_variability": 0.0,
+       "temporal_resolution": 1.0
+      },
+      "components": {
+       "telemetry_agreement": {
+        "f1": 0.1429,
+        "precision": 0.1667,
+        "recall": 0.125,
+        "gripper_events": 8,
+        "boundaries": 6
+       },
+       "visual_verification": {
+        "rate": 0.0,
+        "confirmed": 0,
+        "checked": 6,
+        "mean_offset_to_confirmed_change_sec": null
+       },
+       "duration_variability": {
+        "score": 0.0,
+        "cv": 0.0,
+        "n_segments": 7
+       },
+       "temporal_resolution": {
+        "score": 1.0,
+        "sub_resolution_segments": 0,
+        "min_resolvable_sec": 1.0
+       }
+      },
+      "n_segments": 7,
+      "predicted_boundaries": [
+       1.0,
+       2.0,
+       3.0,
+       4.0,
+       5.0,
+       6.0
+      ],
+      "gripper_events": [
+       6.4,
+       11.1,
+       14.4,
+       18.6,
+       24.9,
+       29.8,
+       36.1,
+       40.9
+      ]
+     },
+     "robointer_droid_000050": {
+      "episode_id": "robointer_droid_000050",
+      "self_score": 0.206,
+      "component_values": {
+       "telemetry_agreement": 0.16,
+       "visual_verification": 0.0,
+       "duration_variability": 0.0,
+       "temporal_resolution": 1.0
+      },
+      "components": {
+       "telemetry_agreement": {
+        "f1": 0.16,
+        "precision": 0.2222,
+        "recall": 0.125,
+        "gripper_events": 8,
+        "boundaries": 9
+       },
+       "visual_verification": {
+        "rate": 0.0,
+        "confirmed": 0,
+        "checked": 8,
+        "mean_offset_to_confirmed_change_sec": null
+       },
+       "duration_variability": {
+        "score": 0.0,
+        "cv": 0.0,
+        "n_segments": 10
+       },
+       "temporal_resolution": {
+        "score": 1.0,
+        "sub_resolution_segments": 0,
+        "min_resolvable_sec": 1.0
+       }
+      },
+      "n_segments": 10,
+      "predicted_boundaries": [
+       1.0,
+       2.0,
+       3.0,
+       4.0,
+       5.0,
+       6.0,
+       7.0,
+       8.0,
+       9.0
+      ],
+      "gripper_events": [
+       6.4,
+       11.1,
+       14.4,
+       18.6,
+       24.9,
+       29.8,
+       36.1,
+       40.9
+      ]
+     },
+     "robointer_droid_000055": {
+      "episode_id": "robointer_droid_000055",
+      "self_score": 0.15,
+      "component_values": {
+       "telemetry_agreement": 0.0,
+       "visual_verification": 0.0,
+       "duration_variability": 0.0,
+       "temporal_resolution": 1.0
+      },
+      "components": {
+       "telemetry_agreement": {
+        "f1": 0.0,
+        "precision": 0.0,
+        "recall": 0.0,
+        "gripper_events": 2,
+        "boundaries": 6
+       },
+       "visual_verification": {
+        "rate": 0.0,
+        "confirmed": 0,
+        "checked": 6,
+        "mean_offset_to_confirmed_change_sec": null
+       },
+       "duration_variability": {
+        "score": 0.0,
+        "cv": 0.0,
+        "n_segments": 7
+       },
+       "temporal_resolution": {
+        "score": 1.0,
+        "sub_resolution_segments": 0,
+        "min_resolvable_sec": 1.0
+       }
+      },
+      "n_segments": 7,
+      "predicted_boundaries": [
+       1.0,
+       2.0,
+       3.0,
+       4.0,
+       5.0,
+       6.0
+      ],
+      "gripper_events": [
+       13.0,
+       63.6
+      ]
+     },
+     "robointer_droid_000056": {
+      "episode_id": "robointer_droid_000056",
+      "self_score": 0.2349,
+      "component_values": {
+       "telemetry_agreement": 0.0,
+       "visual_verification": 0.0,
+       "duration_variability": 0.5657,
+       "temporal_resolution": 1.0
+      },
+      "components": {
+       "telemetry_agreement": {
+        "f1": 0.0,
+        "precision": 0.0,
+        "recall": 0.0,
+        "gripper_events": 2,
+        "boundaries": 5
+       },
+       "visual_verification": {
+        "rate": 0.0,
+        "confirmed": 0,
+        "checked": 5,
+        "mean_offset_to_confirmed_change_sec": null
+       },
+       "duration_variability": {
+        "score": 0.5657,
+        "cv": 0.2828,
+        "n_segments": 6
+       },
+       "temporal_resolution": {
+        "score": 1.0,
+        "sub_resolution_segments": 0,
+        "min_resolvable_sec": 1.0
+       }
+      },
+      "n_segments": 6,
+      "predicted_boundaries": [
+       1.0,
+       3.0,
+       5.0,
+       7.0,
+       8.0
+      ],
+      "gripper_events": [
+       13.0,
+       63.6
+      ]
+     },
+     "robointer_droid_000057": {
+      "episode_id": "robointer_droid_000057",
+      "self_score": 0.3972,
+      "component_values": {
+       "telemetry_agreement": 0.1111,
+       "visual_verification": 0.1667,
+       "duration_variability": 1.0,
+       "temporal_resolution": 1.0
+      },
+      "components": {
+       "telemetry_agreement": {
+        "f1": 0.1111,
+        "precision": 0.1667,
+        "recall": 0.0833,
+        "gripper_events": 12,
+        "boundaries": 6
+       },
+       "visual_verification": {
+        "rate": 0.1667,
+        "confirmed": 1,
+        "checked": 6,
+        "mean_offset_to_confirmed_change_sec": 0.0
+       },
+       "duration_variability": {
+        "score": 1.0,
+        "cv": 1.0153,
+        "n_segments": 7
+       },
+       "temporal_resolution": {
+        "score": 1.0,
+        "sub_resolution_segments": 0,
+        "min_resolvable_sec": 1.0
+       }
+      },
+      "n_segments": 7,
+      "predicted_boundaries": [
+       1.0,
+       2.0,
+       10.0,
+       15.0,
+       16.0,
+       17.0
+      ],
+      "gripper_events": [
+       6.7,
+       13.4,
+       16.2,
+       22.7,
+       26.0,
+       31.1,
+       35.1,
+       40.4,
+       51.9,
+       58.8,
+       63.6,
+       71.6
+      ]
+     },
+     "robointer_droid_000058": {
+      "episode_id": "robointer_droid_000058",
+      "self_score": 0.5389,
+      "component_values": {
+       "telemetry_agreement": 0.1111,
+       "visual_verification": 1.0,
+       "duration_variability": 0.0,
+       "temporal_resolution": 1.0
+      },
+      "components": {
+       "telemetry_agreement": {
+        "f1": 0.1111,
+        "precision": 0.1667,
+        "recall": 0.0833,
+        "gripper_events": 12,
+        "boundaries": 6
+       },
+       "visual_verification": {
+        "rate": 1.0,
+        "confirmed": 6,
+        "checked": 6,
+        "mean_offset_to_confirmed_change_sec": 0.0
+       },
+       "duration_variability": {
+        "score": 0.0,
+        "cv": 0.0,
+        "n_segments": 7
+       },
+       "temporal_resolution": {
+        "score": 1.0,
+        "sub_resolution_segments": 0,
+        "min_resolvable_sec": 1.0
+       }
+      },
+      "n_segments": 7,
+      "predicted_boundaries": [
+       1.0,
+       2.0,
+       3.0,
+       4.0,
+       5.0,
+       6.0
+      ],
+      "gripper_events": [
+       6.7,
+       13.4,
+       16.2,
+       22.7,
+       26.0,
+       31.1,
+       35.1,
+       40.4,
+       51.9,
+       58.8,
+       63.6,
+       71.6
+      ]
+     },
+     "robointer_droid_000059": {
+      "episode_id": "robointer_droid_000059",
+      "self_score": 0.37,
+      "component_values": {
+       "telemetry_agreement": 0.2,
+       "visual_verification": 0.0,
+       "duration_variability": 1.0,
+       "temporal_resolution": 1.0
+      },
+      "components": {
+       "telemetry_agreement": {
+        "f1": 0.2,
+        "precision": 0.1667,
+        "recall": 0.25,
+        "gripper_events": 4,
+        "boundaries": 6
+       },
+       "visual_verification": {
+        "rate": 0.0,
+        "confirmed": 0,
+        "checked": 6,
+        "mean_offset_to_confirmed_change_sec": null
+       },
+       "duration_variability": {
+        "score": 1.0,
+        "cv": 0.5395,
+        "n_segments": 7
+       },
+       "temporal_resolution": {
+        "score": 1.0,
+        "sub_resolution_segments": 0,
+        "min_resolvable_sec": 1.0
+       }
+      },
+      "n_segments": 7,
+      "predicted_boundaries": [
+       1.0,
+       2.0,
+       10.0,
+       15.0,
+       20.0,
+       25.0
+      ],
+      "gripper_events": [
+       17.8,
+       19.3,
+       62.8,
+       64.6
+      ]
+     },
+     "robointer_droid_000060": {
+      "episode_id": "robointer_droid_000060",
+      "self_score": 0.5117,
+      "component_values": {
+       "telemetry_agreement": 0.2,
+       "visual_verification": 0.8333,
+       "duration_variability": 0.0,
+       "temporal_resolution": 1.0
+      },
+      "components": {
+       "telemetry_agreement": {
+        "f1": 0.2,
+        "precision": 0.1667,
+        "recall": 0.25,
+        "gripper_events": 4,
+        "boundaries": 6
+       },
+       "visual_verification": {
+        "rate": 0.8333,
+        "confirmed": 5,
+        "checked": 6,
+        "mean_offset_to_confirmed_change_sec": 0.3
+       },
+       "duration_variability": {
+        "score": 0.0,
+        "cv": 0.0,
+        "n_segments": 7
+       },
+       "temporal_resolution": {
+        "score": 1.0,
+        "sub_resolution_segments": 0,
+        "min_resolvable_sec": 1.0
+       }
+      },
+      "n_segments": 7,
+      "predicted_boundaries": [
+       10.0,
+       20.0,
+       30.0,
+       40.0,
+       50.0,
+       60.0
+      ],
+      "gripper_events": [
+       17.8,
+       19.3,
+       62.8,
+       64.6
+      ]
+     },
+     "robointer_droid_000061": {
+      "episode_id": "robointer_droid_000061",
+      "self_score": 0.2699,
+      "component_values": {
+       "telemetry_agreement": 0.2,
+       "visual_verification": 0.0,
+       "duration_variability": 0.3328,
+       "temporal_resolution": 1.0
+      },
+      "components": {
+       "telemetry_agreement": {
+        "f1": 0.2,
+        "precision": 0.125,
+        "recall": 0.5,
+        "gripper_events": 2,
+        "boundaries": 8
+       },
+       "visual_verification": {
+        "rate": 0.0,
+        "confirmed": 0,
+        "checked": 8,
+        "mean_offset_to_confirmed_change_sec": null
+       },
+       "duration_variability": {
+        "score": 0.3328,
+        "cv": 0.1664,
+        "n_segments": 9
+       },
+       "temporal_resolution": {
+        "score": 1.0,
+        "sub_resolution_segments": 0,
+        "min_resolvable_sec": 1.0
+       }
+      },
+      "n_segments": 9,
+      "predicted_boundaries": [
+       1.0,
+       3.0,
+       5.0,
+       7.0,
+       9.0,
+       11.0,
+       13.0,
+       15.0
+      ],
+      "gripper_events": [
+       11.1,
+       104.2
+      ]
+     },
+     "robointer_droid_000062": {
+      "episode_id": "robointer_droid_000062",
+      "self_score": 0.15,
+      "component_values": {
+       "telemetry_agreement": 0.0,
+       "visual_verification": 0.0,
+       "duration_variability": 0.0,
+       "temporal_resolution": 1.0
+      },
+      "components": {
+       "telemetry_agreement": {
+        "f1": 0.0,
+        "precision": 0.0,
+        "recall": 0.0,
+        "gripper_events": 2,
+        "boundaries": 9
+       },
+       "visual_verification": {
+        "rate": 0.0,
+        "confirmed": 0,
+        "checked": 8,
+        "mean_offset_to_confirmed_change_sec": null
+       },
+       "duration_variability": {
+        "score": 0.0,
+        "cv": 0.0,
+        "n_segments": 10
+       },
+       "temporal_resolution": {
+        "score": 1.0,
+        "sub_resolution_segments": 0,
+        "min_resolvable_sec": 1.0
+       }
+      },
+      "n_segments": 10,
+      "predicted_boundaries": [
+       1.0,
+       2.0,
+       3.0,
+       4.0,
+       5.0,
+       6.0,
+       7.0,
+       8.0,
+       9.0
+      ],
+      "gripper_events": [
+       11.1,
+       104.2
+      ]
+     }
+    }
+   },
+   "task_id": null
+  },
+  "EV-14124a72d4": {
+   "id": "EV-14124a72d4",
+   "tool": "episode_predictions",
+   "args": {
+    "episode_id": "robointer_droid_000006"
+   },
+   "result": {
+    "episode_id": "robointer_droid_000006",
+    "instruction": "Remove the pen from the mug and put it on the table",
+    "duration_sec": 12.6,
+    "has_telemetry": true,
+    "sampling": {
+     "sampling_hz": 2.0,
+     "tile_px": 224,
+     "frames_per_sheet": 20,
+     "cols": 5,
+     "badge": "macrodata",
+     "jpeg_quality": 95
+    },
+    "predicted_segments": [
+     {
+      "start_sec": 0.0,
+      "end_sec": 1.0,
+      "subtask": "approach pen in mug"
+     },
+     {
+      "start_sec": 1.0,
+      "end_sec": 2.0,
+      "subtask": "grasp pen"
+     },
+     {
+      "start_sec": 2.0,
+      "end_sec": 3.0,
+      "subtask": "lift pen from mug"
+     },
+     {
+      "start_sec": 3.0,
+      "end_sec": 4.0,
+      "subtask": "move pen to table"
+     },
+     {
+      "start_sec": 4.0,
+      "end_sec": 5.0,
+      "subtask": "place pen on table"
+     },
+     {
+      "start_sec": 5.0,
+      "end_sec": 6.0,
+      "subtask": "release pen"
+     }
+    ]
+   },
+   "task_id": "TASK-4f5cd89a53",
+   "created_at": 1792275426.499653
+  },
+  "EV-51217a1ec3": {
+   "id": "EV-51217a1ec3",
+   "tool": "telemetry_hints",
+   "args": {
+    "episode_id": "robointer_droid_000006",
+    "signals": [
+     "gripper"
+    ]
+   },
+   "result": {
+    "episode_id": "robointer_droid_000006",
+    "signals": [
+     "gripper"
+    ],
+    "n_hints": 2,
+    "n_predicted_boundaries": 5,
+    "hints": [
+     {
+      "t": 6.5,
+      "kind": "gripper_released",
+      "channel": "state:gripper_state",
+      "strength": 1.0,
+      "nearest_predicted_boundary_sec": 5.0,
+      "distance_to_predicted_boundary_sec": 1.5
+     },
+     {
+      "t": 12.3,
+      "kind": "gripper_engaged",
+      "channel": "state:gripper_state",
+      "strength": 1.0,
+      "nearest_predicted_boundary_sec": 5.0,
+      "distance_to_predicted_boundary_sec": 7.3
+     }
+    ]
+   },
+   "task_id": "TASK-4f5cd89a53",
+   "created_at": 1792275426.501203
+  },
+  "EV-ee5e77aaf7": {
+   "id": "EV-ee5e77aaf7",
+   "tool": "sampling_coverage",
+   "args": {
+    "episode_id": "robointer_droid_000006",
+    "sampling_hz": 2.0
+   },
+   "result": {
+    "episode_id": "robointer_droid_000006",
+    "sampling_hz": 2.0,
+    "n_frames": 26,
+    "frame_spacing_sec": 0.5,
+    "duration_sec": 12.6,
+    "predicted_segments_shorter_than_2_frames": 0,
+    "n_predicted_segments": 6
+   },
+   "task_id": "TASK-4f5cd89a53",
+   "created_at": 1792275426.5019798
+  },
+  "EV-b8101a0ca9": {
+   "id": "EV-b8101a0ca9",
+   "tool": "inspect_frames",
+   "args": {
+    "episode_id": "robointer_droid_000006",
+    "center_sec": 2.0,
+    "window_sec": 2.0,
+    "local_hz": 5,
+    "question": "Is there a manipulation state change (e.g., gripper open/close, object placement) visible in this 2-second frame strip centered at 2.0 seconds?"
+   },
+   "result": {
+    "episode_id": "robointer_droid_000006",
+    "window": [
+     1.0,
+     3.0
+    ],
+    "frame_timestamps": [
+     1.0,
+     1.2,
+     1.4,
+     1.6,
+     1.8,
+     2.0,
+     2.2,
+     2.4,
+     2.6,
+     2.8,
+     3.0
+    ],
+    "vision_model": "nvidia/Nemotron-3-Nano-Omni-Reasoning-30B-A3B",
+    "observation": {
+     "observed_state_changes": [
+      {
+       "completed_at_sec": 2.0,
+       "description": "Gripper closes on pen inside mug"
+      }
+     ],
+     "answer": "Yes",
+     "visual_confidence": 0.95
+    }
+   },
+   "task_id": "TASK-ea9fb0f42e",
+   "created_at": 1792275448.4941719
+  },
+  "EV-135c1c4533": {
+   "id": "EV-135c1c4533",
+   "tool": "inspect_frames",
+   "args": {
+    "episode_id": "robointer_droid_000006",
+    "center_sec": 6.5,
+    "window_sec": 2.0,
+    "local_hz": 5,
+    "question": "Is there a manipulation state change visible in this 2-second frame strip centered at the gripper close event at ~6.5 seconds?"
+   },
+   "result": {
+    "episode_id": "robointer_droid_000006",
+    "window": [
+     5.5,
+     7.5
+    ],
+    "frame_timestamps": [
+     5.5,
+     5.7,
+     5.9,
+     6.1,
+     6.3,
+     6.5,
+     6.7,
+     6.9,
+     7.1,
+     7.3,
+     7.5
+    ],
+    "vision_model": "nvidia/Nemotron-3-Nano-Omni-Reasoning-30B-A3B",
+    "observation": {
+     "observed_state_changes": [
+      {
+       "completed_at_sec": 6.5,
+       "description": "The gripper closes around the pen, completing the manipulation state change from 'approach' to 'grasp'."
+      }
+     ],
+     "answer": "Yes",
+     "visual_confidence": 0.95
+    }
+   },
+   "task_id": "TASK-ea9fb0f42e",
+   "created_at": 1792275449.264746
+  },
+  "SELF-a441541077": {
+   "id": "SELF-a441541077",
+   "tool": "self_assessment",
+   "args": {
+    "version": "N001"
+   },
+   "result": {
+    "definition": "label-free-v1",
+    "mean_self_score": 0.4177,
+    "per_episode_self_score": {
+     "robointer_droid_000001": 0.4,
+     "robointer_droid_000002": 0.4,
+     "robointer_droid_000003": 0.343,
+     "robointer_droid_000004": 0.3153,
+     "robointer_droid_000005": 0.369,
+     "robointer_droid_000006": 0.3,
+     "robointer_droid_000007": 0.65,
+     "robointer_droid_000008": 0.2308,
+     "robointer_droid_000009": 0.8092,
+     "robointer_droid_000010": 0.5042,
+     "robointer_droid_000011": 0.3,
+     "robointer_droid_000012": 0.61,
+     "robointer_droid_000013": 0.4,
+     "robointer_droid_000014": 0.7025,
+     "robointer_droid_000015": 0.4167,
+     "robointer_droid_000016": 0.5042,
+     "robointer_droid_000017": 0.3,
+     "robointer_droid_000019": 0.3,
+     "robointer_droid_000021": 0.47,
+     "robointer_droid_000022": 0.4,
+     "robointer_droid_000023": 0.4167,
+     "robointer_droid_000024": 0.5417,
+     "robointer_droid_000025": 0.4167,
+     "robointer_droid_000027": 0.4,
+     "robointer_droid_000028": 0.4167,
+     "robointer_droid_000029": 0.5917,
+     "robointer_droid_000030": 0.634,
+     "robointer_droid_000032": 0.3636,
+     "robointer_droid_000033": 0.37,
+     "robointer_droid_000034": 0.3,
+     "robointer_droid_000035": 0.3,
+     "robointer_droid_000036": 0.4077,
+     "robointer_droid_000037": 0.3,
+     "robointer_droid_000038": 0.44,
+     "robointer_droid_000039": 0.3,
+     "robointer_droid_000042": 0.3,
+     "robointer_droid_000043": 0.3,
+     "robointer_droid_000044": 0.3,
+     "robointer_droid_000045": 0.615,
+     "robointer_droid_000046": 0.4458,
+     "robointer_droid_000047": 0.35,
+     "robointer_droid_000050": 0.356,
+     "robointer_droid_000055": 0.3,
+     "robointer_droid_000056": 0.3,
+     "robointer_droid_000057": 0.3972,
+     "robointer_droid_000058": 0.6889,
+     "robointer_droid_000059": 0.37,
+     "robointer_droid_000060": 0.5688,
+     "robointer_droid_000061": 0.37,
+     "robointer_droid_000062": 0.3
+    },
+    "component_means": {
+     "telemetry_agreement": 0.1884,
+     "visual_verification": 0.1847,
+     "duration_variability": 0.912,
+     "temporal_resolution": 1.0
+    },
+    "episodes": {
+     "robointer_droid_000001": {
+      "episode_id": "robointer_droid_000001",
+      "self_score": 0.4,
+      "component_values": {
+       "telemetry_agreement": 0.2857,
+       "visual_verification": 0.0,
+       "duration_variability": 1.0,
+       "temporal_resolution": 1.0
+      },
+      "components": {
+       "telemetry_agreement": {
+        "f1": 0.2857,
+        "precision": 0.2,
+        "recall": 0.5,
+        "gripper_events": 2,
+        "boundaries": 5
+       },
+       "visual_verification": {
+        "rate": 0.0,
+        "confirmed": 0,
+        "checked": 5,
+        "mean_offset_to_confirmed_change_sec": null
+       },
+       "duration_variability": {
+        "score": 1.0,
+        "cv": 0.946,
+        "n_segments": 6
+       },
+       "temporal_resolution": {
+        "score": 1.0,
+        "sub_resolution_segments": 0,
+        "min_resolvable_sec": 1.0
+       }
+      },
+      "n_segments": 6,
+      "predicted_boundaries": [
+       1.0,
+       2.0,
+       3.0,
+       4.0,
+       5.0
+      ],
+      "gripper_events": [
+       4.2,
+       9.2
+      ]
+     },
+     "robointer_droid_000002": {
+      "episode_id": "robointer_droid_000002",
+      "self_score": 0.4,
+      "component_values": {
+       "telemetry_agreement": 0.2857,
+       "visual_verification": 0.0,
+       "duration_variability": 1.0,
+       "temporal_resolution": 1.0
+      },
+      "components": {
+       "telemetry_agreement": {
+        "f1": 0.2857,
+        "precision": 0.2,
+        "recall": 0.5,
+        "gripper_events": 2,
+        "boundaries": 5
+       },
+       "visual_verification": {
+        "rate": 0.0,
+        "confirmed": 0,
+        "checked": 5,
+        "mean_offset_to_confirmed_change_sec": null
+       },
+       "duration_variability": {
+        "score": 1.0,
+        "cv": 1.0488,
+        "n_segments": 6
+       },
+       "temporal_resolution": {
+        "score": 1.0,
+        "sub_resolution_segments": 0,
+        "min_resolvable_sec": 1.0
+       }
+      },
+      "n_segments": 6,
+      "predicted_boundaries": [
+       1.0,
+       2.0,
+       3.0,
+       4.0,
+       5.0
+      ],
+      "gripper_events": [
+       5.4,
+       10.3
+      ]
+     },
+     "robointer_droid_000003": {
+      "episode_id": "robointer_droid_000003",
+      "self_score": 0.343,
+      "component_values": {
+       "telemetry_agreement": 0.2857,
+       "visual_verification": 0.0,
+       "duration_variability": 0.6202,
+       "temporal_resolution": 1.0
+      },
+      "components": {
+       "telemetry_agreement": {
+        "f1": 0.2857,
+        "precision": 0.2,
+        "recall": 0.5,
+        "gripper_events": 2,
+        "boundaries": 5
+       },
+       "visual_verification": {
+        "rate": 0.0,
+        "confirmed": 0,
+        "checked": 5,
+        "mean_offset_to_confirmed_change_sec": null
+       },
+       "duration_variability": {
+        "score": 0.6202,
+        "cv": 0.3101,
+        "n_segments": 6
+       },
+       "temporal_resolution": {
+        "score": 1.0,
+        "sub_resolution_segments": 0,
+        "min_resolvable_sec": 1.0
+       }
+      },
+      "n_segments": 6,
+      "predicted_boundaries": [
+       1.0,
+       2.0,
+       4.0,
+       6.0,
+       8.0
+      ],
+      "gripper_events": [
+       4.2,
+       9.2
+      ]
+     },
+     "robointer_droid_000004": {
+      "episode_id": "robointer_droid_000004",
+      "self_score": 0.3153,
+      "component_values": {
+       "telemetry_agreement": 0.2857,
+       "visual_verification": 0.0,
+       "duration_variability": 0.4353,
+       "temporal_resolution": 1.0
+      },
+      "components": {
+       "telemetry_agreement": {
+        "f1": 0.2857,
+        "precision": 0.2,
+        "recall": 0.5,
+        "gripper_events": 2,
+        "boundaries": 5
+       },
+       "visual_verification": {
+        "rate": 0.0,
+        "confirmed": 0,
+        "checked": 5,
+        "mean_offset_to_confirmed_change_sec": null
+       },
+       "duration_variability": {
+        "score": 0.4353,
+        "cv": 0.2177,
+        "n_segments": 6
+       },
+       "temporal_resolution": {
+        "score": 1.0,
+        "sub_resolution_segments": 0,
+        "min_resolvable_sec": 1.0
+       }
+      },
+      "n_segments": 6,
+      "predicted_boundaries": [
+       1.0,
+       3.0,
+       5.0,
+       7.0,
+       9.0
+      ],
+      "gripper_events": [
+       5.4,
+       10.3
+      ]
+     },
+     "robointer_droid_000005": {
+      "episode_id": "robointer_droid_000005",
+      "self_score": 0.369,
+      "component_values": {
+       "telemetry_agreement": 0.0,
+       "visual_verification": 0.5,
+       "duration_variability": 0.2935,
+       "temporal_resolution": 1.0
+      },
+      "components": {
+       "telemetry_agreement": {
+        "f1": 0.0,
+        "precision": 0.0,
+        "recall": 0.0,
+        "gripper_events": 2,
+        "boundaries": 2
+       },
+       "visual_verification": {
+        "rate": 0.5,
+        "confirmed": 1,
+        "checked": 2,
+        "mean_offset_to_confirmed_change_sec": 0.0
+       },
+       "duration_variability": {
+        "score": 0.2935,
+        "cv": 0.1468,
+        "n_segments": 3
+       },
+       "temporal_resolution": {
+        "score": 1.0,
+        "sub_resolution_segments": 0,
+        "min_resolvable_sec": 1.0
+       }
+      },
+      "n_segments": 3,
+      "predicted_boundaries": [
+       5.0,
+       8.5
+      ],
+      "gripper_events": [
+       6.5,
+       12.3
+      ]
+     },
+     "robointer_droid_000006": {
+      "episode_id": "robointer_droid_000006",
+      "self_score": 0.3,
+      "component_values": {
+       "telemetry_agreement": 0.0,
+       "visual_verification": 0.0,
+       "duration_variability": 1.0,
+       "temporal_resolution": 1.0
+      },
+      "components": {
+       "telemetry_agreement": {
+        "f1": 0.0,
+        "precision": 0.0,
+        "recall": 0.0,
+        "gripper_events": 2,
+        "boundaries": 5
+       },
+       "visual_verification": {
+        "rate": 0.0,
+        "confirmed": 0,
+        "checked": 5,
+        "mean_offset_to_confirmed_change_sec": null
+       },
+       "duration_variability": {
+        "score": 1.0,
+        "cv": 1.1713,
+        "n_segments": 6
+       },
+       "temporal_resolution": {
+        "score": 1.0,
+        "sub_resolution_segments": 0,
+        "min_resolvable_sec": 1.0
+       }
+      },
+      "n_segments": 6,
+      "predicted_boundaries": [
+       1.0,
+       2.0,
+       3.0,
+       4.0,
+       5.0
+      ],
+      "gripper_events": [
+       6.5,
+       12.3
+      ]
+     },
+     "robointer_droid_000007": {
+      "episode_id": "robointer_droid_000007",
+      "self_score": 0.65,
+      "component_values": {
+       "telemetry_agreement": 0.0,
+       "visual_verification": 1.0,
+       "duration_variability": 1.0,
+       "temporal_resolution": 1.0
+      },
+      "components": {
+       "telemetry_agreement": {
+        "f1": 0.0,
+        "precision": 0.0,
+        "recall": 0.0,
+        "gripper_events": 2,
+        "boundaries": 5
+       },
+       "visual_verification": {
+        "rate": 1.0,
+        "confirmed": 5,
+        "checked": 5,
+        "mean_offset_to_confirmed_change_sec": 0.0
+       },
+       "duration_variability": {
+        "score": 1.0,
+        "cv": 0.5114,
+        "n_segments": 6
+       },
+       "temporal_resolution": {
+        "score": 1.0,
+        "sub_resolution_segments": 0,
+        "min_resolvable_sec": 1.0
+       }
+      },
+      "n_segments": 6,
+      "predicted_boundaries": [
+       1.0,
+       3.0,
+       5.0,
+       7.0,
+       9.0
+      ],
+      "gripper_events": [
+       7.9,
+       13.7
+      ]
+     },
+     "robointer_droid_000008": {
+      "episode_id": "robointer_droid_000008",
+      "self_score": 0.2308,
+      "component_values": {
+       "telemetry_agreement": 0.0,
+       "visual_verification": null,
+       "duration_variability": 0.0,
+       "temporal_resolution": 1.0
+      },
+      "components": {
+       "telemetry_agreement": {
+        "f1": 0.0,
+        "precision": 0.0,
+        "recall": 0.0,
+        "gripper_events": 2,
+        "boundaries": 0
+       },
+       "visual_verification": null,
+       "duration_variability": {
+        "score": 0.0,
+        "cv": 0.0,
+        "n_segments": 1
+       },
+       "temporal_resolution": {
+        "score": 1.0,
+        "sub_resolution_segments": 0,
+        "min_resolvable_sec": 1.0
+       }
+      },
+      "n_segments": 1,
+      "predicted_boundaries": [],
+      "gripper_events": [
+       7.9,
+       13.7
+      ]
+     },
+     "robointer_droid_000009": {
+      "episode_id": "robointer_droid_000009",
+      "self_score": 0.8092,
+      "component_values": {
+       "telemetry_agreement": 0.5,
+       "visual_verification": 1.0,
+       "duration_variability": 0.8949,
+       "temporal_resolution": 1.0
+      },
+      "components": {
+       "telemetry_agreement": {
+        "f1": 0.5,
+        "precision": 0.3333,
+        "recall": 1.0,
+        "gripper_events": 1,
+        "boundaries": 3
+       },
+       "visual_verification": {
+        "rate": 1.0,
+        "confirmed": 3,
+        "checked": 3,
+        "mean_offset_to_confirmed_change_sec": 0.0
+       },
+       "duration_variability": {
+        "score": 0.8949,
+        "cv": 0.4474,
+        "n_segments": 4
+       },
+       "temporal_resolution": {
+        "score": 1.0,
+        "sub_resolution_segments": 0,
+        "min_resolvable_sec": 1.0
+       }
+      },
+      "n_segments": 4,
+      "predicted_boundaries": [
+       1.0,
+       5.0,
+       10.0
+      ],
+      "gripper_events": [
+       5.0
+      ]
+     },
+     "robointer_droid_000010": {
+      "episode_id": "robointer_droid_000010",
+      "self_score": 0.5042,
+      "component_values": {
+       "telemetry_agreement": 0.3333,
+       "visual_verification": 0.25,
+       "duration_variability": 1.0,
+       "temporal_resolution": 1.0
+      },
+      "components": {
+       "telemetry_agreement": {
+        "f1": 0.3333,
+        "precision": 0.25,
+        "recall": 0.5,
+        "gripper_events": 2,
+        "boundaries": 4
+       },
+       "visual_verification": {
+        "rate": 0.25,
+        "confirmed": 1,
+        "checked": 4,
+        "mean_offset_to_confirmed_change_sec": 0.0
+       },
+       "duration_variability": {
+        "score": 1.0,
+        "cv": 0.7375,
+        "n_segments": 5
+       },
+       "temporal_resolution": {
+        "score": 1.0,
+        "sub_resolution_segments": 0,
+        "min_resolvable_sec": 1.0
+       }
+      },
+      "n_segments": 5,
+      "predicted_boundaries": [
+       1.0,
+       3.0,
+       6.5,
+       8.0
+      ],
+      "gripper_events": [
+       5.0,
+       8.1
+      ]
+     },
+     "robointer_droid_000011": {
+      "episode_id": "robointer_droid_000011",
+      "self_score": 0.3,
+      "component_values": {
+       "telemetry_agreement": 0.0,
+       "visual_verification": 0.0,
+       "duration_variability": 1.0,
+       "temporal_resolution": 1.0
+      },
+      "components": {
+       "telemetry_agreement": {
+        "f1": 0.0,
+        "precision": 0.0,
+        "recall": 0.0,
+        "gripper_events": 2,
+        "boundaries": 5
+       },
+       "visual_verification": {
+        "rate": 0.0,
+        "confirmed": 0,
+        "checked": 5,
+        "mean_offset_to_confirmed_change_sec": null
+       },
+       "duration_variability": {
+        "score": 1.0,
+        "cv": 1.423,
+        "n_segments": 6
+       },
+       "temporal_resolution": {
+        "score": 1.0,
+        "sub_resolution_segments": 0,
+        "min_resolvable_sec": 1.0
+       }
+      },
+      "n_segments": 6,
+      "predicted_boundaries": [
+       1.0,
+       2.0,
+       3.0,
+       4.0,
+       5.0
+      ],
+      "gripper_events": [
+       9.7,
+       16.1
+      ]
+     },
+     "robointer_droid_000012": {
+      "episode_id": "robointer_droid_000012",
+      "self_score": 0.61,
+      "component_values": {
+       "telemetry_agreement": 0.2857,
+       "visual_verification": 0.6,
+       "duration_variability": 1.0,
+       "temporal_resolution": 1.0
+      },
+      "components": {
+       "telemetry_agreement": {
+        "f1": 0.2857,
+        "precision": 0.2,
+        "recall": 0.5,
+        "gripper_events": 2,
+        "boundaries": 5
+       },
+       "visual_verification": {
+        "rate": 0.6,
+        "confirmed": 3,
+        "checked": 5,
+        "mean_offset_to_confirmed_change_sec": 0.0
+       },
+       "duration_variability": {
+        "score": 1.0,
+        "cv": 0.6631,
+        "n_segments": 6
+       },
+       "temporal_resolution": {
+        "score": 1.0,
+        "sub_resolution_segments": 0,
+        "min_resolvable_sec": 1.0
+       }
+      },
+      "n_segments": 6,
+      "predicted_boundaries": [
+       1.0,
+       3.0,
+       5.0,
+       7.0,
+       9.0
+      ],
+      "gripper_events": [
+       5.0,
+       8.1
+      ]
+     },
+     "robointer_droid_000013": {
+      "episode_id": "robointer_droid_000013",
+      "self_score": 0.4,
+      "component_values": {
+       "telemetry_agreement": 0.2857,
+       "visual_verification": 0.0,
+       "duration_variability": 1.0,
+       "temporal_resolution": 1.0
+      },
+      "components": {
+       "telemetry_agreement": {
+        "f1": 0.2857,
+        "precision": 0.1667,
+        "recall": 1.0,
+        "gripper_events": 1,
+        "boundaries": 6
+       },
+       "visual_verification": {
+        "rate": 0.0,
+        "confirmed": 0,
+        "checked": 6,
+        "mean_offset_to_confirmed_change_sec": null
+       },
+       "duration_variability": {
+        "score": 1.0,
+        "cv": 1.404,
+        "n_segments": 7
+       },
+       "temporal_resolution": {
+        "score": 1.0,
+        "sub_resolution_segments": 0,
+        "min_resolvable_sec": 1.0
+       }
+      },
+      "n_segments": 7,
+      "predicted_boundaries": [
+       1.0,
+       2.0,
+       3.0,
+       4.0,
+       5.0,
+       6.0
+      ],
+      "gripper_events": [
+       6.5
+      ]
+     },
+     "robointer_droid_000014": {
+      "episode_id": "robointer_droid_000014",
+      "self_score": 0.7025,
+      "component_values": {
+       "telemetry_agreement": 0.4,
+       "visual_verification": 0.75,
+       "duration_variability": 1.0,
+       "temporal_resolution": 1.0
+      },
+      "components": {
+       "telemetry_agreement": {
+        "f1": 0.4,
+        "precision": 0.25,
+        "recall": 1.0,
+        "gripper_events": 1,
+        "boundaries": 4
+       },
+       "visual_verification": {
+        "rate": 0.75,
+        "confirmed": 3,
+        "checked": 4,
+        "mean_offset_to_confirmed_change_sec": 0.0
+       },
+       "duration_variability": {
+        "score": 1.0,
+        "cv": 0.8727,
+        "n_segments": 5
+       },
+       "temporal_resolution": {
+        "score": 1.0,
+        "sub_resolution_segments": 0,
+        "min_resolvable_sec": 1.0
+       }
+      },
+      "n_segments": 5,
+      "predicted_boundaries": [
+       1.0,
+       3.0,
+       5.0,
+       7.0
+      ],
+      "gripper_events": [
+       5.0
+      ]
+     },
+     "robointer_droid_000015": {
+      "episode_id": "robointer_droid_000015",
+      "self_score": 0.4167,
+      "component_values": {
+       "telemetry_agreement": 0.3333,
+       "visual_verification": 0.0,
+       "duration_variability": 1.0,
+       "temporal_resolution": 1.0
+      },
+      "components": {
+       "telemetry_agreement": {
+        "f1": 0.3333,
+        "precision": 0.2,
+        "recall": 1.0,
+        "gripper_events": 1,
+        "boundaries": 5
+       },
+       "visual_verification": {
+        "rate": 0.0,
+        "confirmed": 0,
+        "checked": 5,
+        "mean_offset_to_confirmed_change_sec": null
+       },
+       "duration_variability": {
+        "score": 1.0,
+        "cv": 0.7751,
+        "n_segments": 6
+       },
+       "temporal_resolution": {
+        "score": 1.0,
+        "sub_resolution_segments": 0,
+        "min_resolvable_sec": 1.0
+       }
+      },
+      "n_segments": 6,
+      "predicted_boundaries": [
+       1.0,
+       3.0,
+       5.0,
+       7.0,
+       9.0
+      ],
+      "gripper_events": [
+       6.5
+      ]
+     },
+     "robointer_droid_000016": {
+      "episode_id": "robointer_droid_000016",
+      "self_score": 0.5042,
+      "component_values": {
+       "telemetry_agreement": 0.3333,
+       "visual_verification": 0.25,
+       "duration_variability": 1.0,
+       "temporal_resolution": 1.0
+      },
+      "components": {
+       "telemetry_agreement": {
+        "f1": 0.3333,
+        "precision": 0.25,
+        "recall": 0.5,
+        "gripper_events": 2,
+        "boundaries": 4
+       },
+       "visual_verification": {
+        "rate": 0.25,
+        "confirmed": 1,
+        "checked": 4,
+        "mean_offset_to_confirmed_change_sec": 0.0
+       },
+       "duration_variability": {
+        "score": 1.0,
+        "cv": 0.5214,
+        "n_segments": 5
+       },
+       "temporal_resolution": {
+        "score": 1.0,
+        "sub_resolution_segments": 0,
+        "min_resolvable_sec": 1.0
+       }
+      },
+      "n_segments": 5,
+      "predicted_boundaries": [
+       1.0,
+       5.0,
+       10.0,
+       15.0
+      ],
+      "gripper_events": [
+       9.7,
+       16.1
+      ]
+     },
+     "robointer_droid_000017": {
+      "episode_id": "robointer_droid_000017",
+      "self_score": 0.3,
+      "component_values": {
+       "telemetry_agreement": 0.0,
+       "visual_verification": 0.0,
+       "duration_variability": 1.0,
+       "temporal_resolution": 1.0
+      },
+      "components": {
+       "telemetry_agreement": {
+        "f1": 0.0,
+        "precision": 0.0,
+        "recall": 0.0,
+        "gripper_events": 2,
+        "boundaries": 5
+       },
+       "visual_verification": {
+        "rate": 0.0,
+        "confirmed": 0,
+        "checked": 5,
+        "mean_offset_to_confirmed_change_sec": null
+       },
+       "duration_variability": {
+        "score": 1.0,
+        "cv": 1.456,
+        "n_segments": 6
+       },
+       "temporal_resolution": {
+        "score": 1.0,
+        "sub_resolution_segments": 0,
+        "min_resolvable_sec": 1.0
+       }
+      },
+      "n_segments": 6,
+      "predicted_boundaries": [
+       1.0,
+       2.0,
+       3.0,
+       4.0,
+       5.0
+      ],
+      "gripper_events": [
+       6.2,
+       14.3
+      ]
+     },
+     "robointer_droid_000019": {
+      "episode_id": "robointer_droid_000019",
+      "self_score": 0.3,
+      "component_values": {
+       "telemetry_agreement": 0.0,
+       "visual_verification": 0.0,
+       "duration_variability": 1.0,
+       "temporal_resolution": 1.0
+      },
+      "components": {
+       "telemetry_agreement": {
+        "f1": 0.0,
+        "precision": 0.0,
+        "recall": 0.0,
+        "gripper_events": 2,
+        "boundaries": 4
+       },
+       "visual_verification": {
+        "rate": 0.0,
+        "confirmed": 0,
+        "checked": 4,
+        "mean_offset_to_confirmed_change_sec": null
+       },
+       "duration_variability": {
+        "score": 1.0,
+        "cv": 0.989,
+        "n_segments": 5
+       },
+       "temporal_resolution": {
+        "score": 1.0,
+        "sub_resolution_segments": 0,
+        "min_resolvable_sec": 1.0
+       }
+      },
+      "n_segments": 5,
+      "predicted_boundaries": [
+       1.0,
+       3.0,
+       5.0,
+       7.0
+      ],
+      "gripper_events": [
+       6.2,
+       14.3
+      ]
+     },
+     "robointer_droid_000021": {
+      "episode_id": "robointer_droid_000021",
+      "self_score": 0.47,
+      "component_values": {
+       "telemetry_agreement": 0.2857,
+       "visual_verification": 0.2,
+       "duration_variability": 1.0,
+       "temporal_resolution": 1.0
+      },
+      "components": {
+       "telemetry_agreement": {
+        "f1": 0.2857,
+        "precision": 0.2,
+        "recall": 0.5,
+        "gripper_events": 2,
+        "boundaries": 5
+       },
+       "visual_verification": {
+        "rate": 0.2,
+        "confirmed": 1,
+        "checked": 5,
+        "mean_offset_to_confirmed_change_sec": 0.0
+       },
+       "duration_variability": {
+        "score": 1.0,
+        "cv": 0.9027,
+        "n_segments": 6
+       },
+       "temporal_resolution": {
+        "score": 1.0,
+        "sub_resolution_segments": 0,
+        "min_resolvable_sec": 1.0
+       }
+      },
+      "n_segments": 6,
+      "predicted_boundaries": [
+       1.0,
+       3.0,
+       5.0,
+       7.0,
+       9.0
+      ],
+      "gripper_events": [
+       9.0,
+       15.2
+      ]
+     },
+     "robointer_droid_000022": {
+      "episode_id": "robointer_droid_000022",
+      "self_score": 0.4,
+      "component_values": {
+       "telemetry_agreement": 0.2857,
+       "visual_verification": 0.0,
+       "duration_variability": 1.0,
+       "temporal_resolution": 1.0
+      },
+      "components": {
+       "telemetry_agreement": {
+        "f1": 0.2857,
+        "precision": 0.25,
+        "recall": 0.3333,
+        "gripper_events": 3,
+        "boundaries": 4
+       },
+       "visual_verification": {
+        "rate": 0.0,
+        "confirmed": 0,
+        "checked": 4,
+        "mean_offset_to_confirmed_change_sec": null
+       },
+       "duration_variability": {
+        "score": 1.0,
+        "cv": 0.9457,
+        "n_segments": 5
+       },
+       "temporal_resolution": {
+        "score": 1.0,
+        "sub_resolution_segments": 0,
+        "min_resolvable_sec": 1.0
+       }
+      },
+      "n_segments": 5,
+      "predicted_boundaries": [
+       1.0,
+       3.0,
+       6.0,
+       8.0
+      ],
+      "gripper_events": [
+       7.8,
+       14.2,
+       17.6
+      ]
+     },
+     "robointer_droid_000023": {
+      "episode_id": "robointer_droid_000023",
+      "self_score": 0.4167,
+      "component_values": {
+       "telemetry_agreement": 0.3333,
+       "visual_verification": 0.0,
+       "duration_variability": 1.0,
+       "temporal_resolution": 1.0
+      },
+      "components": {
+       "telemetry_agreement": {
+        "f1": 0.3333,
+        "precision": 0.25,
+        "recall": 0.5,
+        "gripper_events": 2,
+        "boundaries": 4
+       },
+       "visual_verification": {
+        "rate": 0.0,
+        "confirmed": 0,
+        "checked": 4,
+        "mean_offset_to_confirmed_change_sec": null
+       },
+       "duration_variability": {
+        "score": 1.0,
+        "cv": 1.0387,
+        "n_segments": 5
+       },
+       "temporal_resolution": {
+        "score": 1.0,
+        "sub_resolution_segments": 0,
+        "min_resolvable_sec": 1.0
+       }
+      },
+      "n_segments": 5,
+      "predicted_boundaries": [
+       1.0,
+       3.0,
+       5.0,
+       7.0
+      ],
+      "gripper_events": [
+       6.9,
+       16.7
+      ]
+     },
+     "robointer_droid_000024": {
+      "episode_id": "robointer_droid_000024",
+      "self_score": 0.5417,
+      "component_values": {
+       "telemetry_agreement": 0.3333,
+       "visual_verification": 0.5,
+       "duration_variability": 0.6667,
+       "temporal_resolution": 1.0
+      },
+      "components": {
+       "telemetry_agreement": {
+        "f1": 0.3333,
+        "precision": 0.25,
+        "recall": 0.5,
+        "gripper_events": 2,
+        "boundaries": 4
+       },
+       "visual_verification": {
+        "rate": 0.5,
+        "confirmed": 2,
+        "checked": 4,
+        "mean_offset_to_confirmed_change_sec": 0.15
+       },
+       "duration_variability": {
+        "score": 0.6667,
+        "cv": 0.3333,
+        "n_segments": 5
+       },
+       "temporal_resolution": {
+        "score": 1.0,
+        "sub_resolution_segments": 0,
+        "min_resolvable_sec": 1.0
+       }
+      },
+      "n_segments": 5,
+      "predicted_boundaries": [
+       3.0,
+       5.0,
+       10.0,
+       15.0
+      ],
+      "gripper_events": [
+       9.0,
+       15.2
+      ]
+     },
+     "robointer_droid_000025": {
+      "episode_id": "robointer_droid_000025",
+      "self_score": 0.4167,
+      "component_values": {
+       "telemetry_agreement": 0.3333,
+       "visual_verification": 0.0,
+       "duration_variability": 1.0,
+       "temporal_resolution": 1.0
+      },
+      "components": {
+       "telemetry_agreement": {
+        "f1": 0.3333,
+        "precision": 0.25,
+        "recall": 0.5,
+        "gripper_events": 2,
+        "boundaries": 4
+       },
+       "visual_verification": {
+        "rate": 0.0,
+        "confirmed": 0,
+        "checked": 4,
+        "mean_offset_to_confirmed_change_sec": null
+       },
+       "duration_variability": {
+        "score": 1.0,
+        "cv": 1.0387,
+        "n_segments": 5
+       },
+       "temporal_resolution": {
+        "score": 1.0,
+        "sub_resolution_segments": 0,
+        "min_resolvable_sec": 1.0
+       }
+      },
+      "n_segments": 5,
+      "predicted_boundaries": [
+       1.0,
+       3.0,
+       5.0,
+       7.0
+      ],
+      "gripper_events": [
+       6.9,
+       16.7
+      ]
+     },
+     "robointer_droid_000027": {
+      "episode_id": "robointer_droid_000027",
+      "self_score": 0.4,
+      "component_values": {
+       "telemetry_agreement": 0.2857,
+       "visual_verification": 0.0,
+       "duration_variability": 1.0,
+       "temporal_resolution": 1.0
+      },
+      "components": {
+       "telemetry_agreement": {
+        "f1": 0.2857,
+        "precision": 0.25,
+        "recall": 0.3333,
+        "gripper_events": 3,
+        "boundaries": 4
+       },
+       "visual_verification": {
+        "rate": 0.0,
+        "confirmed": 0,
+        "checked": 4,
+        "mean_offset_to_confirmed_change_sec": null
+       },
+       "duration_variability": {
+        "score": 1.0,
+        "cv": 0.9457,
+        "n_segments": 5
+       },
+       "temporal_resolution": {
+        "score": 1.0,
+        "sub_resolution_segments": 0,
+        "min_resolvable_sec": 1.0
+       }
+      },
+      "n_segments": 5,
+      "predicted_boundaries": [
+       1.0,
+       3.0,
+       5.0,
+       8.0
+      ],
+      "gripper_events": [
+       7.8,
+       14.2,
+       17.6
+      ]
+     },
+     "robointer_droid_000028": {
+      "episode_id": "robointer_droid_000028",
+      "self_score": 0.4167,
+      "component_values": {
+       "telemetry_agreement": 0.3333,
+       "visual_verification": 0.0,
+       "duration_variability": 1.0,
+       "temporal_resolution": 1.0
+      },
+      "components": {
+       "telemetry_agreement": {
+        "f1": 0.3333,
+        "precision": 0.25,
+        "recall": 0.5,
+        "gripper_events": 2,
+        "boundaries": 8
+       },
+       "visual_verification": {
+        "rate": 0.0,
+        "confirmed": 0,
+        "checked": 8,
+        "mean_offset_to_confirmed_change_sec": null
+       },
+       "duration_variability": {
+        "score": 1.0,
+        "cv": 1.5163,
+        "n_segments": 9
+       },
+       "temporal_resolution": {
+        "score": 1.0,
+        "sub_resolution_segments": 0,
+        "min_resolvable_sec": 1.0
+       }
+      },
+      "n_segments": 9,
+      "predicted_boundaries": [
+       1.0,
+       2.0,
+       3.0,
+       4.0,
+       5.0,
+       6.0,
+       7.0,
+       8.0
+      ],
+      "gripper_events": [
+       7.6,
+       16.9
+      ]
+     },
+     "robointer_droid_000029": {
+      "episode_id": "robointer_droid_000029",
+      "self_score": 0.5917,
+      "component_values": {
+       "telemetry_agreement": 0.3333,
+       "visual_verification": 0.5,
+       "duration_variability": 1.0,
+       "temporal_resolution": 1.0
+      },
+      "components": {
+       "telemetry_agreement": {
+        "f1": 0.3333,
+        "precision": 0.5,
+        "recall": 0.25,
+        "gripper_events": 4,
+        "boundaries": 2
+       },
+       "visual_verification": {
+        "rate": 0.5,
+        "confirmed": 1,
+        "checked": 2,
+        "mean_offset_to_confirmed_change_sec": 0.0
+       },
+       "duration_variability": {
+        "score": 1.0,
+        "cv": 0.5026,
+        "n_segments": 3
+       },
+       "temporal_resolution": {
+        "score": 1.0,
+        "sub_resolution_segments": 0,
+        "min_resolvable_sec": 1.0
+       }
+      },
+      "n_segments": 3,
+      "predicted_boundaries": [
+       5.5,
+       10.0
+      ],
+      "gripper_events": [
+       10.0,
+       12.6,
+       13.5,
+       22.9
+      ]
+     },
+     "robointer_droid_000030": {
+      "episode_id": "robointer_droid_000030",
+      "self_score": 0.634,
+      "component_values": {
+       "telemetry_agreement": 0.25,
+       "visual_verification": 1.0,
+       "duration_variability": 0.3103,
+       "temporal_resolution": 1.0
+      },
+      "components": {
+       "telemetry_agreement": {
+        "f1": 0.25,
+        "precision": 0.25,
+        "recall": 0.25,
+        "gripper_events": 4,
+        "boundaries": 4
+       },
+       "visual_verification": {
+        "rate": 1.0,
+        "confirmed": 4,
+        "checked": 4,
+        "mean_offset_to_confirmed_change_sec": 0.0
+       },
+       "duration_variability": {
+        "score": 0.3103,
+        "cv": 0.1552,
+        "n_segments": 5
+       },
+       "temporal_resolution": {
+        "score": 1.0,
+        "sub_resolution_segments": 0,
+        "min_resolvable_sec": 1.0
+       }
+      },
+      "n_segments": 5,
+      "predicted_boundaries": [
+       5.0,
+       10.0,
+       15.0,
+       20.0
+      ],
+      "gripper_events": [
+       10.0,
+       12.6,
+       13.5,
+       22.9
+      ]
+     },
+     "robointer_droid_000032": {
+      "episode_id": "robointer_droid_000032",
+      "self_score": 0.3636,
+      "component_values": {
+       "telemetry_agreement": 0.1818,
+       "visual_verification": 0.0,
+       "duration_variability": 1.0,
+       "temporal_resolution": 1.0
+      },
+      "components": {
+       "telemetry_agreement": {
+        "f1": 0.1818,
+        "precision": 0.1111,
+        "recall": 0.5,
+        "gripper_events": 2,
+        "boundaries": 9
+       },
+       "visual_verification": {
+        "rate": 0.0,
+        "confirmed": 0,
+        "checked": 8,
+        "mean_offset_to_confirmed_change_sec": null
+       },
+       "duration_variability": {
+        "score": 1.0,
+        "cv": 0.9603,
+        "n_segments": 10
+       },
+       "temporal_resolution": {
+        "score": 1.0,
+        "sub_resolution_segments": 0,
+        "min_resolvable_sec": 1.0
+       }
+      },
+      "n_segments": 10,
+      "predicted_boundaries": [
+       1.0,
+       3.0,
+       5.0,
+       7.0,
+       9.0,
+       11.0,
+       13.0,
+       15.0,
+       17.0
+      ],
+      "gripper_events": [
+       11.3,
+       25.4
+      ]
+     },
+     "robointer_droid_000033": {
+      "episode_id": "robointer_droid_000033",
+      "self_score": 0.37,
+      "component_values": {
+       "telemetry_agreement": 0.2,
+       "visual_verification": 0.0,
+       "duration_variability": 1.0,
+       "temporal_resolution": 1.0
+      },
+      "components": {
+       "telemetry_agreement": {
+        "f1": 0.2,
+        "precision": 0.125,
+        "recall": 0.5,
+        "gripper_events": 2,
+        "boundaries": 8
+       },
+       "visual_verification": {
+        "rate": 0.0,
+        "confirmed": 0,
+        "checked": 8,
+        "mean_offset_to_confirmed_change_sec": null
+       },
+       "duration_variability": {
+        "score": 1.0,
+        "cv": 1.11,
+        "n_segments": 9
+       },
+       "temporal_resolution": {
+        "score": 1.0,
+        "sub_resolution_segments": 0,
+        "min_resolvable_sec": 1.0
+       }
+      },
+      "n_segments": 9,
+      "predicted_boundaries": [
+       1.0,
+       3.0,
+       5.0,
+       7.0,
+       9.0,
+       11.0,
+       13.0,
+       15.0
+      ],
+      "gripper_events": [
+       11.3,
+       25.4
+      ]
+     },
+     "robointer_droid_000034": {
+      "episode_id": "robointer_droid_000034",
+      "self_score": 0.3,
+      "component_values": {
+       "telemetry_agreement": 0.0,
+       "visual_verification": 0.0,
+       "duration_variability": 1.0,
+       "temporal_resolution": 1.0
+      },
+      "components": {
+       "telemetry_agreement": {
+        "f1": 0.0,
+        "precision": 0.0,
+        "recall": 0.0,
+        "gripper_events": 2,
+        "boundaries": 7
+       },
+       "visual_verification": {
+        "rate": 0.0,
+        "confirmed": 0,
+        "checked": 7,
+        "mean_offset_to_confirmed_change_sec": null
+       },
+       "duration_variability": {
+        "score": 1.0,
+        "cv": 1.9057,
+        "n_segments": 8
+       },
+       "temporal_resolution": {
+        "score": 1.0,
+        "sub_resolution_segments": 0,
+        "min_resolvable_sec": 1.0
+       }
+      },
+      "n_segments": 8,
+      "predicted_boundaries": [
+       1.0,
+       2.0,
+       3.0,
+       4.0,
+       5.0,
+       6.0,
+       7.0
+      ],
+      "gripper_events": [
+       19.1,
+       27.1
+      ]
+     },
+     "robointer_droid_000035": {
+      "episode_id": "robointer_droid_000035",
+      "self_score": 0.3,
+      "component_values": {
+       "telemetry_agreement": 0.0,
+       "visual_verification": 0.0,
+       "duration_variability": 1.0,
+       "temporal_resolution": 1.0
+      },
+      "components": {
+       "telemetry_agreement": {
+        "f1": 0.0,
+        "precision": 0.0,
+        "recall": 0.0,
+        "gripper_events": 2,
+        "boundaries": 4
+       },
+       "visual_verification": {
+        "rate": 0.0,
+        "confirmed": 0,
+        "checked": 4,
+        "mean_offset_to_confirmed_change_sec": null
+       },
+       "duration_variability": {
+        "score": 1.0,
+        "cv": 1.3054,
+        "n_segments": 5
+       },
+       "temporal_resolution": {
+        "score": 1.0,
+        "sub_resolution_segments": 0,
+        "min_resolvable_sec": 1.0
+       }
+      },
+      "n_segments": 5,
+      "predicted_boundaries": [
+       1.0,
+       3.0,
+       5.0,
+       8.0
+      ],
+      "gripper_events": [
+       19.1,
+       27.1
+      ]
+     },
+     "robointer_droid_000036": {
+      "episode_id": "robointer_droid_000036",
+      "self_score": 0.4077,
+      "component_values": {
+       "telemetry_agreement": 0.3077,
+       "visual_verification": 0.0,
+       "duration_variability": 1.0,
+       "temporal_resolution": 1.0
+      },
+      "components": {
+       "telemetry_agreement": {
+        "f1": 0.3077,
+        "precision": 0.2222,
+        "recall": 0.5,
+        "gripper_events": 2,
+        "boundaries": 9
+       },
+       "visual_verification": {
+        "rate": 0.0,
+        "confirmed": 0,
+        "checked": 8,
+        "mean_offset_to_confirmed_change_sec": null
+       },
+       "duration_variability": {
+        "score": 1.0,
+        "cv": 1.917,
+        "n_segments": 10
+       },
+       "temporal_resolution": {
+        "score": 1.0,
+        "sub_resolution_segments": 0,
+        "min_resolvable_sec": 1.0
+       }
+      },
+      "n_segments": 10,
+      "predicted_boundaries": [
+       1.0,
+       2.0,
+       3.0,
+       4.0,
+       5.0,
+       6.0,
+       7.0,
+       8.0,
+       9.0
+      ],
+      "gripper_events": [
+       5.7,
+       26.8
+      ]
+     },
+     "robointer_droid_000037": {
+      "episode_id": "robointer_droid_000037",
+      "self_score": 0.3,
+      "component_values": {
+       "telemetry_agreement": 0.0,
+       "visual_verification": 0.0,
+       "duration_variability": 1.0,
+       "temporal_resolution": 1.0
+      },
+      "components": {
+       "telemetry_agreement": {
+        "f1": 0.0,
+        "precision": 0.0,
+        "recall": 0.0,
+        "gripper_events": 4,
+        "boundaries": 5
+       },
+       "visual_verification": {
+        "rate": 0.0,
+        "confirmed": 0,
+        "checked": 5,
+        "mean_offset_to_confirmed_change_sec": null
+       },
+       "duration_variability": {
+        "score": 1.0,
+        "cv": 1.7653,
+        "n_segments": 6
+       },
+       "temporal_resolution": {
+        "score": 1.0,
+        "sub_resolution_segments": 0,
+        "min_resolvable_sec": 1.0
+       }
+      },
+      "n_segments": 6,
+      "predicted_boundaries": [
+       1.0,
+       2.0,
+       3.0,
+       4.0,
+       5.0
+      ],
+      "gripper_events": [
+       10.8,
+       19.7,
+       20.6,
+       27.5
+      ]
+     },
+     "robointer_droid_000038": {
+      "episode_id": "robointer_droid_000038",
+      "self_score": 0.44,
+      "component_values": {
+       "telemetry_agreement": 0.4,
+       "visual_verification": 0.0,
+       "duration_variability": 1.0,
+       "temporal_resolution": 1.0
+      },
+      "components": {
+       "telemetry_agreement": {
+        "f1": 0.4,
+        "precision": 0.3333,
+        "recall": 0.5,
+        "gripper_events": 2,
+        "boundaries": 6
+       },
+       "visual_verification": {
+        "rate": 0.0,
+        "confirmed": 0,
+        "checked": 6,
+        "mean_offset_to_confirmed_change_sec": null
+       },
+       "duration_variability": {
+        "score": 1.0,
+        "cv": 1.8305,
+        "n_segments": 7
+       },
+       "temporal_resolution": {
+        "score": 1.0,
+        "sub_resolution_segments": 0,
+        "min_resolvable_sec": 1.0
+       }
+      },
+      "n_segments": 7,
+      "predicted_boundaries": [
+       1.0,
+       2.0,
+       3.0,
+       4.0,
+       5.0,
+       6.0
+      ],
+      "gripper_events": [
+       5.7,
+       26.8
+      ]
+     },
+     "robointer_droid_000039": {
+      "episode_id": "robointer_droid_000039",
+      "self_score": 0.3,
+      "component_values": {
+       "telemetry_agreement": 0.0,
+       "visual_verification": 0.0,
+       "duration_variability": 1.0,
+       "temporal_resolution": 1.0
+      },
+      "components": {
+       "telemetry_agreement": {
+        "f1": 0.0,
+        "precision": 0.0,
+        "recall": 0.0,
+        "gripper_events": 4,
+        "boundaries": 5
+       },
+       "visual_verification": {
+        "rate": 0.0,
+        "confirmed": 0,
+        "checked": 5,
+        "mean_offset_to_confirmed_change_sec": null
+       },
+       "duration_variability": {
+        "score": 1.0,
+        "cv": 1.4859,
+        "n_segments": 6
+       },
+       "temporal_resolution": {
+        "score": 1.0,
+        "sub_resolution_segments": 0,
+        "min_resolvable_sec": 1.0
+       }
+      },
+      "n_segments": 6,
+      "predicted_boundaries": [
+       1.0,
+       3.0,
+       5.0,
+       7.0,
+       8.0
+      ],
+      "gripper_events": [
+       10.8,
+       19.7,
+       20.6,
+       27.5
+      ]
+     },
+     "robointer_droid_000042": {
+      "episode_id": "robointer_droid_000042",
+      "self_score": 0.3,
+      "component_values": {
+       "telemetry_agreement": 0.0,
+       "visual_verification": 0.0,
+       "duration_variability": 1.0,
+       "temporal_resolution": 1.0
+      },
+      "components": {
+       "telemetry_agreement": {
+        "f1": 0.0,
+        "precision": 0.0,
+        "recall": 0.0,
+        "gripper_events": 2,
+        "boundaries": 5
+       },
+       "visual_verification": {
+        "rate": 0.0,
+        "confirmed": 0,
+        "checked": 5,
+        "mean_offset_to_confirmed_change_sec": null
+       },
+       "duration_variability": {
+        "score": 1.0,
+        "cv": 0.5833,
+        "n_segments": 6
+       },
+       "temporal_resolution": {
+        "score": 1.0,
+        "sub_resolution_segments": 0,
+        "min_resolvable_sec": 1.0
+       }
+      },
+      "n_segments": 6,
+      "predicted_boundaries": [
+       1.0,
+       5.0,
+       10.0,
+       15.0,
+       20.0
+      ],
+      "gripper_events": [
+       16.1,
+       28.3
+      ]
+     },
+     "robointer_droid_000043": {
+      "episode_id": "robointer_droid_000043",
+      "self_score": 0.3,
+      "component_values": {
+       "telemetry_agreement": 0.0,
+       "visual_verification": 0.0,
+       "duration_variability": 1.0,
+       "temporal_resolution": 1.0
+      },
+      "components": {
+       "telemetry_agreement": {
+        "f1": 0.0,
+        "precision": 0.0,
+        "recall": 0.0,
+        "gripper_events": 2,
+        "boundaries": 7
+       },
+       "visual_verification": {
+        "rate": 0.0,
+        "confirmed": 0,
+        "checked": 7,
+        "mean_offset_to_confirmed_change_sec": null
+       },
+       "duration_variability": {
+        "score": 1.0,
+        "cv": 1.9884,
+        "n_segments": 8
+       },
+       "temporal_resolution": {
+        "score": 1.0,
+        "sub_resolution_segments": 0,
+        "min_resolvable_sec": 1.0
+       }
+      },
+      "n_segments": 8,
+      "predicted_boundaries": [
+       1.0,
+       2.0,
+       3.0,
+       4.0,
+       5.0,
+       6.0,
+       7.0
+      ],
+      "gripper_events": [
+       7.8,
+       30.0
+      ]
+     },
+     "robointer_droid_000044": {
+      "episode_id": "robointer_droid_000044",
+      "self_score": 0.3,
+      "component_values": {
+       "telemetry_agreement": 0.0,
+       "visual_verification": 0.0,
+       "duration_variability": 1.0,
+       "temporal_resolution": 1.0
+      },
+      "components": {
+       "telemetry_agreement": {
+        "f1": 0.0,
+        "precision": 0.0,
+        "recall": 0.0,
+        "gripper_events": 2,
+        "boundaries": 4
+       },
+       "visual_verification": {
+        "rate": 0.0,
+        "confirmed": 0,
+        "checked": 4,
+        "mean_offset_to_confirmed_change_sec": null
+       },
+       "duration_variability": {
+        "score": 1.0,
+        "cv": 1.6894,
+        "n_segments": 5
+       },
+       "temporal_resolution": {
+        "score": 1.0,
+        "sub_resolution_segments": 0,
+        "min_resolvable_sec": 1.0
+       }
+      },
+      "n_segments": 5,
+      "predicted_boundaries": [
+       1.0,
+       2.0,
+       3.0,
+       4.0
+      ],
+      "gripper_events": [
+       7.8,
+       30.0
+      ]
+     },
+     "robointer_droid_000045": {
+      "episode_id": "robointer_droid_000045",
+      "self_score": 0.615,
+      "component_values": {
+       "telemetry_agreement": 0.4,
+       "visual_verification": 0.5,
+       "duration_variability": 1.0,
+       "temporal_resolution": 1.0
+      },
+      "components": {
+       "telemetry_agreement": {
+        "f1": 0.4,
+        "precision": 0.5,
+        "recall": 0.3333,
+        "gripper_events": 6,
+        "boundaries": 4
+       },
+       "visual_verification": {
+        "rate": 0.5,
+        "confirmed": 2,
+        "checked": 4,
+        "mean_offset_to_confirmed_change_sec": 0.0
+       },
+       "duration_variability": {
+        "score": 1.0,
+        "cv": 1.5215,
+        "n_segments": 5
+       },
+       "temporal_resolution": {
+        "score": 1.0,
+        "sub_resolution_segments": 0,
+        "min_resolvable_sec": 1.0
+       }
+      },
+      "n_segments": 5,
+      "predicted_boundaries": [
+       1.0,
+       3.0,
+       5.0,
+       7.0
+      ],
+      "gripper_events": [
+       5.2,
+       7.4,
+       10.4,
+       14.9,
+       19.7,
+       23.1
+      ]
+     },
+     "robointer_droid_000046": {
+      "episode_id": "robointer_droid_000046",
+      "self_score": 0.4458,
+      "component_values": {
+       "telemetry_agreement": 0.4167,
+       "visual_verification": 0.0,
+       "duration_variability": 1.0,
+       "temporal_resolution": 1.0
+      },
+      "components": {
+       "telemetry_agreement": {
+        "f1": 0.4167,
+        "precision": 0.3571,
+        "recall": 0.5,
+        "gripper_events": 6,
+        "boundaries": 14
+       },
+       "visual_verification": {
+        "rate": 0.0,
+        "confirmed": 0,
+        "checked": 8,
+        "mean_offset_to_confirmed_change_sec": null
+       },
+       "duration_variability": {
+        "score": 1.0,
+        "cv": 2.204,
+        "n_segments": 15
+       },
+       "temporal_resolution": {
+        "score": 1.0,
+        "sub_resolution_segments": 0,
+        "min_resolvable_sec": 1.0
+       }
+      },
+      "n_segments": 15,
+      "predicted_boundaries": [
+       1.0,
+       2.0,
+       3.0,
+       4.0,
+       5.0,
+       6.0,
+       7.0,
+       8.0,
+       9.0,
+       10.0,
+       11.0,
+       12.0,
+       13.0,
+       14.0
+      ],
+      "gripper_events": [
+       5.2,
+       7.4,
+       10.4,
+       14.9,
+       19.7,
+       23.1
+      ]
+     },
+     "robointer_droid_000047": {
+      "episode_id": "robointer_droid_000047",
+      "self_score": 0.35,
+      "component_values": {
+       "telemetry_agreement": 0.1429,
+       "visual_verification": 0.0,
+       "duration_variability": 1.0,
+       "temporal_resolution": 1.0
+      },
+      "components": {
+       "telemetry_agreement": {
+        "f1": 0.1429,
+        "precision": 0.1667,
+        "recall": 0.125,
+        "gripper_events": 8,
+        "boundaries": 6
+       },
+       "visual_verification": {
+        "rate": 0.0,
+        "confirmed": 0,
+        "checked": 6,
+        "mean_offset_to_confirmed_change_sec": null
+       },
+       "duration_variability": {
+        "score": 1.0,
+        "cv": 2.0187,
+        "n_segments": 7
+       },
+       "temporal_resolution": {
+        "score": 1.0,
+        "sub_resolution_segments": 0,
+        "min_resolvable_sec": 1.0
+       }
+      },
+      "n_segments": 7,
+      "predicted_boundaries": [
+       1.0,
+       2.0,
+       3.0,
+       4.0,
+       5.0,
+       6.5
+      ],
+      "gripper_events": [
+       6.4,
+       11.1,
+       14.4,
+       18.6,
+       24.9,
+       29.8,
+       36.1,
+       40.9
+      ]
+     },
+     "robointer_droid_000050": {
+      "episode_id": "robointer_droid_000050",
+      "self_score": 0.356,
+      "component_values": {
+       "telemetry_agreement": 0.16,
+       "visual_verification": 0.0,
+       "duration_variability": 1.0,
+       "temporal_resolution": 1.0
+      },
+      "components": {
+       "telemetry_agreement": {
+        "f1": 0.16,
+        "precision": 0.2222,
+        "recall": 0.125,
+        "gripper_events": 8,
+        "boundaries": 9
+       },
+       "visual_verification": {
+        "rate": 0.0,
+        "confirmed": 0,
+        "checked": 8,
+        "mean_offset_to_confirmed_change_sec": null
+       },
+       "duration_variability": {
+        "score": 1.0,
+        "cv": 2.3039,
+        "n_segments": 10
+       },
+       "temporal_resolution": {
+        "score": 1.0,
+        "sub_resolution_segments": 0,
+        "min_resolvable_sec": 1.0
+       }
+      },
+      "n_segments": 10,
+      "predicted_boundaries": [
+       1.0,
+       2.0,
+       3.0,
+       4.0,
+       5.0,
+       6.0,
+       7.0,
+       8.0,
+       9.0
+      ],
+      "gripper_events": [
+       6.4,
+       11.1,
+       14.4,
+       18.6,
+       24.9,
+       29.8,
+       36.1,
+       40.9
+      ]
+     },
+     "robointer_droid_000055": {
+      "episode_id": "robointer_droid_000055",
+      "self_score": 0.3,
+      "component_values": {
+       "telemetry_agreement": 0.0,
+       "visual_verification": 0.0,
+       "duration_variability": 1.0,
+       "temporal_resolution": 1.0
+      },
+      "components": {
+       "telemetry_agreement": {
+        "f1": 0.0,
+        "precision": 0.0,
+        "recall": 0.0,
+        "gripper_events": 2,
+        "boundaries": 6
+       },
+       "visual_verification": {
+        "rate": 0.0,
+        "confirmed": 0,
+        "checked": 6,
+        "mean_offset_to_confirmed_change_sec": null
+       },
+       "duration_variability": {
+        "score": 1.0,
+        "cv": 2.1845,
+        "n_segments": 7
+       },
+       "temporal_resolution": {
+        "score": 1.0,
+        "sub_resolution_segments": 0,
+        "min_resolvable_sec": 1.0
+       }
+      },
+      "n_segments": 7,
+      "predicted_boundaries": [
+       1.0,
+       2.0,
+       3.0,
+       4.0,
+       5.0,
+       6.0
+      ],
+      "gripper_events": [
+       13.0,
+       63.6
+      ]
+     },
+     "robointer_droid_000056": {
+      "episode_id": "robointer_droid_000056",
+      "self_score": 0.3,
+      "component_values": {
+       "telemetry_agreement": 0.0,
+       "visual_verification": 0.0,
+       "duration_variability": 1.0,
+       "temporal_resolution": 1.0
+      },
+      "components": {
+       "telemetry_agreement": {
+        "f1": 0.0,
+        "precision": 0.0,
+        "recall": 0.0,
+        "gripper_events": 2,
+        "boundaries": 5
+       },
+       "visual_verification": {
+        "rate": 0.0,
+        "confirmed": 0,
+        "checked": 5,
+        "mean_offset_to_confirmed_change_sec": null
+       },
+       "duration_variability": {
+        "score": 1.0,
+        "cv": 1.9047,
+        "n_segments": 6
+       },
+       "temporal_resolution": {
+        "score": 1.0,
+        "sub_resolution_segments": 0,
+        "min_resolvable_sec": 1.0
+       }
+      },
+      "n_segments": 6,
+      "predicted_boundaries": [
+       1.0,
+       3.0,
+       5.0,
+       7.0,
+       8.0
+      ],
+      "gripper_events": [
+       13.0,
+       63.6
+      ]
+     },
+     "robointer_droid_000057": {
+      "episode_id": "robointer_droid_000057",
+      "self_score": 0.3972,
+      "component_values": {
+       "telemetry_agreement": 0.1111,
+       "visual_verification": 0.1667,
+       "duration_variability": 1.0,
+       "temporal_resolution": 1.0
+      },
+      "components": {
+       "telemetry_agreement": {
+        "f1": 0.1111,
+        "precision": 0.1667,
+        "recall": 0.0833,
+        "gripper_events": 12,
+        "boundaries": 6
+       },
+       "visual_verification": {
+        "rate": 0.1667,
+        "confirmed": 1,
+        "checked": 6,
+        "mean_offset_to_confirmed_change_sec": 0.0
+       },
+       "duration_variability": {
+        "score": 1.0,
+        "cv": 1.813,
+        "n_segments": 7
+       },
+       "temporal_resolution": {
+        "score": 1.0,
+        "sub_resolution_segments": 0,
+        "min_resolvable_sec": 1.0
+       }
+      },
+      "n_segments": 7,
+      "predicted_boundaries": [
+       1.0,
+       2.0,
+       10.0,
+       15.0,
+       16.0,
+       17.0
+      ],
+      "gripper_events": [
+       6.7,
+       13.4,
+       16.2,
+       22.7,
+       26.0,
+       31.1,
+       35.1,
+       40.4,
+       51.9,
+       58.8,
+       63.6,
+       71.6
+      ]
+     },
+     "robointer_droid_000058": {
+      "episode_id": "robointer_droid_000058",
+      "self_score": 0.6889,
+      "component_values": {
+       "telemetry_agreement": 0.1111,
+       "visual_verification": 1.0,
+       "duration_variability": 1.0,
+       "temporal_resolution": 1.0
+      },
+      "components": {
+       "telemetry_agreement": {
+        "f1": 0.1111,
+        "precision": 0.1667,
+        "recall": 0.0833,
+        "gripper_events": 12,
+        "boundaries": 6
+       },
+       "visual_verification": {
+        "rate": 1.0,
+        "confirmed": 6,
+        "checked": 6,
+        "mean_offset_to_confirmed_change_sec": 0.0
+       },
+       "duration_variability": {
+        "score": 1.0,
+        "cv": 2.2193,
+        "n_segments": 7
+       },
+       "temporal_resolution": {
+        "score": 1.0,
+        "sub_resolution_segments": 0,
+        "min_resolvable_sec": 1.0
+       }
+      },
+      "n_segments": 7,
+      "predicted_boundaries": [
+       1.0,
+       2.0,
+       3.0,
+       4.0,
+       5.0,
+       6.0
+      ],
+      "gripper_events": [
+       6.7,
+       13.4,
+       16.2,
+       22.7,
+       26.0,
+       31.1,
+       35.1,
+       40.4,
+       51.9,
+       58.8,
+       63.6,
+       71.6
+      ]
+     },
+     "robointer_droid_000059": {
+      "episode_id": "robointer_droid_000059",
+      "self_score": 0.37,
+      "component_values": {
+       "telemetry_agreement": 0.2,
+       "visual_verification": 0.0,
+       "duration_variability": 1.0,
+       "temporal_resolution": 1.0
+      },
+      "components": {
+       "telemetry_agreement": {
+        "f1": 0.2,
+        "precision": 0.1667,
+        "recall": 0.25,
+        "gripper_events": 4,
+        "boundaries": 6
+       },
+       "visual_verification": {
+        "rate": 0.0,
+        "confirmed": 0,
+        "checked": 6,
+        "mean_offset_to_confirmed_change_sec": null
+       },
+       "duration_variability": {
+        "score": 1.0,
+        "cv": 1.523,
+        "n_segments": 7
+       },
+       "temporal_resolution": {
+        "score": 1.0,
+        "sub_resolution_segments": 0,
+        "min_resolvable_sec": 1.0
+       }
+      },
+      "n_segments": 7,
+      "predicted_boundaries": [
+       1.0,
+       2.0,
+       10.0,
+       15.0,
+       20.0,
+       25.0
+      ],
+      "gripper_events": [
+       17.8,
+       19.3,
+       62.8,
+       64.6
+      ]
+     },
+     "robointer_droid_000060": {
+      "episode_id": "robointer_droid_000060",
+      "self_score": 0.5688,
+      "component_values": {
+       "telemetry_agreement": 0.2,
+       "visual_verification": 0.8333,
+       "duration_variability": 0.3808,
+       "temporal_resolution": 1.0
+      },
+      "components": {
+       "telemetry_agreement": {
+        "f1": 0.2,
+        "precision": 0.1667,
+        "recall": 0.25,
+        "gripper_events": 4,
+        "boundaries": 6
+       },
+       "visual_verification": {
+        "rate": 0.8333,
+        "confirmed": 5,
+        "checked": 6,
+        "mean_offset_to_confirmed_change_sec": 0.3
+       },
+       "duration_variability": {
+        "score": 0.3808,
+        "cv": 0.1904,
+        "n_segments": 7
+       },
+       "temporal_resolution": {
+        "score": 1.0,
+        "sub_resolution_segments": 0,
+        "min_resolvable_sec": 1.0
+       }
+      },
+      "n_segments": 7,
+      "predicted_boundaries": [
+       10.0,
+       20.0,
+       30.0,
+       40.0,
+       50.0,
+       60.0
+      ],
+      "gripper_events": [
+       17.8,
+       19.3,
+       62.8,
+       64.6
+      ]
+     },
+     "robointer_droid_000061": {
+      "episode_id": "robointer_droid_000061",
+      "self_score": 0.37,
+      "component_values": {
+       "telemetry_agreement": 0.2,
+       "visual_verification": 0.0,
+       "duration_variability": 1.0,
+       "temporal_resolution": 1.0
+      },
+      "components": {
+       "telemetry_agreement": {
+        "f1": 0.2,
+        "precision": 0.125,
+        "recall": 0.5,
+        "gripper_events": 2,
+        "boundaries": 8
+       },
+       "visual_verification": {
+        "rate": 0.0,
+        "confirmed": 0,
+        "checked": 8,
+        "mean_offset_to_confirmed_change_sec": null
+       },
+       "duration_variability": {
+        "score": 1.0,
+        "cv": 2.3837,
+        "n_segments": 9
+       },
+       "temporal_resolution": {
+        "score": 1.0,
+        "sub_resolution_segments": 0,
+        "min_resolvable_sec": 1.0
+       }
+      },
+      "n_segments": 9,
+      "predicted_boundaries": [
+       1.0,
+       3.0,
+       5.0,
+       7.0,
+       9.0,
+       11.0,
+       13.0,
+       15.0
+      ],
+      "gripper_events": [
+       11.1,
+       104.2
+      ]
+     },
+     "robointer_droid_000062": {
+      "episode_id": "robointer_droid_000062",
+      "self_score": 0.3,
+      "component_values": {
+       "telemetry_agreement": 0.0,
+       "visual_verification": 0.0,
+       "duration_variability": 1.0,
+       "temporal_resolution": 1.0
+      },
+      "components": {
+       "telemetry_agreement": {
+        "f1": 0.0,
+        "precision": 0.0,
+        "recall": 0.0,
+        "gripper_events": 2,
+        "boundaries": 9
+       },
+       "visual_verification": {
+        "rate": 0.0,
+        "confirmed": 0,
+        "checked": 8,
+        "mean_offset_to_confirmed_change_sec": null
+       },
+       "duration_variability": {
+        "score": 1.0,
+        "cv": 2.7204,
+        "n_segments": 10
+       },
+       "temporal_resolution": {
+        "score": 1.0,
+        "sub_resolution_segments": 0,
+        "min_resolvable_sec": 1.0
+       }
+      },
+      "n_segments": 10,
+      "predicted_boundaries": [
+       1.0,
+       2.0,
+       3.0,
+       4.0,
+       5.0,
+       6.0,
+       7.0,
+       8.0,
+       9.0
+      ],
+      "gripper_events": [
+       11.1,
+       104.2
+      ]
+     }
+    }
+   },
+   "task_id": null
+  },
+  "EV-6ec5794956": {
+   "id": "EV-6ec5794956",
+   "tool": "episode_predictions",
+   "args": {
+    "episode_id": "robointer_droid_000008"
+   },
+   "result": {
+    "episode_id": "robointer_droid_000008",
+    "instruction": "Pick the bottle on the table and put it in the mug",
+    "duration_sec": 13.8,
+    "has_telemetry": true,
+    "sampling": {
+     "sampling_hz": 2.0,
+     "tile_px": 224,
+     "frames_per_sheet": 20,
+     "cols": 5,
+     "badge": "macrodata",
+     "jpeg_quality": 95
+    },
+    "predicted_segments": [
+     {
+      "start_sec": 0.0,
+      "end_sec": 13.8,
+      "subtask": "Pick the bottle on the table and put it in the mug"
+     }
+    ]
+   },
+   "task_id": "TASK-0eb525d8d7",
+   "created_at": 1792275728.029739
+  },
+  "EV-e0e3309022": {
+   "id": "EV-e0e3309022",
+   "tool": "telemetry_hints",
+   "args": {
+    "episode_id": "robointer_droid_000008",
+    "signals": [
+     "gripper"
+    ]
+   },
+   "result": {
+    "episode_id": "robointer_droid_000008",
+    "signals": [
+     "gripper"
+    ],
+    "n_hints": 2,
+    "n_predicted_boundaries": 0,
+    "hints": [
+     {
+      "t": 7.9,
+      "kind": "gripper_released",
+      "channel": "state:gripper_state",
+      "strength": 1.0,
+      "nearest_predicted_boundary_sec": null,
+      "distance_to_predicted_boundary_sec": null
+     },
+     {
+      "t": 13.7,
+      "kind": "gripper_engaged",
+      "channel": "state:gripper_state",
+      "strength": 1.0,
+      "nearest_predicted_boundary_sec": null,
+      "distance_to_predicted_boundary_sec": null
+     }
+    ]
+   },
+   "task_id": "TASK-0eb525d8d7",
+   "created_at": 1792275728.032249
+  },
+  "EV-3cd4746874": {
+   "id": "EV-3cd4746874",
+   "tool": "inspect_frames",
+   "args": {
+    "episode_id": "robointer_droid_000008",
+    "center_sec": 2.0,
+    "window_sec": 2.0,
+    "local_hz": 4.0,
+    "question": "Does this 2\u2011second frame strip show a completed manipulation state change such as gripper open/close, object placement/release, or a tool starting/stopping a surface change?"
+   },
+   "result": {
+    "episode_id": "robointer_droid_000008",
+    "window": [
+     1.0,
+     3.0
+    ],
+    "frame_timestamps": [
+     1.0,
+     1.25,
+     1.5,
+     1.75,
+     2.0,
+     2.25,
+     2.5,
+     2.75,
+     3.0
+    ],
+    "vision_model": "nvidia/Nemotron-3-Nano-Omni-Reasoning-30B-A3B",
+    "observation": {
+     "observed_state_changes": [
+      {
+       "completed_at_sec": 2.2,
+       "description": "gripper open/close"
+      }
+     ],
+     "answer": "Yes",
+     "visual_confidence": 0.95
+    }
+   },
+   "task_id": "TASK-49b94671a0",
+   "created_at": 1792275740.7199411
+  },
+  "EV-bb03224c18": {
+   "id": "EV-bb03224c18",
+   "tool": "inspect_frames",
+   "args": {
+    "episode_id": "robointer_droid_000006",
+    "center_sec": 2.0,
+    "window_sec": 2.0,
+    "local_hz": 4.0,
+    "question": "Does this 2-second frame strip show a completed manipulation state change such as gripper open/close, object placement/release, or a tool starting/stopping a surface change?"
+   },
+   "result": {
+    "episode_id": "robointer_droid_000006",
+    "window": [
+     1.0,
+     3.0
+    ],
+    "frame_timestamps": [
+     1.0,
+     1.25,
+     1.5,
+     1.75,
+     2.0,
+     2.25,
+     2.5,
+     2.75,
+     3.0
+    ],
+    "vision_model": "nvidia/Nemotron-3-Nano-Omni-Reasoning-30B-A3B",
+    "observation": {
+     "observed_state_changes": [
+      {
+       "completed_at_sec": 2.2,
+       "description": "gripper open/close"
+      }
+     ],
+     "answer": "Yes",
+     "visual_confidence": 0.9
+    }
+   },
+   "task_id": "TASK-49b94671a0",
+   "created_at": 1792275803.9505699
+  }
+ },
+ "incumbent_after": "N001",
+ "usage": {
+  "nemotron": {
+   "calls": 13,
+   "cache_hits": 0,
+   "prompt_tokens": 56109,
+   "completion_tokens": 19662,
+   "cost_usd": 0.064021,
+   "model_latency_s": 561.72
+  },
+  "vision": {
+   "calls": 501,
+   "cache_hits": 337,
+   "prompt_tokens": 254076,
+   "completion_tokens": 33134,
+   "cost_usd": 0.136858,
+   "model_latency_s": 1054.1
+  }
+ }
+}

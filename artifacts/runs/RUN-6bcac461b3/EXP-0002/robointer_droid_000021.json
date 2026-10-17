@@ -1,0 +1,31 @@
+{
+ "episode_id": "robointer_droid_000021",
+ "version_id": "EXP-0002",
+ "segments": [
+  {
+   "start_sec": 0.0,
+   "end_sec": 1.0,
+   "subtask": "The robot approaches the tomato on the red checkered surface."
+  },
+  {
+   "start_sec": 1.0,
+   "end_sec": 3.0,
+   "subtask": "The robot grasps the tomato."
+  },
+  {
+   "start_sec": 3.0,
+   "end_sec": 5.0,
+   "subtask": "The robot lifts the tomato and moves it towards the silver bowl."
+  },
+  {
+   "start_sec": 5.0,
+   "end_sec": 7.0,
+   "subtask": "The robot places the tomato inside the silver bowl."
+  },
+  {
+   "start_sec": 7.0,
+   "end_sec": 18.0,
+   "subtask": "The robot releases the tomato and retracts its arm."
+  }
+ ]
+}
