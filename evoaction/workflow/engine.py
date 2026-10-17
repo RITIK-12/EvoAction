@@ -390,10 +390,11 @@ def run_episode(version: Version, episode_id: str, client: CrusoeClient, run_id:
 
 
 def run_version(version: Version, episode_ids: list[str], client: CrusoeClient, run_id: str, *, store: Store | None = None,
-                settings: Settings | None = None, workers: int = 4) -> dict[str, Any]:
+                settings: Settings | None = None, workers: int | None = None) -> dict[str, Any]:
     store = store or get_store()
     settings = settings or get_settings()
     store.event(run_id, "version_run_started", {"version_id": version.id, "episodes": episode_ids})
+    workers = workers or (settings or get_settings()).workers
     with ThreadPoolExecutor(max_workers=max(1, min(workers, len(episode_ids)))) as ex:
         results = list(ex.map(lambda e: run_episode(version, e, client, run_id, store, settings), episode_ids))
     out = {"version_id": version.id, "workflow_sha256": version.workflow_sha256, "episodes": {r["episode_id"]: r for r in results}}

@@ -1,0 +1,51 @@
+{
+ "episode_id": "robointer_droid_000028",
+ "version_id": "N0",
+ "segments": [
+  {
+   "start_sec": 0.0,
+   "end_sec": 1.0,
+   "subtask": "The robot arm is positioned near the edge of the table, preparing to interact with the paper."
+  },
+  {
+   "start_sec": 1.0,
+   "end_sec": 2.0,
+   "subtask": "The robot arm moves closer to the paper on the table edge."
+  },
+  {
+   "start_sec": 2.0,
+   "end_sec": 3.0,
+   "subtask": "The robot arm grasps the paper from the edge of the table."
+  },
+  {
+   "start_sec": 3.0,
+   "end_sec": 4.0,
+   "subtask": "The robot arm lifts the paper from the table edge."
+  },
+  {
+   "start_sec": 4.0,
+   "end_sec": 5.0,
+   "subtask": "The robot arm begins moving the paper forward."
+  },
+  {
+   "start_sec": 5.0,
+   "end_sec": 6.0,
+   "subtask": "The robot arm continues to move the paper forward across the table surface."
+  },
+  {
+   "start_sec": 6.0,
+   "end_sec": 7.0,
+   "subtask": "The robot arm places the paper forward on the table."
+  },
+  {
+   "start_sec": 7.0,
+   "end_sec": 8.0,
+   "subtask": "The robot arm releases the paper and begins to retract."
+  },
+  {
+   "start_sec": 8.0,
+   "end_sec": 9.0,
+   "subtask": "The robot arm completes the retraction and returns to its initial position."
+  }
+ ]
+}

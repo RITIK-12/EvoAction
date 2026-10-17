@@ -1,0 +1,36 @@
+{
+ "episode_id": "robointer_droid_000021",
+ "version_id": "N0",
+ "segments": [
+  {
+   "start_sec": 0.0,
+   "end_sec": 1.0,
+   "subtask": "approach the tomato"
+  },
+  {
+   "start_sec": 1.0,
+   "end_sec": 3.0,
+   "subtask": "grasp the tomato"
+  },
+  {
+   "start_sec": 3.0,
+   "end_sec": 5.0,
+   "subtask": "lift the tomato"
+  },
+  {
+   "start_sec": 5.0,
+   "end_sec": 7.0,
+   "subtask": "move the tomato to the silver bowl"
+  },
+  {
+   "start_sec": 7.0,
+   "end_sec": 9.0,
+   "subtask": "place the tomato in the silver bowl"
+  },
+  {
+   "start_sec": 9.0,
+   "end_sec": 10.0,
+   "subtask": "release the tomato"
+  }
+ ]
+}

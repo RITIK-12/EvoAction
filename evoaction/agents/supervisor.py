@@ -21,7 +21,9 @@ GOAL = ("Improve the incumbent robot-video temporal subtask annotation workflow 
 LABEL_FREE_SCORE = json.dumps({k: SCORE_DEFINITION[k] for k in ("components", "weights", "aggregation")})
 
 OPERATOR_DOCS = {
-    "sample_contact_sheets": "uniformly samples frames and tiles them into timestamped contact sheets (input to initial_annotate).",
+    "sample_contact_sheets": "uniformly samples frames and tiles them into timestamped contact sheets (input to initial_annotate). "
+                             "All sheets go into one call. Measured on this provider: each sheet image is encoded to ~570 prompt tokens "
+                             "regardless of how many frames it holds, so frames_per_sheet trades temporal coverage per image against per-frame visual detail.",
     "initial_annotate": "one Crusoe multimodal call over all contact sheets with the versioned prompt file; outputs candidate segments (optionally with per-segment confidence). thinking=false is ~10x cheaper/faster but less deliberate.",
     "state_hint_detection": "deterministic robot-telemetry change points (gripper open/close transitions, end-effector pauses). No model call. Skipped when an episode has no telemetry.",
     "inspect_transition_windows": "builds close-up frame strips (local_hz) around selected boundaries; select = all_boundaries | low_confidence | near_hints | hint_disagreement | short_segments; include_unmatched_hints adds windows at telemetry hints with no nearby boundary (candidates for missing boundaries). No model call.",

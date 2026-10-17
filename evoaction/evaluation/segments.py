@@ -162,7 +162,7 @@ def aggregate(scores: list[EpisodeScore]) -> dict[str, Any]:
         "episodes": len(scores),
         "micro_precision": p, "micro_recall": r, "micro_f1": f,
         "micro_f1_iou05": f05,
-        "tp": tp, "fp": n_pred - tp, "fn": n_ref - tp, "n_pred": n_pred, "n_ref": n_ref,
+        "tp": tp, "tp_05": sum(s.tp_05 for s in scores), "fp": n_pred - tp, "fn": n_ref - tp, "n_pred": n_pred, "n_ref": n_ref,
         "short_event_recall": (sum(s.short_tp for s in scores) / short_ref) if short_ref else None,
         "short_ref": short_ref,
         "invalid_items": sum(s.n_invalid for s in scores),

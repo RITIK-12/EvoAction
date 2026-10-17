@@ -55,7 +55,7 @@ def section_sponsor(store, pre) -> str:
                 f"<td class=num>${r['cost']:.4f}</td><td class=num>{r['lat']:.0f}s</td></tr>" for r in rows)
     tot = store.query("SELECT COUNT(*) n, COALESCE(SUM(cost_usd),0) c FROM model_calls WHERE cache_hit=0")[0]
     locked = (pre or {}).get("locked", {})
-    return f"""<h2>1. Sponsor-backed execution (Crusoe Managed Inference, NVIDIA Nemotron)</h2>
+    return f"""<h2>7. Sponsor-backed execution (Crusoe Managed Inference, NVIDIA Nemotron)</h2>
 <div class=card><p>Reasoning / supervisor / investigators / strategy / critic: <code>{esc(locked.get('CRUSOE_REASONING_MODEL'))}</code><br>
 Vision annotation and refinement: <code>{esc(locked.get('CRUSOE_VISION_MODEL'))}</code><br>
 <span class=muted>Model IDs confirmed live via <code>GET /v1/models</code> in preflight. Every row below is a persisted real call (cache hits re-serve an earlier real response and cost $0).
@@ -63,70 +63,188 @@ Total non-cached calls: {tot['n']}, provider-token cost ${tot['c']:.4f} at liste
 <table><tr><th>run</th><th>role</th><th>model</th><th>calls</th><th>cache hits</th><th>failed attempts</th><th>prompt tok</th><th>completion tok</th><th>cost</th><th>model time</th></tr>{t}</table></div>"""
 
 
-def _refine_decisions(store, version_dir: str) -> str:
-    vid = version_dir.split("_")[0]
-    rows = store.query("SELECT episode_id, detail_json FROM operator_runs WHERE version_id = ? AND operator = 'refine_intervals'", (vid,))
-    out = []
-    for r in rows:
-        d = json.loads(r["detail_json"] or "{}")
-        if d.get("decisions") is not None:
-            out.append(f"{r['episode_id']}: " + ", ".join(f"{x.get('window')} {x.get('action')}{(' to ' + str(x['to'])) if x.get('to') is not None else ''}" for x in d["decisions"]))
-        elif d.get("skipped"):
-            out.append(f"{r['episode_id']}: skipped ({d['skipped']})")
-    return ("<p class=muted><b>Refine decisions on validation:</b> " + esc("; ".join(out)) + "</p>") if out else ""
+SETS = (("droid50", "Batch 1 · 50 DROID"), ("rest50", "Batch 2 · 25 Galaxea + 25 HomER"))
+# Published references from Macrodata's WGO-Bench post (same metric and episodes, contact-sheet setup).
+MACRODATA_REFERENCE = [("Gemini 3.5 Flash, final recipe (Macrodata, published): DROID 48/150 matched", "droid50", 0.292),
+                       ("Gemini 3.5 Flash, final recipe (Macrodata, published): Galaxea only", "rest50", 0.589),
+                       ("Gemini 3.5 Flash, final recipe (Macrodata, published): HomER only", "rest50", 0.227)]
+# Macrodata's 16-model sweep on all 100 episodes (overall Segment F1, predicted segment count); final recipe 0.306.
+MACRODATA_SWEEP_100 = [("Gemini 3.5 Flash (final recipe, after GEPA)", 550, 0.306), ("Gemini 3.5 Flash", 645, 0.290),
+                       ("Gemini Robotics ER 1.6", 556, 0.245), ("GPT-5.5 low", 602, 0.233), ("GPT-5.4 low", 529, 0.233),
+                       ("Gemini 3.1 Pro Preview", 586, 0.232), ("Gemini 3 Flash Preview", 685, 0.210), ("Claude Opus 4.8", 733, 0.168),
+                       ("Claude Sonnet 4.6", 698, 0.146), ("Gemini 2.5 Pro", 662, 0.145), ("Qwen 3.5 Plus", 763, 0.141),
+                       ("Claude Haiku 4.5", 570, 0.128), ("Gemini 3.1 Flash Lite", 757, 0.119), ("Qwen 3.6 Flash", 715, 0.110),
+                       ("GPT-5.4 mini", 317, 0.106), ("Gemini 2.5 Flash", 855, 0.059), ("Gemma 4 26B", 1080, 0.057)]
 
 
-def _n_baseline(evo) -> str:
+def _sfx(name: str) -> str:
+    return "" if name == "droid50" else f"_{name}"
+
+
+def recursion_levels(lin: dict[str, Any] | None, base: dict[str, Any] | None) -> list[dict[str, Any]]:
+    """Level 0 = N0; level k = state after the k-th experiment (incumbent after the gate, plus the candidate tried)."""
+    if not lin and not base:
+        return []
+    versions = (lin or {}).get("versions", {})
+    n0 = versions.get("N0") or base
+    levels = [{"level": 0, "incumbent_id": "N0", "incumbent": n0, "candidate_id": None, "candidate": None, "decision": "baseline",
+               "recursion_cost": None}]
+    inc_id, inc = "N0", n0
+    for e in (lin or {}).get("experiments", []):
+        cand = versions.get(e.get("version_dir") or "")
+        if e.get("decision") == "PROMOTED":
+            inc_id, inc = e.get("version_dir"), cand
+        levels.append({"level": len(levels), "incumbent_id": inc_id, "incumbent": inc, "candidate_id": e.get("version_dir") or e["id"],
+                       "candidate": cand, "decision": e.get("decision"), "recursion_cost": e.get("recursion_cost"),
+                       "hypothesis": e.get("hypothesis")})
+    return levels
+
+
+def _f1(tp: float, npred: float, nref: float) -> float | None:
+    return 2 * tp / (npred + nref) if npred + nref else None
+
+
+def _pooled(recs: list[dict[str, Any] | None]) -> dict[str, Any] | None:
+    hs = [(r or {}).get("headline_gt") or {} for r in recs]
+    if not recs or any(not h for h in hs):
+        return None
+    sm = lambda k: sum(h.get(k) or 0 for h in hs)
+    return {"snapped_f1_075": _f1(sm("tp_snapped"), sm("n_pred"), sm("n_ref")), "raw_f1_075": _f1(sm("tp_raw"), sm("n_pred"), sm("n_ref")),
+            "snapped_f1_05": _f1(sm("tp05_snapped"), sm("n_pred"), sm("n_ref")), "n_pred": sm("n_pred"), "n_ref": sm("n_ref"),
+            "episodes": sm("episodes"), "cost": sum((r or {}).get("annotation_cost_usd_total") or 0 for r in recs)}
+
+
+def _row(label: str, rec: dict[str, Any] | None, extra: str = "", bold: bool = False) -> str:
+    h = (rec or {}).get("headline_gt") or {}
+    b = (lambda x: f"<b>{x}</b>") if bold else (lambda x: x)
+    return (f"<tr><td>{label}</td><td class=num>{b(fmt(h.get('snapped_f1_075')))}</td><td class=num>{fmt(h.get('raw_f1_075'))}</td>"
+            f"<td class=num>{fmt(h.get('snapped_f1_05'))}</td><td class=num>{fmt(h.get('n_pred'))}/{fmt(h.get('n_ref'))}</td>"
+            f"<td class=num>{fmt((rec or {}).get('label_free_self_score'))}</td><td class=num>{('$' + format(rec['annotation_cost_usd_total'], '.4f')) if rec else '–'}</td>{extra}</tr>")
+
+
+RESULT_HEAD = ("<tr><th>version</th><th>Segment F1@0.75 snapped (headline)</th><th>F1@0.75 raw</th><th>F1@0.5 snapped</th><th>pred/ref</th>"
+               "<th>label-free self-score</th><th>annotation cost (all episodes)</th>")
+
+
+def section_results(a: Path) -> str:
+    out, combined = [], {}
+    for name, title in SETS:
+        lin, base = _load(a / f"lineage{_sfx(name)}.json"), _load(a / f"baseline_v3{_sfx(name)}.json")
+        es = _load(a / "episode_sets" / f"{name}.json")
+        levels = recursion_levels(lin, base)
+        if not levels:
+            continue
+        refs = "".join(f"<tr class=muted><td>{esc(lbl)}</td><td class=num>{v:.3f}</td><td colspan=6>reference; not run here</td></tr>"
+                       for lbl, s_, v in MACRODATA_REFERENCE if s_ == name)
+        rows = ""
+        for L in levels:
+            if L["level"] == 0:
+                rows += _row(f"recursion 0 · <code>N0</code> (Macrodata Refiner protocol on Nemotron Omni)", L["incumbent"],
+                             "<td>baseline</td><td class=num>–</td>", bold=True)
+                continue
+            rc = (L.get("recursion_cost") or {}).get("total_cost_usd")
+            dec = L["decision"]
+            cls = "ok" if dec == "PROMOTED" else "bad"
+            rows += _row(f"recursion {L['level']} · candidate <code>{esc(L['candidate_id'])}</code>", L["candidate"],
+                         f"<td><span class='pill {cls}'>{esc(dec)}</span></td><td class=num>{('$' + format(rc, '.4f')) if rc is not None else '–'}</td>")
+            rows += _row(f"recursion {L['level']} · incumbent <code>{esc(L['incumbent_id'])}</code>", L["incumbent"], "<td>incumbent</td><td></td>", bold=True)
+            combined.setdefault(L["level"], {})[name] = L["incumbent"]
+        combined.setdefault(0, {})[name] = levels[0]["incumbent"]
+        n_ep = (es or {}).get("n_episodes")
+        out.append(f"""<div class=card><h3>{esc(title)} ({esc(n_ep)} episodes; set sha256 <code>{esc((es or {}).get('set_sha256', '')[:16])}</code>)</h3>
+<table>{RESULT_HEAD}<th>gate decision</th><th>recursion cost (agents + candidate run)</th></tr>{refs}{rows}</table></div>""")
+    comb_rows = ""
+    ranked: list[tuple[str, int | None, float, bool]] = [(m, n, f, False) for m, n, f in MACRODATA_SWEEP_100]
+    for lvl in sorted(combined):
+        got = combined[lvl]
+        if len(got) == len(SETS):
+            pc = _pooled([got[n] for n, _ in SETS])
+            if pc:
+                ids = " + ".join(f"<code>{esc((got[n] or {}).get('version_id'))}</code>" for n, _ in SETS)
+                comb_rows += (f"<tr><td>recursion {lvl} · {ids}</td><td class=num><b>{fmt(pc['snapped_f1_075'])}</b></td><td class=num>{fmt(pc['raw_f1_075'])}</td>"
+                              f"<td class=num>{fmt(pc['snapped_f1_05'])}</td><td class=num>{pc['n_pred']}/{pc['n_ref']}</td><td class=num>{pc['episodes']}</td>"
+                              f"<td class=num>${pc['cost']:.4f}</td></tr>")
+                ranked.append((f"EvoAction recursion {lvl} (Nemotron Omni 30B-A3B)", pc["n_pred"], pc["snapped_f1_075"] or 0.0, True))
+    comb = (f"""<div class=card><h3>Full benchmark (pooled over both batches)</h3><table><tr><th>recursion level</th><th>Segment F1@0.75 snapped</th>
+<th>F1@0.75 raw</th><th>F1@0.5 snapped</th><th>pred/ref</th><th>episodes</th><th>annotation cost</th></tr>{comb_rows}</table>
+<p class=muted>Pooled micro F1 = 2·TP / (pred + ref) summed over both batches; each batch keeps its own lineage.</p></div>
+<div class=card><h3>Against Macrodata's published 100-episode model sweep</h3><table><tr><th>#</th><th>system</th><th>predicted segments</th><th>Segment F1@0.75</th></tr>
+{''.join(f"<tr><td>{i + 1}</td><td>{'<b>' + esc(m) + '</b>' if ours else esc(m)}</td><td class=num>{fmt(n)}</td><td class=num>{'<b>' + fmt(f) + '</b>' if ours else fmt(f)}</td></tr>" for i, (m, n, f, ours) in enumerate(sorted(ranked, key=lambda x: -x[2])))}</table>
+<p class=muted>Published rows are copied from Macrodata's post (all 743 reference segments); Nemotron was not in their sweep.</p></div>""" if comb_rows else
+            "<div class=card class=muted>Full-benchmark pooling appears once both batches have results.</div>")
+    return f"""<h2>1. Results: Macrodata's metric on the same episodes for every version</h2>
+<p class=muted>Headline metric follows Macrodata's WGO-Bench evaluation: temporal IoU ≥ 0.75, one-to-one maximum matching, pooled over episodes, with the first predicted
+start and last predicted end snapped to the human episode boundaries (scoring-only); labels are ignored. Every version in a batch runs on exactly the same episodes.
+Ground truth is measured by the protected evaluator for this table only; agents and the promotion gate never see it.</p>
+{''.join(out) or '<div class=card>No v3 results yet.</div>'}{comb}"""
+
+
+def _gate_rows(evo) -> str:
     rows = ""
-    for it in (evo or {}).get("iterations", []):
-        lf, gt = it.get("incumbent_label_free") or {}, it.get("incumbent_shadow_gt") or {}
-        rows += (f"<tr><td>{esc(it['iteration'])}</td><td>{esc(it['incumbent'])}</td><td class=num>{fmt(lf.get('dev'))}</td><td class=num>{fmt(lf.get('val'))}</td>"
-                 f"<td class=num>{fmt(gt.get('dev'))}</td><td class=num>{fmt(gt.get('val'))}</td></tr>")
-    if not rows:
-        return ""
-    return ("<div class=card><h3>Version N (incumbent) at the start of each iteration</h3><table><tr><th>iter</th><th>incumbent</th>"
-            "<th>label-free dev</th><th>label-free val</th><th>shadow GT F1@0.75 dev</th><th>shadow GT F1@0.75 val</th></tr>" + rows + "</table></div>")
-
-
-def section_lineage(lin, evo, store=None) -> str:
-    if not lin:
-        return "<h2>2. Version lineage</h2><div class=card class=muted>No evolution run yet.</div>"
-    items = []
-    for e in lin.get("experiments", []):
-        dec = e.get("decision")
-        cls = "ok" if dec == "PROMOTED" else "bad"
-        lf = e.get("label_free") or {}
-        sg = e.get("shadow_gt") or {}
-        cg, ig = sg.get("candidate") or {}, sg.get("incumbent") or {}
-        items.append(f"""<div class=card><h3>{esc(e['id'])} <span class="pill {cls}">{esc(dec)}</span> <span class=muted>parent {esc(e.get('parent_version'))}
-{' · topology change' if e.get('topology_change') else ''}</span></h3>
-<p><b>Hypothesis.</b> {esc(e.get('hypothesis'))}</p>
-<table><tr><th></th><th>label-free self-score (gate signal)</th><th>shadow GT F1@0.75</th><th>shadow GT F1@0.5</th><th>shadow boundary MAE s</th></tr>
-<tr><td>incumbent</td><td class=num><b>{fmt(lf.get('incumbent_self_score'))}</b></td><td class=num>{fmt(ig.get('micro_f1'))}</td><td class=num>{fmt(ig.get('micro_f1_iou05'))}</td><td class=num>{fmt(ig.get('mean_boundary_mae_sec'),2)}</td></tr>
-<tr><td>candidate</td><td class=num><b>{fmt(lf.get('candidate_self_score'))}</b></td><td class=num>{fmt(cg.get('micro_f1'))}</td><td class=num>{fmt(cg.get('micro_f1_iou05'))}</td><td class=num>{fmt(cg.get('mean_boundary_mae_sec'),2)}</td></tr></table>
-<p class=muted>Label-free components (candidate vs incumbent): {esc(json.dumps(lf.get('candidate_components')))} vs {esc(json.dumps(lf.get('incumbent_components')))}</p>
-{_refine_decisions(store, e['version_dir']) if store is not None and e.get('version_dir') else ''}
-{('<p class=muted>Errors: ' + esc(e.get('errors')) + '</p>') if e.get('errors') else ''}</div>""")
-    gate_rows = ""
     for it in (evo or {}).get("iterations", []):
         d = it.get("decision") or {}
         for name, c in (d.get("checks") or {}).items():
-            gate_rows += (f"<tr><td>{esc(it['iteration'])}</td><td>{esc(name)}</td><td>{esc(json.dumps(c.get('value'), default=str))}</td>"
-                          f"<td>{esc(c.get('threshold'))}</td><td><span class='pill {'ok' if c.get('pass') else 'bad'}'>{'pass' if c.get('pass') else 'fail'}</span></td></tr>")
+            rows += (f"<tr><td>{esc(it['iteration'])}</td><td>{esc(name)}</td><td>{esc(json.dumps(c.get('value'), default=str))[:300]}</td>"
+                     f"<td>{esc(c.get('threshold'))}</td><td><span class='pill {'ok' if c.get('pass') else 'bad'}'>{'pass' if c.get('pass') else 'fail'}</span></td></tr>")
         if d.get("rollback"):
-            gate_rows += f"<tr><td>{esc(it['iteration'])}</td><td colspan=4 class=muted>rollback: {esc(d['rollback'])}</td></tr>"
+            rows += f"<tr><td>{esc(it['iteration'])}</td><td colspan=4 class=muted>rollback: {esc(d['rollback'])}</td></tr>"
         if it.get("stopped"):
-            gate_rows += f"<tr><td>{esc(it['iteration'])}</td><td colspan=4 class=muted>stopped: {esc(it['stopped'])}</td></tr>"
-    return f"""<h2>2. Version N → N+1 lineage</h2>
-<p class=muted>Protocol <b>{esc(lin.get('protocol'))}</b>. Incumbent now: <b>{esc(lin.get('incumbent'))}</b>. Agents and the promotion gate see <b>no ground truth</b>: they work from the system's own predictions, video frames, robot telemetry and a predeclared label-free self-score. "Shadow GT" columns are measured by the protected evaluator <i>after</i> each decision and are never shown to agents or the gate. Rejected candidates are frozen, not deleted.</p>
-{_n_baseline(evo)}
-{''.join(items) or '<div class=card>No experiments recorded.</div>'}
-<div class=card><h3>Promotion gate checks</h3><table><tr><th>iter</th><th>check</th><th>value</th><th>threshold</th><th>result</th></tr>{gate_rows}</table></div>"""
+            rows += f"<tr><td>{esc(it['iteration'])}</td><td colspan=4 class=muted>stopped: {esc(it['stopped'])}</td></tr>"
+    return rows
+
+
+def section_lineage(a: Path) -> str:
+    blocks = []
+    for name, title in SETS:
+        lin, evo = _load(a / f"lineage{_sfx(name)}.json"), _load(a / f"evolution{_sfx(name)}.json")
+        if not lin:
+            continue
+        items = []
+        for e in lin.get("experiments", []):
+            dec = e.get("decision")
+            lf = e.get("label_free") or {}
+            sg = e.get("shadow_gt") or {}
+            cg, ig = sg.get("candidate") or {}, sg.get("incumbent") or {}
+            rc = e.get("recursion_cost") or {}
+            by = " · ".join(f"{k}: {v['calls']} calls (${v['cost_usd']:.4f})" for k, v in (rc.get("by_role") or {}).items())
+            items.append(f"""<div class=card><h3>{esc(e['id'])} <span class="pill {'ok' if dec == 'PROMOTED' else 'bad'}">{esc(dec)}</span>
+<span class=muted>parent {esc(e.get('parent_version'))}{' · topology change' if e.get('topology_change') else ''}</span></h3>
+<p><b>Hypothesis.</b> {esc(e.get('hypothesis'))}</p>
+<table><tr><th></th><th>label-free self-score (gate signal)</th><th>shadow GT snapped F1@0.75</th><th>shadow GT raw F1@0.75</th><th>shadow GT snapped F1@0.5</th></tr>
+<tr><td>incumbent</td><td class=num><b>{fmt(lf.get('incumbent_self_score'))}</b></td><td class=num>{fmt(ig.get('snapped_f1_075'))}</td><td class=num>{fmt(ig.get('raw_f1_075'))}</td><td class=num>{fmt(ig.get('snapped_f1_05'))}</td></tr>
+<tr><td>candidate</td><td class=num><b>{fmt(lf.get('candidate_self_score'))}</b></td><td class=num>{fmt(cg.get('snapped_f1_075'))}</td><td class=num>{fmt(cg.get('raw_f1_075'))}</td><td class=num>{fmt(cg.get('snapped_f1_05'))}</td></tr></table>
+<p class=muted>Label-free components (candidate vs incumbent): {esc(json.dumps(lf.get('candidate_components')))} vs {esc(json.dumps(lf.get('incumbent_components')))}</p>
+<p class=muted>Recursion cost: ${fmt(rc.get('total_cost_usd'), 4)} ({esc(by)})</p>
+{('<p class=muted>Errors: ' + esc(e.get('errors')) + '</p>') if e.get('errors') else ''}</div>""")
+        blocks.append(f"""<h3>{esc(title)}: incumbent now <code>{esc(lin.get('incumbent'))}</code></h3>{''.join(items) or '<div class=card>No experiments yet.</div>'}
+<div class=card><h3>Promotion gate checks</h3><table><tr><th>iter</th><th>check</th><th>value</th><th>threshold</th><th>result</th></tr>{_gate_rows(evo)}</table></div>""")
+    return ("""<h2>2. Version N → N+1 lineage (label-free gate)</h2>
+<p class=muted>Agents and the promotion gate see <b>no ground truth</b>: only the system's own predictions, video frames, robot telemetry and a predeclared label-free
+self-score. "Shadow GT" is measured by the protected evaluator after each decision and is never shown to agents or the gate. Rejected candidates are frozen, not deleted.</p>"""
+            + ("".join(blocks) or "<div class=card>No evolution run yet.</div>"))
+
+
+def section_per_episode(a: Path) -> str:
+    blocks = []
+    for name, title in SETS:
+        lin = _load(a / f"lineage{_sfx(name)}.json")
+        levels = recursion_levels(lin, _load(a / f"baseline_v3{_sfx(name)}.json"))
+        if not levels:
+            continue
+        first, last = levels[0]["incumbent"], levels[-1]["incumbent"]
+        cands = [(L["candidate_id"], L["candidate"]) for L in levels[1:] if L["candidate"]]
+        cols = [("N0", first)] + cands + ([(f"final incumbent {levels[-1]['incumbent_id']}", last)] if len(levels) > 1 else [])
+        per = {k: ((r or {}).get("headline_gt") or {}).get("per_episode_snapped_f1") or {} for k, r in cols}
+        eps = sorted(per.get("N0", {}))
+        head = "".join(f"<th>{esc(k)}</th>" for k, _ in cols)
+        body = "".join(f"<tr><td><code>{esc(e)}</code></td>" + "".join(f"<td class=num>{fmt(per[k].get(e))}</td>" for k, _ in cols) + "</tr>" for e in eps)
+        blocks.append(f"<div class=card><h3>{esc(title)}</h3><table><tr><th>episode</th>{head}</tr>{body}</table></div>")
+    return "<h2>6. Per-episode snapped F1@0.75</h2>" + ("".join(blocks) or "<div class=card>No results yet.</div>")
 
 
 def section_tree(evo) -> str:
     if not evo:
-        return "<h2>3. Recursive task tree</h2><div class=card>No evolution run yet.</div>"
+        return "<h2>4. Recursive task tree</h2><div class=card>No evolution run yet.</div>"
     tasks = evo.get("task_tree", [])
     by_parent: dict[Any, list] = {}
     for t in tasks:
@@ -149,7 +267,7 @@ def section_tree(evo) -> str:
 
     plans = "".join(f"<p><b>Iteration {esc(it['iteration'])} supervisor:</b> {esc((it.get('plan') or {}).get('failure_summary'))}</p>"
                     for it in evo.get("iterations", []))
-    return f"""<h2>3. Recursive task tree (real dispatch)</h2>
+    return f"""<h2>4. Recursive task tree (real dispatch)</h2>
 <p class=muted>Max depth actually reached: <b>{esc(evo.get('max_depth_reached'))}</b> (limit 3). Children exist only where an investigator raised an evidence-cited new question
 that passed the dispatcher's novelty, cycle, depth, fan-out and budget gates. Rejected/deduplicated requests are shown too.</p>
 <div class=card>{plans}{render(None)}</div>"""
@@ -165,120 +283,47 @@ def _diff(a: str, b: str) -> str:
     return "<pre>" + "".join(out) + "</pre>" if out else "<p class=muted>no change</p>"
 
 
-def section_diff(s, lin) -> str:
+def section_diff(s) -> str:
     root = s.artifacts_dir / "versions"
     blocks = []
-    for e in (lin or {}).get("experiments", []):
-        vd = e.get("version_dir")
-        if not vd or not (root / vd).exists() or not (root / e["parent_version"]).exists():
-            continue
-        p, c = root / e["parent_version"], root / vd
-        wf_a = json.dumps(json.loads((p / "workflow.json").read_text()), indent=1)
-        wf_b = json.dumps(json.loads((c / "workflow.json").read_text()), indent=1)
-        pr = ""
-        for name in ("prompt.md", "refine.md"):
-            a = (p / name).read_text() if (p / name).exists() else ""
-            b = (c / name).read_text() if (c / name).exists() else ""
-            if a != b:
-                pr += f"<h3>{name}</h3>{_diff(a, b)}"
-        nodes_a = " → ".join(n["operator"] for n in json.loads(wf_a)["nodes"])
-        nodes_b = " → ".join(n["operator"] for n in json.loads(wf_b)["nodes"])
-        blocks.append(f"""<div class=card><h3>{esc(e['parent_version'])} → {esc(vd)}</h3>
+    for name, _ in SETS:
+        for e in (_load(s.artifacts_dir / f"lineage{_sfx(name)}.json") or {}).get("experiments", []):
+            vd = e.get("version_dir")
+            if not vd or not (root / vd).exists() or not (root / e["parent_version"]).exists():
+                continue
+            p, c = root / e["parent_version"], root / vd
+            wf_a = json.dumps(json.loads((p / "workflow.json").read_text()), indent=1)
+            wf_b = json.dumps(json.loads((c / "workflow.json").read_text()), indent=1)
+            pr = ""
+            for fn in sorted({f.name for f in p.glob("*.md")} | {f.name for f in c.glob("*.md")}):
+                x = (p / fn).read_text() if (p / fn).exists() else ""
+                y = (c / fn).read_text() if (c / fn).exists() else ""
+                if x != y:
+                    pr += f"<h3>{fn}</h3>{_diff(x, y)}"
+            nodes_a = " → ".join(n["operator"] for n in json.loads(wf_a)["nodes"])
+            nodes_b = " → ".join(n["operator"] for n in json.loads(wf_b)["nodes"])
+            blocks.append(f"""<div class=card><h3>{esc(e['parent_version'])} → {esc(vd)}</h3>
 <p class=muted>before: {esc(nodes_a)}<br>after: {esc(nodes_b)}</p><h3>workflow.json</h3>{_diff(wf_a, wf_b)}{pr}</div>""")
-    return "<h2>4. Executable harness diff</h2>" + ("".join(blocks) or "<div class=card class=muted>No candidate versions.</div>")
-
-
-def _timeline_svg(tl: dict[str, Any]) -> str:
-    dur = float(tl.get("duration_sec") or max((s["end_sec"] for s in tl["reference"]), default=1.0))
-    W, H, pad, row = 860, 0, 70, 22
-    rows = [("reference", "var(--ref)")] + [(k, f"var(--{k})") for k in ("A", "B", "C") if k in tl]
-    H = row * len(rows) + 24
-    svg = [f"<svg viewBox='0 0 {W} {H}' width='100%' role='img' aria-label='timeline'>"]
-    for i, (name, color) in enumerate(rows):
-        y = 4 + i * row
-        svg.append(f"<text x='0' y='{y + 13}' font-size='11' fill='var(--muted)'>{esc(name)}</text>")
-        for seg in tl[name]:
-            x0 = pad + (W - pad) * seg["start_sec"] / dur
-            x1 = pad + (W - pad) * seg["end_sec"] / dur
-            svg.append(f"<rect x='{x0:.1f}' y='{y}' width='{max(1.0, x1 - x0 - 1.5):.1f}' height='16' rx='2' fill='{color}' opacity='0.85'>"
-                       f"<title>{esc(seg.get('subtask'))} [{seg['start_sec']:.2f}-{seg['end_sec']:.2f}s]</title></rect>")
-    for t in range(0, int(dur) + 1, max(1, int(dur // 10) or 1)):
-        x = pad + (W - pad) * t / dur
-        svg.append(f"<text x='{x:.1f}' y='{H - 4}' font-size='10' fill='var(--muted)' text-anchor='middle'>{t}s</text>")
-    svg.append("</svg>")
-    return "".join(svg)
-
-
-def _overhead_rows(store) -> str:
-    rows = store.query("SELECT r.kind || ' (' || r.status || ')' phase, m.role || ':' || m.model model, COUNT(*) n, "
-                       "COALESCE(SUM(m.completion_tokens),0) ct, COALESCE(SUM(m.cost_usd),0) cost FROM model_calls m JOIN runs r ON m.run_id = r.id "
-                       "WHERE r.kind != 'final_test' GROUP BY 1, 2 ORDER BY 1")
-    return "".join(f"<tr><td>{esc(r['phase'])}</td><td><code>{esc(r['model'])}</code></td><td class=num>{r['n']}</td>"
-                   f"<td class=num>{r['ct']:,}</td><td class=num>${r['cost']:.4f}</td></tr>" for r in rows)
-
-
-def _continuity(fin) -> str:
-    c = fin.get("continuity") or {}
-    if not c:
-        return ""
-    rows = "".join(f"<tr><td>{k}</td><td><code>{esc(c[k].get('version_id'))}</code></td><td class=num>{fmt(c[k].get('micro_f1'))}</td>"
-                   f"<td class=num>{fmt(c[k].get('micro_f1_iou05'))}</td></tr>" for k in "ABC" if k in c)
-    return (f"<div class=card><h3>Continuity: v1 pilot test episodes ({esc(', '.join(fin.get('continuity_episode_ids', [])))})</h3>"
-            f"<p class=muted>Already scored once in the superseded v1 run; shown only for comparison.</p><table><tr><th>system</th><th>version</th>"
-            f"<th>F1@0.75</th><th>F1@0.5</th></tr>{rows}</table></div>")
-
-
-def section_final(fin, base, store=None) -> str:
-    if not fin:
-        btab = ""
-        if base:
-            btab = "".join(f"<tr><td>{esc(r['version'])}</td><td>{esc(r['split'])}</td><td class=num>{esc(r['micro_f1@0.75'])}</td><td class=num>{esc(r['micro_f1@0.5'])}</td>"
-                           f"<td class=num>{esc(r['n_pred/n_ref'])}</td><td>{esc(r['statuses'])}</td></tr>" for r in base.get("results", []))
-        return f"""<h2>5. Sealed held-out scoreboard</h2><div class=card>The sealed test has not been run yet.</div>
-<div class=card><h3>Fixed baselines on dev/validation (pre-optimization)</h3><table><tr><th>version</th><th>split</th><th>F1@0.75</th><th>F1@0.5</th><th>pred/ref</th><th>status</th></tr>{btab}</table></div>"""
-    sm = fin["summary"]
-    rows = ""
-    names = {"A": "A · N000 (1 Hz, simple prompt)", "B": "B · strong fixed (2 Hz, world-state prompt, no agents)", "C": f"C · {fin.get('C_label')}"}
-    for k in "ABC":
-        x = sm[k]
-        rows += (f"<tr><td><span class=sw style='background:var(--{k})'></span>{esc(names[k])}<br><code>{esc(x['version_id'])}</code></td>"
-                 f"<td class=num><b>{fmt(x['micro_f1'])}</b></td><td class=num>{fmt(x['micro_f1_iou05'])}</td><td class=num>{fmt(x['outer_snapped_micro_f1'])}</td>"
-                 f"<td class=num>{fmt(x['short_event_recall'])}</td><td class=num>{fmt(x['mean_boundary_mae_sec'], 2)}</td>"
-                 f"<td class=num>{x['invalid_items']}/{x['empty_output_episodes']}</td><td class=num>{x['vision_calls']}</td>"
-                 f"<td class=num>{x['annotation_tokens']['completion']:,}</td><td class=num>${x['annotation_cost_usd']:.4f}</td><td class=num>{x['wall_s']:.0f}s</td>"
-                 f"<td class=num>{fmt(x.get('label_free_self_score'))}</td></tr>")
-    eps = fin["test_episode_ids"]
-    per = "".join(f"<tr><td><code>{esc(e)}</code></td>" + "".join(f"<td class=num>{fmt(sm[k]['per_episode_f1'].get(e))}</td>" for k in "ABC")
-                  + f"<td class=num>{fmt(sm['C']['per_episode_f1'].get(e, 0) - sm['B']['per_episode_f1'].get(e, 0))}</td></tr>" for e in eps)
-    tls = "".join(f"<h3><code>{esc(e)}</code></h3>{_timeline_svg(tl)}" for e, tl in fin["timelines"].items())
-    ovh_rows = _overhead_rows(store) if store is not None else ""
-    p = fin["paired"]
-    lim = "".join(f"<li>{esc(x)}</li>" for x in fin.get("limitations", []))
-    return f"""<h2>5. Sealed held-out scoreboard (run once after freezing)</h2>
-<div class=card><p class=muted>{len(eps)} test episodes never seen by any agent tool. Systems frozen with checksums before the test evaluator was unsealed. Timelines below are produced only by the final evaluator.</p>
-<table><tr><th>system</th><th>F1@0.75</th><th>F1@0.5</th><th>F1@0.75 outer-snapped</th><th>short recall</th><th>boundary MAE s</th><th>invalid/empty</th><th>vision calls</th><th>completion tok</th><th>annotation cost</th><th>wall</th><th>label-free self-score</th></tr>{rows}</table>
-<p class=muted>Test set: <b>{esc(fin.get('test_set'))}</b> (episodes never evaluated before this run). The label-free self-score column shows whether the proxy the agents optimized tracks ground truth on unseen episodes.</p></div>
-{_continuity(fin)}
-<div class=card><h3>Paired per-episode F1@0.75</h3><table><tr><th>episode</th><th>A</th><th>B</th><th>C</th><th>C−B</th></tr>{per}</table>
-<p class=muted>C vs A: {p['C_vs_A']['improved']} improved / {p['C_vs_A']['regressed']} regressed · C vs B: {p['C_vs_B']['improved']} improved / {p['C_vs_B']['regressed']} regressed · B vs A: {p['B_vs_A']['improved']} improved / {p['B_vs_A']['regressed']} regressed</p></div>
-<div class=card><h3>Optimization overhead (every non-test call, by run and run status, including superseded/aborted runs)</h3><table><tr><th>phase (status)</th><th>model</th><th>calls</th><th>completion tok</th><th>cost</th></tr>{ovh_rows}</table></div>
-<div class=card><div class=legend><span><i class=sw style='background:var(--ref)'></i>reference</span><span><i class=sw style='background:var(--A)'></i>A</span><span><i class=sw style='background:var(--B)'></i>B</span><span><i class=sw style='background:var(--C)'></i>C</span></div>{tls}</div>
-<div class=card><h3>Limitations</h3><ul>{lim}</ul></div>"""
+    return "<h2>5. Executable harness diff</h2>" + ("".join(blocks) or "<div class=card class=muted>No candidate versions.</div>")
 
 
 def build_report() -> Path:
     s = get_settings()
     store = get_store()
     a = s.artifacts_dir
-    pre, splits, base = _load(a / "preflight.json"), _load(a / "splits.json"), _load(a / "baselines.json")
-    evo, lin, fin = _load(a / "evolution.json"), _load(a / "lineage.json"), _load(a / "final_test.json")
-    split_line = ""
-    if splits:
-        split_line = " · ".join(f"{k}: {len(v['episode_ids'])} (pilot {len(v['pilot_episode_ids'])})" for k, v in splits["splits"].items())
+    pre = _load(a / "preflight.json")
+    trees = ""
+    for name, title in SETS:
+        evo = _load(a / f"evolution{_sfx(name)}.json")
+        if evo:
+            trees += f"<h3>{esc(title)}</h3>" + section_tree(evo).split("</h2>", 1)[1]
+    if trees:
+        trees = section_tree({"task_tree": [], "iterations": []}).split("<div class=card>")[0] + trees
     body = f"""<main><h1>EvoAction evidence report</h1>
-<p class=muted>A self-evolving, recursively delegated annotation harness for robot manipulation video (WGO-Bench temporal subtask segmentation).
-Every number and agent message on this page comes from persisted real runs in <code>artifacts/</code>. An earlier run in which agents saw ground-truth-derived feedback is superseded and archived in <code>artifacts/superseded/v1_gt_feedback/</code>. Splits: {esc(split_line)}; splits sha256 <code>{esc((splits or {}).get('splits_sha256', '')[:16])}</code>.</p>
-{section_sponsor(store, pre)}{section_lineage(lin, evo, store)}{section_tree(evo)}{section_diff(s, lin)}{section_final(fin, base, store)}</main>"""
+<p class=muted>A self-evolving, recursively delegated annotation harness for robot manipulation video, evaluated on WGO-Bench temporal subtask segmentation
+with Macrodata's protocol. Every number and agent message on this page comes from persisted real runs in <code>artifacts/</code>. Earlier protocols
+(v1: agents saw GT-derived feedback; v2: mixed episode counts) are archived in <code>artifacts/superseded/</code>.</p>
+{section_results(a)}{section_lineage(a)}{trees or section_tree(None)}{section_diff(s)}{section_per_episode(a)}{section_sponsor(store, pre)}</main>"""
     doc = f"<!doctype html><html lang=en><head><meta charset=utf-8><meta name=viewport content='width=device-width,initial-scale=1'><title>EvoAction Evidence Report</title><style>{CSS}</style></head><body>{body}</body></html>"
     out = a / "report.html"
     out.write_text(doc)

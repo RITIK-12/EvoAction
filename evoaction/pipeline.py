@@ -29,7 +29,8 @@ def headline(gt: dict[str, Any] | None) -> dict[str, Any]:
         return {}
     raw, snap = gt["raw"], gt["outer_snapped"]
     return {"snapped_f1_075": snap["micro_f1"], "raw_f1_075": raw["micro_f1"], "snapped_f1_05": snap["micro_f1_iou05"],
-            "raw_f1_05": raw["micro_f1_iou05"], "tp_snapped": snap["tp"], "n_pred": raw["n_pred"], "n_ref": raw["n_ref"],
+            "raw_f1_05": raw["micro_f1_iou05"], "tp_snapped": snap["tp"], "tp_raw": raw["tp"], "tp05_snapped": snap.get("tp_05"),
+            "tp05_raw": raw.get("tp_05"), "n_pred": raw["n_pred"], "n_ref": raw["n_ref"],
             "invalid_items": raw["invalid_items"], "empty_output_episodes": raw["empty_output_episodes"],
             "mean_boundary_mae_sec": raw["mean_boundary_mae_sec"], "episodes": raw["episodes"],
             "per_episode_snapped_f1": snap["per_episode_f1"]}

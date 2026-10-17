@@ -145,7 +145,9 @@ def assess_run(client: CrusoeClient | None, run_result: dict[str, Any], sampling
     from concurrent.futures import ThreadPoolExecutor
 
     items = list(run_result["episodes"].items())
-    with ThreadPoolExecutor(max_workers=4) as ex:
+    from evoaction.config import get_settings
+
+    with ThreadPoolExecutor(max_workers=get_settings().workers) as ex:
         results = list(ex.map(lambda kv: assess_episode(client, kv[0], kv[1]["segments"], sampling_hz, version_id, verify), items))
     eps = {a["episode_id"]: a for a in results}
     scores = [a["self_score"] for a in eps.values()]

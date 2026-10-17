@@ -70,7 +70,8 @@ def cost_profile(result: dict[str, Any]) -> dict[str, Any]:
             "mean_vision_calls_per_episode": round(sum(e["calls_used"] for e in eps) / max(1, len(costs)), 2),
             "note": ("measured on this provider: thinking=true multi-image calls returned invalid JSON in 31/42 attempts (token cap "
                      "exhausted while reasoning) and took 40-170s; thinking=false returned valid JSON in 2-11s with ~10x fewer tokens "
-                     "but tended toward evenly spaced segment boundaries")}
+                     "but tended toward evenly spaced segment boundaries; each contact-sheet image is encoded to ~570 prompt tokens "
+                     "whatever its frame count (1/2/4/11 sheets -> 601/1173/2307/6138 prompt tokens), i.e. ~28 tokens per frame at 20 frames per sheet")}
 
 
 def decide(cand: dict[str, Any], inc: dict[str, Any]) -> dict[str, Any]:
@@ -90,7 +91,7 @@ def decide(cand: dict[str, Any], inc: dict[str, Any]) -> dict[str, Any]:
     return {"decision": "PROMOTED" if promote else "REJECTED", "gate": GATE, "checks": checks, "paired_self_score": paired,
             "label_free": {"candidate_self_score": ca["mean_self_score"], "incumbent_self_score": ia["mean_self_score"],
                            "candidate_components": ca["component_means"], "incumbent_components": ia["component_means"]},
-            "uncertainty": f"n={len(paired['episodes'])} validation episodes; label-free proxy, not ground truth"}
+            "uncertainty": f"n={len(paired['episodes'])} episodes (same set for both versions); label-free proxy, not ground truth"}
 
 
 def shadow_gt(cand: dict[str, Any], inc: dict[str, Any]) -> dict[str, Any]:
