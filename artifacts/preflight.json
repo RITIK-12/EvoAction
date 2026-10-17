@@ -1,0 +1,426 @@
+{
+ "created_at": "2026-10-17T13:12:53-0700",
+ "api_base": "https://api.inference.crusoecloud.com/v1",
+ "api_key_present": true,
+ "configured": {
+  "reasoning": "nvidia/Nemotron-3-Super-120B-A12B",
+  "vision": "nvidia/Nemotron-3-Nano-Omni-Reasoning-30B-A3B"
+ },
+ "checks": {
+  "models_endpoint": {
+   "ok": true,
+   "latency_s": 0.22,
+   "models": [
+    {
+     "id": "openai/gpt-oss-120b",
+     "type": "chat",
+     "tags": [
+      "text to text"
+     ],
+     "pricing_per_mtok": {
+      "prompt": "0.05",
+      "completion": "0.25",
+      "image": "0",
+      "request": "0",
+      "video": "0",
+      "input_cache_reads": "0.05"
+     },
+     "context_length": 131072
+    },
+    {
+     "id": "deepseek-ai/DeepSeek-V4.1-Flash",
+     "type": "multimodal",
+     "tags": [
+      "image text to text"
+     ],
+     "pricing_per_mtok": {
+      "prompt": "0.29",
+      "completion": "1.20",
+      "image": "0",
+      "request": "0",
+      "video": "0",
+      "input_cache_reads": "0.007"
+     },
+     "context_length": 1048576
+    },
+    {
+     "id": "google/gemma-4-31b-it",
+     "type": "multimodal",
+     "tags": [
+      "text to text",
+      "image text to text"
+     ],
+     "pricing_per_mtok": {
+      "prompt": "0.14",
+      "completion": "0.40",
+      "image": "0",
+      "request": "0",
+      "video": "0",
+      "input_cache_reads": "0.14"
+     },
+     "context_length": 262144
+    },
+    {
+     "id": "nvidia/NVIDIA-Nemotron-3-Super-120B-A12B",
+     "type": "chat",
+     "tags": [
+      "text to text"
+     ],
+     "pricing_per_mtok": {
+      "prompt": "0.30",
+      "completion": "2.40",
+      "image": "0",
+      "request": "0",
+      "video": "0",
+      "input_cache_reads": "0.15"
+     },
+     "context_length": 262144
+    },
+    {
+     "id": "deepseek-ai/Deepseek-V4-Flash",
+     "type": "chat",
+     "tags": [
+      "text to text",
+      "tool calling"
+     ],
+     "pricing_per_mtok": {
+      "prompt": "0.14",
+      "completion": "0.28",
+      "image": "0",
+      "request": "0",
+      "video": "0",
+      "input_cache_reads": "0.03"
+     },
+     "context_length": 1048576
+    },
+    {
+     "id": "Qwen/Qwen3.8-27B",
+     "type": "multimodal",
+     "tags": [
+      "image text to text",
+      "text to text",
+      "tool calling"
+     ],
+     "pricing_per_mtok": {
+      "prompt": "0.25",
+      "completion": "2.00",
+      "image": "0",
+      "request": "0",
+      "video": "0",
+      "input_cache_reads": "0.15"
+     },
+     "context_length": 262144
+    },
+    {
+     "id": "nvidia/NVIDIA-Nemotron-3-Nano-30B-A3B",
+     "type": "chat",
+     "tags": [
+      "text to text"
+     ],
+     "pricing_per_mtok": {
+      "prompt": "0.05",
+      "completion": "0.20",
+      "image": "0",
+      "request": "0",
+      "video": "0",
+      "input_cache_reads": "0.03"
+     },
+     "context_length": 262144
+    },
+    {
+     "id": "nvidia/Nemotron-3-Nano-Omni-Reasoning-30B-A3B",
+     "type": "chat",
+     "tags": [
+      "text to text",
+      "image text to text"
+     ],
+     "pricing_per_mtok": {
+      "prompt": "0.30",
+      "completion": "1.83",
+      "image": "0",
+      "request": "0",
+      "video": "0",
+      "input_cache_reads": "0.30"
+     },
+     "context_length": 262144
+    },
+    {
+     "id": "deepseek-ai/DeepSeek-V4-Pro",
+     "type": "chat",
+     "tags": [
+      "text to text",
+      "tool calling"
+     ],
+     "pricing_per_mtok": {
+      "prompt": "1.74",
+      "completion": "3.48",
+      "image": "0",
+      "request": "0",
+      "video": "0",
+      "input_cache_reads": "0.15"
+     },
+     "context_length": 1048576
+    },
+    {
+     "id": "nvidia/NVIDIA-Nemotron-3.5-Super-VL",
+     "type": "multimodal",
+     "tags": [
+      "text to text",
+      "image text to text",
+      "tool calling"
+     ],
+     "pricing_per_mtok": {
+      "prompt": "0.10",
+      "completion": "0.40",
+      "image": "0",
+      "request": "0",
+      "video": "0",
+      "input_cache_reads": "0.08"
+     },
+     "context_length": 262144
+    },
+    {
+     "id": "zai-org/GLM-5.3",
+     "type": "chat",
+     "tags": [
+      "text to text",
+      "tool calling"
+     ],
+     "pricing_per_mtok": {
+      "prompt": "1.40",
+      "completion": "4.40",
+      "image": "0",
+      "request": "0",
+      "video": "0",
+      "input_cache_reads": "0.26"
+     },
+     "context_length": 1048576
+    },
+    {
+     "id": "zai-org/GLM-5.3-Flash",
+     "type": "multimodal",
+     "tags": [
+      "image text to text",
+      "text to text",
+      "tool calling"
+     ],
+     "pricing_per_mtok": {
+      "prompt": "0.15",
+      "completion": "0.50",
+      "image": "0",
+      "request": "0",
+      "video": "0",
+      "input_cache_reads": "0.03"
+     },
+     "context_length": 1048576
+    },
+    {
+     "id": "nvidia/Nemotron-3.5-Lightning-30B-A3B",
+     "type": "",
+     "tags": [
+      "text to text"
+     ],
+     "pricing_per_mtok": {
+      "prompt": "0.05",
+      "completion": "0.20",
+      "image": "0",
+      "request": "0",
+      "video": "0",
+      "input_cache_reads": "0.03"
+     },
+     "context_length": 262144
+    }
+   ]
+  },
+  "resolve_models": {
+   "ok": true,
+   "latency_s": 0.0,
+   "reasoning_model": "nvidia/NVIDIA-Nemotron-3-Super-120B-A12B",
+   "vision_model": "nvidia/Nemotron-3-Nano-Omni-Reasoning-30B-A3B",
+   "reasoning_tags": [
+    "text to text"
+   ],
+   "vision_tags": [
+    "text to text",
+    "image text to text"
+   ]
+  },
+  "nemotron_structured_json": {
+   "ok": true,
+   "latency_s": 2.72,
+   "model": "nvidia/NVIDIA-Nemotron-3-Super-120B-A12B",
+   "parsed": {
+    "ok": true,
+    "role": "supervisor",
+    "next_steps": [
+     "Create test annotation",
+     "Validate output"
+    ]
+   },
+   "prompt_tokens": 62,
+   "completion_tokens": 141,
+   "reasoning_tokens": 0,
+   "cost_usd": 0.000357,
+   "call_latency_s": 2.72
+  },
+  "ffmpeg_ffprobe": {
+   "ok": true,
+   "latency_s": 0.0,
+   "ffmpeg": "/usr/local/bin/ffmpeg",
+   "ffprobe": "/usr/local/bin/ffprobe"
+  },
+  "wgo_episode": {
+   "ok": true,
+   "latency_s": 66.47,
+   "episode_id": "robointer_droid_000010",
+   "source": "droid",
+   "duration_sec": 15.2,
+   "video_fps": 10.0,
+   "resolution": [
+    320,
+    180
+   ],
+   "has_telemetry": true,
+   "reference_labels_present_in_protected_store": true,
+   "video_sha256": "150e1b0a38b3a2363d3cc19daf778d3410a9b186db37436d0fdeac52b6fa0426"
+  },
+  "vision_single_image[nvidia/Nemotron-3-Nano-Omni-Reasoning-30B-A3B]": {
+   "ok": true,
+   "latency_s": 5.37,
+   "model": "nvidia/Nemotron-3-Nano-Omni-Reasoning-30B-A3B",
+   "images": 1,
+   "parsed": {
+    "timestamps_read": [
+     0.0,
+     5.0,
+     10.0,
+     12.0,
+     15.0
+    ],
+    "events": [
+     {
+      "start_sec": 5.0,
+      "end_sec": 12.0,
+      "subtask": "Put the blue object inside the drawer."
+     }
+    ]
+   },
+   "prompt_tokens": 653,
+   "completion_tokens": 1276,
+   "reasoning_tokens": 0,
+   "cost_usd": 0.002531,
+   "call_latency_s": 5.37
+  },
+  "vision_multi_image[nvidia/Nemotron-3-Nano-Omni-Reasoning-30B-A3B]": {
+   "ok": true,
+   "latency_s": 26.09,
+   "model": "nvidia/Nemotron-3-Nano-Omni-Reasoning-30B-A3B",
+   "images": 3,
+   "parsed": {
+    "timestamps_read": [
+     "0.0s",
+     "3.0s",
+     "6.0s",
+     "9.0s",
+     "12.0s"
+    ],
+    "events": [
+     {
+      "start_sec": 3.0,
+      "end_sec": 9.5,
+      "subtask": "Put the blue object inside the drawer"
+     }
+    ]
+   },
+   "prompt_tokens": 952,
+   "completion_tokens": 3072,
+   "reasoning_tokens": 0,
+   "cost_usd": 0.005907,
+   "call_latency_s": 11.09
+  },
+  "vision_single_image[nvidia/NVIDIA-Nemotron-3.5-Super-VL]": {
+   "ok": true,
+   "latency_s": 8.12,
+   "model": "nvidia/NVIDIA-Nemotron-3.5-Super-VL",
+   "images": 1,
+   "parsed": {
+    "timestamps_read": [
+     "0.0s",
+     "5.0s",
+     "10.0s",
+     "15.0s"
+    ],
+    "events": [
+     {
+      "start_sec": 4.0,
+      "end_sec": 6.0,
+      "subtask": "grasp blue object"
+     },
+     {
+      "start_sec": 8.0,
+      "end_sec": 11.0,
+      "subtask": "place blue object in drawer"
+     }
+    ]
+   },
+   "prompt_tokens": 652,
+   "completion_tokens": 1542,
+   "reasoning_tokens": 1427,
+   "cost_usd": 0.000682,
+   "call_latency_s": 8.12
+  }
+ },
+ "locked": {
+  "CRUSOE_REASONING_MODEL": "nvidia/NVIDIA-Nemotron-3-Super-120B-A12B",
+  "CRUSOE_VISION_MODEL": "nvidia/Nemotron-3-Nano-Omni-Reasoning-30B-A3B"
+ },
+ "contact_sheet": {
+  "timestamps": [
+   0.0,
+   1.0,
+   2.0,
+   3.0,
+   4.0,
+   5.0,
+   6.0,
+   7.0,
+   8.0,
+   9.0,
+   10.0,
+   11.0,
+   12.0,
+   13.0,
+   14.0,
+   15.0
+  ],
+  "sha256": "7ff133773c6df79af3164f89f9cff3cbe517fedac400aaac4b7f77b2b4234f51",
+  "path": "artifacts/preflight/contact_sheet_0.jpg"
+ },
+ "exit_criterion_met": true,
+ "usage": [
+  {
+   "role": "nemotron",
+   "model": "nvidia/NVIDIA-Nemotron-3-Super-120B-A12B",
+   "n": 1,
+   "pt": 62,
+   "ct": 141,
+   "cost": 0.000357
+  },
+  {
+   "role": "vision",
+   "model": "nvidia/NVIDIA-Nemotron-3.5-Super-VL",
+   "n": 1,
+   "pt": 652,
+   "ct": 1542,
+   "cost": 0.0006820000000000001
+  },
+  {
+   "role": "vision",
+   "model": "nvidia/Nemotron-3-Nano-Omni-Reasoning-30B-A3B",
+   "n": 3,
+   "pt": 2557,
+   "ct": 8444,
+   "cost": 0.01621962
+  }
+ ]
+}

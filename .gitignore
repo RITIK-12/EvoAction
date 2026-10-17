@@ -1,0 +1,11 @@
+docs/
+.env
+.venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+data/cache/
+artifacts/cache/
+.DS_Store
+artifacts/evoaction.db
+artifacts/events.jsonl
