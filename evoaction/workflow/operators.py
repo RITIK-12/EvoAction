@@ -267,6 +267,8 @@ def op_inspect_transition_windows(ctx: EpisodeContext, state: dict, params: dict
         lo = max(0.0, w["center"] - half)
         hi = min(ep["duration_sec"], w["center"] + half)
         ts = [round(lo + i / p.local_hz, 2) for i in range(int(math.floor((hi - lo) * p.local_hz)) + 1)]
+        if hi <= lo or not ts:  # window centred outside the video: nothing to inspect
+            continue
         sheet = build_sheets(ep["video_path"], ts, tile_px=p.tile_px, frames_per_sheet=len(ts), cols=min(len(ts), 6))[0]
         evidence.append({**w, "window_id": f"W{k + 1}", "start_sec": lo, "end_sec": hi, "timestamps": ts, "sheet": sheet})
     return {"evidence": evidence}, {"n_boundaries": len(bounds), "n_windows": len(evidence), "select": p.select,

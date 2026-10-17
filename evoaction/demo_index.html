@@ -11,9 +11,11 @@
 *{box-sizing:border-box}
 html,body{height:100%}
 body{margin:0;background:var(--bg);color:var(--fg);font:14px/1.4 -apple-system,BlinkMacSystemFont,"Segoe UI",Inter,sans-serif}
-main{max-width:1280px;margin:0 auto;padding:12px 16px 20px;display:flex;flex-direction:column;gap:10px;min-height:100%}
+main{max-width:1280px;margin:0 auto;padding:18px 16px 20px;display:flex;flex-direction:column;gap:10px;min-height:100%}
 header{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
-h1{font-size:16px;margin:0 6px 0 0;white-space:nowrap}
+h1{font-size:22px;line-height:1.2;margin:0;white-space:nowrap;letter-spacing:-.01em}
+.brand{display:flex;flex-direction:column;margin-right:8px}
+.brand span{font-size:11.5px;color:var(--muted);white-space:nowrap}
 select,button{font:inherit;padding:6px 10px;border-radius:8px;border:1px solid var(--line);background:var(--card);color:var(--fg);min-width:0}
 select{flex:1 1 260px;max-width:520px}
 button{background:var(--accent);color:var(--onaccent);border-color:transparent;font-weight:600;cursor:pointer}
@@ -25,7 +27,10 @@ video{width:100%;max-height:62vh;background:#000;border-radius:10px;display:bloc
 .row{display:grid;grid-template-columns:132px minmax(0,1fr);gap:10px;align-items:center;padding:5px 0}
 .lbl{font-size:13px;font-weight:700;display:flex;gap:6px;align-items:baseline;flex-wrap:wrap}
 .lbl small{font-weight:500;color:var(--muted);font-variant-numeric:tabular-nums}
-.lbl .dec{font-size:11px;font-weight:600}.dec.ok{color:var(--ok)}.dec.bad{color:var(--bad)}
+.lbl .chg{flex-basis:100%;font-size:11px;font-weight:500;color:var(--muted);line-height:1.25}
+.row.best .lbl{color:var(--ok)}
+.row.best .bar{box-shadow:0 0 0 2px var(--ok)}
+.tag{font-size:10.5px;font-weight:700;color:var(--onaccent);background:var(--ok);border-radius:8px;padding:0 6px}
 .bar{position:relative;height:30px;background:var(--track);border-radius:6px;overflow:hidden;cursor:pointer}
 .seg{position:absolute;top:2px;bottom:2px;border-radius:4px;border-right:2px solid var(--card)}
 .seg:hover{outline:2px solid var(--fg);z-index:1}
@@ -41,7 +46,7 @@ video{width:100%;max-height:62vh;background:#000;border-radius:10px;display:bloc
 <body>
 <main>
   <header>
-    <h1>EvoAction · live</h1>
+    <div class="brand"><h1>EvoAction</h1><span>self-improving annotation harness · live on Crusoe</span></div>
     <select id="ep" aria-label="Episode"></select>
     <button id="run">Run N0 → N1 → N2</button>
     <span class="status" id="status"></span>
@@ -103,37 +108,34 @@ async function load(id) {
   tick();
 }
 
-function decHtml(dec) {
-  if (dec === 'PROMOTED') return '<span class="dec ok">promoted</span>';
-  if (dec === 'REJECTED') return '<span class="dec bad">rejected</span>';
-  return '';
-}
-
 function run() {
   if (es) es.close();
   for (const id of Object.keys(rows)) if (id !== 'GT') { rows[id].remove(); delete rows[id]; }
   $('#run').disabled = true;
-  const t0 = performance.now(), labels = {};
+  const t0 = performance.now();
   es = new EventSource(`/api/run?id=${encodeURIComponent(EP.id)}`);
   es.onmessage = m => {
     const e = JSON.parse(m.data);
-    if (e.type === 'plan') {
-      e.versions.forEach(v => labels[v.version_id] = v);
-    } else if (e.type === 'start') {
-      const v = labels[e.version_id] || {label: e.version_id};
-      addRow(e.version_id, `${esc(v.label)} <small>labeling…</small>`, 'pending');
-      $('#status').textContent = `${v.label}: calling Nemotron on Crusoe…`;
+    if (e.type === 'start') {
+      addRow(e.label, `${esc(e.label)} <small>labeling…</small>`, 'pending');
+      $('#status').textContent = e.phase;
+    } else if (e.type === 'phase') {
+      $('#status').textContent = e.phase;
+    } else if (e.type === 'agent') {
+      $('#status').textContent = `Agent → ${e.to}: ${e.change}`;
     } else if (e.type === 'result') {
-      const r = rows[e.version_id]; if (!r) return;
+      const r = rows[e.label]; if (!r) return;
       r.className = 'row';
+      r.dataset.f1 = e.snapped_f1_075;
       r.querySelector('.bar').innerHTML = bar(e.segments);
-      r.querySelector('.lbl').innerHTML = `${esc(e.label)} ${decHtml(e.decision)}<small>F1 ${(+e.snapped_f1_075).toFixed(2)} · ${e.n_pred} seg · ${e.wall_s}s</small>` +
-        (e.status !== 'ok' ? `<span class="err">${esc(e.status)}</span>` : '');
-      r.title = [e.hypothesis || '', (e.nodes || []).join(' → '), `${e.calls} live call(s)`].filter(Boolean).join('\n');
+      r.querySelector('.lbl').innerHTML = `${esc(e.label)} <small>F1 ${(+e.snapped_f1_075).toFixed(2)} · ${e.n_pred} seg · ${e.wall_s}s</small>` +
+        `<span class="chg">${esc(e.change)}</span>` + (e.status !== 'ok' ? `<span class="err">${esc(e.status)}</span>` : '');
+      r.title = [(e.nodes || []).join(' → '), `${e.calls} live call(s)`].join('\n');
     } else if (e.type === 'error') {
-      const r = rows[e.version_id]; if (r) { r.className = 'row'; r.querySelector('.lbl').innerHTML += `<span class="err">${esc(e.error)}</span>`; }
+      const r = rows[e.label]; if (r) { r.className = 'row'; r.querySelector('.lbl').innerHTML += `<span class="err">${esc(e.error)}</span>`; }
     } else if (e.type === 'done') {
       es.close(); es = null; $('#run').disabled = false;
+      const b = rows[e.best]; if (b) { b.classList.add('best'); b.querySelector('.lbl').insertAdjacentHTML('beforeend', ' <span class="tag">best</span>'); }
       $('#status').textContent = `done in ${((performance.now() - t0) / 1000).toFixed(0)} s`;
     }
   };

@@ -1,11 +1,12 @@
-"""Live demo: one episode's video, the human reference bar, and one bar per harness version as each finishes.
+"""Live demo: one episode's video, the human reference bar, and a live N0 -> N1 -> N2 self-improvement run.
 
   python -m evoaction demo [--port 8765]
 
-Each version (N0, then the version each human-in-the-loop recursion produced) is executed through the real workflow
-engine on the chosen episode with live Crusoe calls (cache reads off), so a bar appears when that version's labeling
-is done. Reference labels are read here only for display and scoring in this human-facing viewer;
-no agent code path is involved.
+Every click runs its own recursion, independent of the batch experiments: N0 (Macrodata protocol) labels the episode
+and the batch's fixed 10% human-labeled sample; the main agent (Nemotron Super) reads the root-cause analysis of that
+sample and patches the harness into N1; N1 runs the same way; the agent improves N1 into N2. All model calls are live
+(cache reads off). The demo writes only to data/demo_runs/ (its own SQLite DB, events and outputs) and never to
+artifacts/. Reference labels of the shown episode are used only to draw and score its bars.
 """
 
 from __future__ import annotations
@@ -27,7 +28,6 @@ from evoaction.config import ROOT, get_settings
 from evoaction.evaluation import segments as M
 
 PAGE = Path(__file__).with_name("demo_index.html")
-LINEAGES = {"hitl": ("_hitl", "Human-in-the-loop (10% labeled sample)"), "label_free": ("", "Label-free (no labels)")}
 _lock = threading.Lock()
 
 
@@ -37,12 +37,6 @@ def _settings():
 
 def _set_of(episode_id: str) -> str:
     return "droid50" if episode_id.startswith("robointer_droid") else "rest50"
-
-
-def _lineage(set_name: str, kind: str) -> dict[str, Any]:
-    sfx = ("" if set_name == "droid50" else f"_{set_name}") + LINEAGES[kind][0]
-    p = _settings().artifacts_dir / f"lineage{sfx}.json"
-    return json.loads(p.read_text()) if p.exists() else {}
 
 
 def episodes() -> list[dict[str, Any]]:
@@ -70,16 +64,6 @@ def episode_detail(episode_id: str) -> dict[str, Any]:
             "reference": [{"start_sec": g["start_sec"], "end_sec": g["end_sec"], "subtask": g.get("subtask", "")} for g in gold]}
 
 
-def versions_for(set_name: str, kind: str = "hitl") -> list[dict[str, Any]]:
-    """N0, then the version each recursion produced (N1, N2, ...) in the human-in-the-loop lineage."""
-    lin = _lineage(set_name, kind)
-    out = [{"version_id": "N0", "label": "N0", "decision": "baseline"}]
-    for k, e in enumerate(lin.get("experiments", []), start=1):
-        if e.get("version_dir"):
-            out.append({"version_id": e["version_dir"], "label": f"N{k}", "decision": e.get("decision"), "hypothesis": e.get("hypothesis")})
-    return out
-
-
 def score(episode_id: str, preds: list[dict[str, Any]], refs: list[dict[str, Any]], duration: float) -> dict[str, Any]:
     norm, _ = M.normalize_predictions(preds, duration)
     snapped = M.outer_snap(norm, refs)
@@ -90,18 +74,48 @@ def score(episode_id: str, preds: list[dict[str, Any]], refs: list[dict[str, Any
             "snapped_f1_075": s_snap.f1, "raw_f1_075": s_raw.f1, "n_pred": len(norm), "n_ref": len(refs)}
 
 
-def run_version_on_episode(version_id: str, episode_id: str, client, store, run_id: str) -> dict[str, Any]:
-    from evoaction.workflow.engine import VersionStore, run_episode
+DEMO_DIR = ROOT / "data" / "demo_runs"
+_demo_store = None
 
-    s = _settings()
-    v = VersionStore(s, store).load(version_id)
-    demo_settings = dataclasses.replace(s, artifacts_dir=ROOT / "data" / "demo_runs")  # keep demo outputs out of artifacts/
-    t0 = time.time()
-    r = run_episode(v, episode_id, client, run_id, store, demo_settings)
-    rows = store.query("SELECT COUNT(*) n, COALESCE(SUM(cache_hit),0) ch FROM model_calls WHERE run_id=? AND version_id=? AND episode_id=?",
-                       (run_id, version_id, episode_id))
-    return {"segments": r["segments"], "status": r["status"], "wall_s": round(time.time() - t0, 1),
-            "calls": rows[0]["n"] if rows else 0, "cache_hits": rows[0]["ch"] if rows else 0, "nodes": [n.operator for n in v.workflow.nodes]}
+
+def demo_store():
+    """Separate SQLite DB + event log so the demo never touches the experiment artifacts."""
+    global _demo_store
+    if _demo_store is None:
+        from evoaction.persistence import Store
+
+        _demo_store = Store(DEMO_DIR / "demo.db", DEMO_DIR / "events.jsonl")
+    return _demo_store
+
+
+def demo_settings():
+    return dataclasses.replace(_settings(), artifacts_dir=DEMO_DIR)
+
+
+def run_on(version, episode_ids: list[str], client, run_id: str) -> dict[str, Any]:
+    from evoaction.workflow.engine import run_version
+
+    return run_version(version, episode_ids, client, run_id, store=demo_store(), settings=demo_settings(), workers=6)
+
+
+def calls_of(run_id: str, version_id: str, episode_id: str) -> int:
+    rows = demo_store().query("SELECT COUNT(*) n FROM model_calls WHERE run_id=? AND version_id=? AND episode_id=?", (run_id, version_id, episode_id))
+    return rows[0]["n"] if rows else 0
+
+
+def patch_summary(patch: dict[str, Any] | None) -> str:
+    patch = patch or {}
+    parts = []
+    for ins in patch.get("insert_nodes") or []:
+        node = ins.get("node", ins) if isinstance(ins, dict) else {}
+        parts.append(f"+{node.get('operator', '?')}")
+    if patch.get("remove_nodes"):
+        parts.append("-" + ",-".join(patch["remove_nodes"]))
+    if patch.get("set_params"):
+        parts.append("params: " + ", ".join(f"{n}.{k}" for n, kv in patch["set_params"].items() for k in (kv or {})))
+    if (patch.get("prompt_updates") or {}).get("prompt.md"):
+        parts.append("prompt rewritten")
+    return "; ".join(parts) or "no change"
 
 
 class Handler(BaseHTTPRequestHandler):
@@ -131,7 +145,7 @@ class Handler(BaseHTTPRequestHandler):
                 self._json(episodes())
             elif u.path == "/api/episode":
                 eid = q["id"]
-                self._json({**episode_detail(eid), "versions": versions_for(_set_of(eid))})
+                self._json(episode_detail(eid))
             elif u.path.startswith("/video/"):
                 self._video(u.path.split("/video/", 1)[1])
             elif u.path == "/api/run":
@@ -180,32 +194,77 @@ class Handler(BaseHTTPRequestHandler):
         self.wfile.write(f"data: {json.dumps(obj, default=str)}\n\n".encode())
         self.wfile.flush()
 
-    def _run(self, episode_id: str, kind: str = "hitl") -> None:
+    def _run(self, episode_id: str) -> None:
+        from concurrent.futures import ThreadPoolExecutor
+
+        from evoaction.agents.supervisor import engineer_patch
         from evoaction.clients.crusoe import CrusoeClient
-        from evoaction.persistence import get_store
+        from evoaction.data.wgo import calibration_split
+        from evoaction.experiments.evolution import root_cause_analysis
+        from evoaction.schemas import WorkflowPatch
+        from evoaction.workflow.engine import Version, VersionStore, apply_patch
 
         self.send_response(200)
         self.send_header("Content-Type", "text/event-stream")
         self.send_header("Cache-Control", "no-cache")
         self.end_headers()
         detail = episode_detail(episode_id)
-        store = get_store()
+        store = demo_store()
         client = CrusoeClient(_settings(), store)
-        client.read_cache = False  # live: every model call goes to Crusoe, exactly as the harness runs the version
-        run_id = store.start_run("demo", {"episode": episode_id, "lineage": kind, "live": True})
+        client.read_cache = False  # live: every call goes to Crusoe
+        run_id = store.start_run("demo", {"episode": episode_id, "live": True})
         client.run_id = run_id
-        vs = versions_for(_set_of(episode_id), kind)
-        self._event({"type": "plan", "versions": vs})
-        for v in vs:
-            self._event({"type": "start", "version_id": v["version_id"]})
+        labeled = calibration_split(_set_of(episode_id))[0]
+        version = VersionStore(_settings(), store).load("N0")
+        history: list[dict[str, Any]] = []
+        results: list[dict[str, Any]] = []
+        pool = ThreadPoolExecutor(2)
+        for k in range(3):
+            name = f"N{k}"
+            self._event({"type": "start", "label": name, "phase": f"{name} labeling the episode (live Crusoe calls)"})
+            t0 = time.time()
+            fut_ep = pool.submit(run_on, version, [episode_id], client, run_id)
+            fut_lab = pool.submit(run_on, version, labeled, client, run_id) if k < 2 else None
             try:
-                r = run_version_on_episode(v["version_id"], episode_id, client, store, run_id)
+                r = fut_ep.result()["episodes"][episode_id]
                 sc = score(episode_id, r["segments"], detail["reference"], detail["duration_sec"])
-                self._event({"type": "result", **v, **r, **sc})
+                res = {"type": "result", "label": name, "status": r["status"], "wall_s": round(time.time() - t0, 1),
+                       "calls": calls_of(run_id, version.id, episode_id), "nodes": [n.operator for n in version.workflow.nodes],
+                       "change": results[-1]["next_change"] if results else "Macrodata protocol baseline", **sc}
+                results.append({**res, "next_change": None})
+                self._event(res)
             except Exception as e:
-                self._event({"type": "error", "version_id": v["version_id"], "error": f"{type(e).__name__}: {str(e)[:300]}"})
+                self._event({"type": "error", "label": name, "error": f"{type(e).__name__}: {str(e)[:300]}"})
+                break
+            if fut_lab is None:
+                break
+            self._event({"type": "phase", "phase": f"Main agent reading {name}'s errors on the 10% labeled sample ({len(labeled)} episodes)"})
+            try:
+                analysis = root_cause_analysis({"run": fut_lab.result()}, labeled)
+                data, wf, prompts, err = {}, None, None, None
+                for attempt in range(2):
+                    data = engineer_patch(client, version, analysis, history, {}, [{"error": err}] if err else [], f"demo_engineer_N{k + 1}")
+                    try:
+                        wf, prompts = apply_patch(version.workflow, version.prompts, WorkflowPatch(**(data.get("candidate_patch") or {})))
+                        break
+                    except Exception as e:
+                        err = f"invalid patch: {str(e)[:500]}"
+                change = patch_summary(data.get("candidate_patch")) if wf is not None else "agent patch invalid; unchanged"
+                results[-1]["next_change"] = change
+                history.append({"version": version.id, "labeled_scores": analysis["labeled_sample"]["pooled"], "hypothesis": data.get("hypothesis"),
+                                "patch_summary": change})
+                self._event({"type": "agent", "from": name, "to": f"N{k + 1}", "change": change, "hypothesis": data.get("hypothesis"),
+                             "root_causes": data.get("root_causes"), "labeled_f1": analysis["labeled_sample"]["pooled"]["snapped_f1_075"]})
+                if wf is not None:
+                    version = Version(id=f"demo-{run_id}-N{k + 1}", path=version.path, workflow=wf, prompts=prompts, config=version.config,
+                                      manifest={"workflow_sha256": "demo"})
+            except Exception as e:
+                self._event({"type": "phase", "phase": f"agent step failed ({type(e).__name__}); N{k + 1} keeps {name}'s harness"})
+                results[-1]["next_change"] = "agent step failed; unchanged"
+        pool.shutdown(wait=False)
         store.finish_run(run_id, "ok")
-        self._event({"type": "done"})
+        best = max(results, key=lambda x: (x["snapped_f1_075"], x["raw_f1_075"]))["label"] if results else None
+        self._event({"type": "done", "best": best})
 
 
 def cmd_demo(args: argparse.Namespace) -> int:

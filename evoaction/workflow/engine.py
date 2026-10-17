@@ -363,6 +363,8 @@ def run_episode(version: Version, episode_id: str, client: CrusoeClient, run_id:
             updates, detail, op_status = {}, {"error": str(e)}, "budget_denied"
         except ModelCallError as e:
             updates, detail, op_status = {}, {"error": str(e)[:300]}, "model_error"
+        except Exception as e:  # an operator bug degrades this episode (downstream continues) instead of aborting the run
+            updates, detail, op_status = {}, {"error": f"{type(e).__name__}: {str(e)[:300]}"}, "operator_error"
         state.update(updates)
         inference_cost += float(detail.get("cost_usd") or 0.0)
         tokens["prompt"] += int(detail.get("prompt_tokens") or 0)
