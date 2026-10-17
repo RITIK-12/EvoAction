@@ -256,3 +256,49 @@ Return JSON: {{"verdict": "approve" | "revise", "issues": [str], "required_chang
     record["status"] = "valid"
     record["proposal"] = json.loads(prop.model_dump_json())
     return record
+
+
+# -- human-in-the-loop main agent: diagnose root causes, then rewrite the harness (prompt first) -------------
+
+PROMPT_ENGINEER_SYSTEM = """You are the main agent of EvoAction, a harness that rewrites its own robot-video temporal segmentation workflow.
+Goal: maximize Segment F1 at temporal IoU >= 0.75 against human annotations: one predicted segment per human subtask, with boundaries where a
+manipulation state change completes, covering the whole video.
+Humans labeled a fixed ~10% sample of the episodes. You get (1) root-cause statistics computed on that labeled sample, (2) structural statistics of
+the incumbent's predictions on ALL episodes (no labels), (3) human reference segments next to the incumbent's predictions for the labeled sample,
+(4) the incumbent workflow and its full prompt.
+Work in two steps:
+1. Diagnose: list the top root causes of the errors, ranked by how many human segments they cost, each citing the numbers.
+2. Fix: write ONE WorkflowPatch. Rewrite prompt.md in full when the prompt or the model's reading of it causes the errors (keep the $instruction
+   placeholder and the JSON output shape {"segments":[{"start_sec":float,"end_sec":float,"subtask":str}]}). You may also change parameters or
+   topology from the operator library (e.g. sampling, thinking, merge_filter_segments) when that addresses a root cause better than wording.
+Your patch is run on the labeled sample and you will see the result and may refine it over a few rounds; the best round is then run on all episodes.
+The unlabeled ~90% decide whether it generalized, so state general rules (granularity, what counts as a boundary, coverage of the whole video,
+typical durations), never timestamps or content of specific labeled episodes.
+Reply with one JSON object only."""
+
+
+def engineer_patch(client: CrusoeClient, incumbent: Version, analysis: dict[str, Any], history: list[dict[str, Any]],
+                   cost_profile: dict[str, Any], trials: list[dict[str, Any]], purpose: str) -> dict[str, Any]:
+    refine = incumbent.prompts.get("refine.md")
+    refine_txt = f"Incumbent refine.md (full text):\n{refine}\n" if refine else ""
+    user = f"""Incumbent {incumbent.id} workflow JSON: {json.dumps(incumbent.workflow.model_dump())}
+Incumbent prompt.md (full text):
+{incumbent.prompts.get('prompt.md', '')}
+{refine_txt}Measured incumbent cost profile: {json.dumps(cost_profile)}
+
+Operator library:
+{operator_library()}
+
+{PATCH_DOC}
+
+Root-cause statistics on the human-labeled sample: {json.dumps(analysis['root_cause_stats_labeled'])}
+Structure of the incumbent's predictions on ALL episodes (label-free): {json.dumps(analysis['structure_all_episodes'])}
+Labeled sample, human references vs incumbent predictions: {compact(analysis['labeled_sample']['episodes'], 9000)}
+Previous experiments in this lineage: {compact(history, 2500) if history else 'none'}
+Your earlier attempts in this recursion and their labeled-sample results: {compact(trials, 7000) if trials else 'none yet'}
+
+Return JSON: {{"root_causes": [{{"cause": str, "evidence": str}}], "hypothesis": str, "candidate_patch": <WorkflowPatch>, "expected_outcome": str}}"""
+    res = _chat(client, PROMPT_ENGINEER_SYSTEM, user, purpose)
+    data = res.data if isinstance(res.data, dict) else {}
+    data["call_id"], data["model"] = res.call_id, res.model
+    return data

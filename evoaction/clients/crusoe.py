@@ -283,7 +283,7 @@ class CrusoeClient:
                     time.sleep(5 * (attempt + 1))
         raise ModelCallError(f"{purpose}: failed after retries: {last_err}")
 
-    def _create_with_backoff(self, kwargs: dict[str, Any], role: str, purpose: str, model: str, waits: tuple[int, ...] = (5, 10, 20)):
+    def _create_with_backoff(self, kwargs: dict[str, Any], role: str, purpose: str, model: str, waits: tuple[int, ...] = (5, 10, 20, 40, 60)):
         """HTTP 429 is provider back-pressure, not a model failure: back off without spending the retry budget."""
         for i, wait in enumerate((*waits, None)):
             try:

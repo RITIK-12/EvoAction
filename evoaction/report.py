@@ -78,7 +78,7 @@ def _sfx(name: str) -> str:
     return "" if name == "droid50" else f"_{name}"
 
 
-def recursion_levels(lin: dict[str, Any] | None, base: dict[str, Any] | None, set_name: str = "droid50") -> list[dict[str, Any]]:
+def recursion_levels(lin: dict[str, Any] | None, base: dict[str, Any] | None, set_name: str = "droid50", hitl: bool = False) -> list[dict[str, Any]]:
     """Level 0 = N0; level k = state after the k-th experiment (incumbent after the gate, plus the candidate tried)."""
     if not lin and not base:
         return []
@@ -87,7 +87,7 @@ def recursion_levels(lin: dict[str, Any] | None, base: dict[str, Any] | None, se
     levels = [{"level": 0, "incumbent_id": "N0", "incumbent": n0, "candidate_id": None, "candidate": None, "decision": "baseline",
                "recursion_cost": None}]
     inc_id, inc, promoted = "N0", n0, 0
-    prefix = "" if set_name == "droid50" else f"{set_name}-"
+    prefix = ("" if set_name == "droid50" else f"{set_name}-") + ("hitl-" if hitl else "")
     for e in (lin or {}).get("experiments", []):
         cand = versions.get(e.get("version_dir") or "")
         if e.get("decision") == "PROMOTED":
@@ -180,6 +180,55 @@ def section_results(a: Path) -> str:
 start and last predicted end snapped to the human episode boundaries (scoring-only); labels are ignored. Every version in a batch runs on exactly the same episodes.
 Ground truth is measured by the protected evaluator for this table only; agents and the promotion gate never see it.</p>
 {''.join(out) or '<div class=card>No v3 results yet.</div>'}{comb}"""
+
+
+def _pooled_key(recs: list[dict[str, Any] | None], key: str) -> dict[str, Any] | None:
+    return _pooled([{**(r or {}), "headline_gt": (r or {}).get(key)} for r in recs])
+
+
+def section_hitl(a: Path) -> str:
+    """Human-in-the-loop lineages: ~10% labeled sample shared with agents and gate; held-out 90% is the honest score."""
+    rows_by_set, levels_by_set = {}, {}
+    for name, title in SETS:
+        lin = _load(a / f"lineage{_sfx(name)}_hitl.json")
+        if not lin:
+            continue
+        levels = recursion_levels(lin, None, name, hitl=True)
+        levels_by_set[name] = levels
+        cal = _load(a / "episode_sets" / f"{name}_calibration.json") or {}
+        rows = ""
+        for L in levels:
+            for kind, rec, vid in ((("candidate", L["candidate"], L["candidate_id"]),) if L["level"] else ()) + (("incumbent", L["incumbent"], L["incumbent_id"]),):
+                r = rec or {}
+                lab, held, full = r.get("headline_gt_labeled") or {}, r.get("headline_gt_heldout") or {}, r.get("headline_gt") or {}
+                dec = L["decision"] if kind == "candidate" else ("baseline" if L["level"] == 0 else "incumbent")
+                cls = "ok" if dec == "PROMOTED" else "bad" if dec == "REJECTED" else ""
+                rows += (f"<tr><td>recursion {L['level']} · {kind} <code>{esc(vid)}</code></td><td class=num>{fmt(lab.get('snapped_f1_075'))}</td>"
+                         f"<td class=num><b>{fmt(held.get('snapped_f1_075'))}</b></td><td class=num>{fmt(held.get('raw_f1_075'))}</td>"
+                         f"<td class=num>{fmt(held.get('n_pred'))}/{fmt(held.get('n_ref'))}</td><td class=num>{fmt(full.get('snapped_f1_075'))}</td>"
+                         f"<td class=num>{('$' + format(r['annotation_cost_usd_total'], '.4f')) if r else '–'}</td><td><span class='pill {cls}'>{esc(dec)}</span></td></tr>")
+        rows_by_set[name] = (f"""<div class=card><h3>{esc(title)}: labeled sample {esc(', '.join(cal.get('calibration_ids', [])))}</h3>
+<table><tr><th>version</th><th>labeled-sample snapped F1@0.75 (gate signal)</th><th>held-out snapped F1@0.75 (headline)</th><th>held-out raw F1@0.75</th>
+<th>held-out pred/ref</th><th>all-episode snapped F1@0.75</th><th>annotation cost</th><th>decision</th></tr>{rows}</table></div>""")
+    if not rows_by_set:
+        return ""
+    pooled = ""
+    if len(levels_by_set) == len(SETS):
+        n = max(len(v) for v in levels_by_set.values())
+        for lvl in range(n):
+            got = [levels_by_set[s_][min(lvl, len(levels_by_set[s_]) - 1)] for s_, _ in SETS]
+            ph, pa = _pooled_key([g["incumbent"] for g in got], "headline_gt_heldout"), _pooled_key([g["incumbent"] for g in got], "headline_gt")
+            ids = " + ".join(f"<code>{esc(g['incumbent_id'])}</code>" for g in got)
+            if ph and pa:
+                pooled += (f"<tr><td>recursion {lvl} · {ids}</td><td class=num><b>{fmt(ph['snapped_f1_075'])}</b></td><td class=num>{fmt(ph['raw_f1_075'])}</td>"
+                           f"<td class=num>{ph['n_pred']}/{ph['n_ref']}</td><td class=num>{fmt(pa['snapped_f1_075'])}</td><td class=num>{fmt(pa['raw_f1_075'])}</td></tr>")
+    return f"""<h2>2. Human-in-the-loop: 10% labeled sample shared with the agents</h2>
+<p class=muted>As in production annotation, humans label a small sample after each pass. Here a fixed ~10% of each batch (whole instruction groups, chosen before the run)
+is labeled: agents see those human segments next to the incumbent's predictions, and the gate promotes only if Segment F1@0.75 on that sample strictly improves.
+The other 90% are never labeled for agents or the gate; their score is the honest measure of whether the fix generalized.</p>
+{''.join(rows_by_set.values())}
+<div class=card><h3>Pooled per recursion level</h3><table><tr><th>recursion level</th><th>held-out 90 snapped F1@0.75</th><th>held-out 90 raw F1@0.75</th>
+<th>held-out pred/ref</th><th>all 100 snapped F1@0.75 (10 labeled)</th><th>all 100 raw F1@0.75</th></tr>{pooled}</table></div>"""
 
 
 def _gate_rows(evo) -> str:
@@ -325,7 +374,7 @@ def build_report() -> Path:
     body = f"""<main><h1>EvoAction evidence report</h1>
 <p class=muted>A self-evolving, recursively delegated annotation harness for robot manipulation video, evaluated on WGO-Bench temporal subtask segmentation
 with Macrodata's protocol. Every number and agent message on this page comes from persisted real runs in <code>artifacts/</code>.</p>
-{section_results(a)}{section_lineage(a)}{trees or section_tree(None)}{section_diff(s)}{section_per_episode(a)}{section_sponsor(store, pre)}</main>"""
+{section_results(a)}{section_hitl(a)}{section_lineage(a)}{trees or section_tree(None)}{section_diff(s)}{section_per_episode(a)}{section_sponsor(store, pre)}</main>"""
     doc = f"<!doctype html><html lang=en><head><meta charset=utf-8><meta name=viewport content='width=device-width,initial-scale=1'><title>EvoAction Evidence Report</title><style>{CSS}</style></head><body>{body}</body></html>"
     out = a / "report.html"
     out.write_text(doc)

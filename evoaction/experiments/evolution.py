@@ -11,6 +11,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import statistics
 import time
 from typing import Any
 
@@ -28,7 +29,7 @@ from evoaction.persistence import get_store
 from evoaction.pipeline import ensure_n0, headline, run_and_assess
 from evoaction.schemas import WorkflowPatch
 from evoaction.selfcheck.label_free import SCORE_DEFINITION, compact_assessment
-from evoaction.workflow.engine import VersionStore, apply_patch, usage_for
+from evoaction.workflow.engine import Version, VersionStore, WorkflowValidationError, apply_patch, run_version, usage_for
 
 PROTOCOL = "v3-macrodata"
 GATE = {
@@ -118,6 +119,98 @@ def labeled_feedback(r: dict[str, Any], ids: list[str], s: Settings | None = Non
     eps = r["run"]["episodes"]
     ev = ProtectedEvaluator.for_episode_set(ids, s)
     return ev.labeled_sample_feedback({e: eps[e]["segments"] for e in ids}, {e: eps[e]["duration_sec"] for e in ids})
+
+
+INNER_ROUNDS = 3  # main-agent refinement rounds per recursion, each tried on the labeled sample
+
+
+def _med(v: list[float]) -> float | None:
+    return round(float(statistics.median(v)), 2) if v else None
+
+
+def _frac(v: list[float], pred) -> float | None:
+    return round(sum(1 for x in v if pred(x)) / len(v), 3) if v else None
+
+
+def root_cause_analysis(r: dict[str, Any], calib_ids: list[str], s: Settings | None = None) -> dict[str, Any]:
+    """Deterministic error analysis: metric-aligned stats on the labeled sample + label-free structure on all episodes."""
+    fb = labeled_feedback(r, calib_ids, s)
+    eps = list(fb["episodes"].values())
+    pd = [b - a for e in eps for a, b in e["predictions"]]
+    rd = [x["reference"][1] - x["reference"][0] for e in eps for x in e["references"]]
+    cov = [max((b for _, b in e["predictions"]), default=0.0) / max(x["reference"][1] for x in e["references"]) for e in eps if e["references"]]
+    best = [x["best_iou"] for e in eps for x in e["references"]]
+    stats = {"predicted_vs_reference_segments": [len(pd), len(rd)], "median_predicted_segment_sec": _med(pd), "median_reference_segment_sec": _med(rd),
+             "predicted_segments_le_2s_fraction": _frac(pd, lambda x: x <= 2.0), "reference_segments_le_2s_fraction": _frac(rd, lambda x: x <= 2.0),
+             "predicted_segments_exactly_1s_fraction": _frac(pd, lambda x: abs(x - 1.0) < 1e-6),
+             "median_coverage_last_predicted_end_over_reference_end": _med(cov), "episodes_with_coverage_below_50pct": sum(1 for c in cov if c < 0.5),
+             "references_matched_at_iou075": fb["pooled"]["tp_snapped"], "mean_best_iou_per_reference": round(sum(best) / len(best), 3) if best else None,
+             "references_with_best_iou_below_0.5": sum(1 for b in best if b < 0.5), "pooled_scores": fb["pooled"]}
+    allr = r["run"]["episodes"]
+    ad = [x["end_sec"] - x["start_sec"] for v in allr.values() for x in v["segments"]]
+    acov = [max((x["end_sec"] for x in v["segments"]), default=0.0) / v["duration_sec"] for v in allr.values() if v.get("duration_sec")]
+    struct = {"episodes": len(allr), "predicted_segments_per_episode_mean": round(len(ad) / max(1, len(allr)), 2), "median_predicted_segment_sec": _med(ad),
+              "predicted_segments_exactly_1s_fraction": _frac(ad, lambda x: abs(x - 1.0) < 1e-6),
+              "median_coverage_last_predicted_end_over_video_duration": _med(acov),
+              "episodes_with_predictions_ending_before_half_the_video": sum(1 for c in acov if c < 0.5),
+              "empty_or_failed_episodes": sum(1 for v in allr.values() if not v["segments"])}
+    return {"labeled_sample": fb, "root_cause_stats_labeled": stats, "structure_all_episodes": struct}
+
+
+def trial_on_labeled(incumbent: Version, wf, prompts: dict[str, str], trial_id: str, calib_ids: list[str], client: CrusoeClient,
+                     run_id: str, store, s: Settings) -> dict[str, Any]:
+    v = Version(id=trial_id, path=incumbent.path, workflow=wf, prompts=prompts, config=incumbent.config, manifest={"workflow_sha256": "labeled-trial"})
+    res = run_version(v, calib_ids, client, run_id, store=store, settings=s)
+    return root_cause_analysis({"run": res}, calib_ids, s)
+
+
+def hitl_propose(client: CrusoeClient, store, run_id: str, exp_id: str, incumbent: Version, analysis: dict[str, Any],
+                 history: list[dict[str, Any]], cprof: dict[str, Any], calib_ids: list[str], s: Settings) -> dict[str, Any]:
+    """Main agent diagnoses root causes and rewrites the harness, refining over INNER_ROUNDS on the fixed labeled sample."""
+    trials: list[dict[str, Any]] = []
+    best = None
+    root_causes = None
+    for k in range(INNER_ROUNDS):
+        try:
+            data = supervisor_mod.engineer_patch(client, incumbent, analysis, history, cprof, trials, f"hitl_engineer_round{k + 1}")
+        except (BudgetExceeded, ModelCallError) as e:
+            trials.append({"round": k + 1, "error": f"{type(e).__name__}: {str(e)[:300]}"})
+            store.event(run_id, "hitl_trial", {"exp_id": exp_id, **trials[-1]})
+            if best is not None or k == INNER_ROUNDS - 1:
+                break
+            continue
+        root_causes = root_causes or data.get("root_causes")
+        try:
+            patch = WorkflowPatch(**(data.get("candidate_patch") or {}))
+            wf, prompts = apply_patch(incumbent.workflow, incumbent.prompts, patch)
+        except (WorkflowValidationError, ValueError, TypeError) as e:
+            trials.append({"round": k + 1, "hypothesis": data.get("hypothesis"), "error": f"invalid patch: {str(e)[:600]}"})
+            store.event(run_id, "hitl_trial", {"exp_id": exp_id, **trials[-1]})
+            continue
+        try:
+            ta = trial_on_labeled(incumbent, wf, prompts, f"{exp_id}-trial{k + 1}", calib_ids, client, run_id, store, s)
+        except (BudgetExceeded, ModelCallError) as e:
+            trials.append({"round": k + 1, "hypothesis": data.get("hypothesis"), "error": f"{type(e).__name__}: {str(e)[:300]}"})
+            store.event(run_id, "hitl_trial", {"exp_id": exp_id, **trials[-1]})
+            break
+        pooled = ta["labeled_sample"]["pooled"]
+        tr = {"round": k + 1, "hypothesis": data.get("hypothesis"), "root_causes": data.get("root_causes"), "patch": data.get("candidate_patch"),
+              "labeled_scores": pooled, "root_cause_stats_labeled": ta["root_cause_stats_labeled"],
+              "predictions_by_episode": {e: v["predictions"] for e, v in ta["labeled_sample"]["episodes"].items()}}
+        trials.append(tr)
+        store.event(run_id, "hitl_trial", {"exp_id": exp_id, "round": k + 1, "hypothesis": data.get("hypothesis"), "labeled_scores": pooled,
+                                           "root_cause_stats_labeled": ta["root_cause_stats_labeled"], "patch": data.get("candidate_patch")})
+        score = (pooled["snapped_f1_075"], pooled["raw_f1_075"])
+        if best is None or score > best[0]:
+            best = (score, data, tr)
+    if best is None:
+        return {"status": "invalid", "attempts": [{"errors": [x.get("error") for x in trials]}], "trials": trials, "root_causes": root_causes}
+    data = best[1]
+    proposal = {"hypothesis": data.get("hypothesis"), "candidate_patch": data.get("candidate_patch"), "root_causes": data.get("root_causes") or root_causes,
+                "expected_outcome": data.get("expected_outcome"), "selected_round": best[2]["round"], "evidence_ids": [],
+                "incumbent_labeled_scores": analysis["labeled_sample"]["pooled"],
+                "trials": [{k: v for k, v in x.items() if k != "predictions_by_episode"} for x in trials]}
+    return {"status": "valid", "proposal": proposal, "trials": trials}
 
 
 def decide_hitl(cand: dict[str, Any], inc: dict[str, Any], cand_fb: dict[str, Any], inc_fb: dict[str, Any]) -> dict[str, Any]:
@@ -230,19 +323,27 @@ def cmd_evolve(args: argparse.Namespace) -> int:
                 supervisor_mod.configure_labeled_sample(inc_fb, fb_id)
                 root_evidence.append(fb_id)
                 it_rec["incumbent_labeled_sample"] = inc_fb["pooled"]
-            plan = plan_investigations(client, ctx, incumbent, inc_val["assessment"], history, cprof)
-            it_rec["plan"] = plan
-            store.event(run_id, "supervisor_plan", {"iteration": it + 1, "failure_summary": plan.get("failure_summary"),
-                                                    "investigations": plan.get("investigations")})
-            roots = []
-            for inv in (plan.get("investigations") or [])[:2]:
-                t, _ = graph.add(str(inv.get("question", "")), None, inv.get("tools_allowed") or [],
-                                 inv.get("tool_requests") or [], evidence_ids=root_evidence)
-                roots.append(t)
-            dispatch(graph, roots, ctx, workflow_summary(incumbent))
-            exp_id = f"{prefix}EXP-{lin['next_experiment']:04d}"
-            lin["next_experiment"] += 1
-            rec = propose_experiment(client, store, run_id, exp_id, findings_view(graph), incumbent, history, cprof, set(ctx.evidence))
+            if hitl:
+                analysis = root_cause_analysis(inc_dev, calib_ids, s)
+                it_rec["root_cause_analysis"] = {k: analysis[k] for k in ("root_cause_stats_labeled", "structure_all_episodes")}
+                store.event(run_id, "hitl_root_cause_stats", {"iteration": it + 1, **it_rec["root_cause_analysis"]})
+                exp_id = f"{prefix}EXP-{lin['next_experiment']:04d}"
+                lin["next_experiment"] += 1
+                rec = hitl_propose(client, store, run_id, exp_id, incumbent, analysis, history, cprof, calib_ids, s)
+            else:
+                plan = plan_investigations(client, ctx, incumbent, inc_val["assessment"], history, cprof)
+                it_rec["plan"] = plan
+                store.event(run_id, "supervisor_plan", {"iteration": it + 1, "failure_summary": plan.get("failure_summary"),
+                                                        "investigations": plan.get("investigations")})
+                roots = []
+                for inv in (plan.get("investigations") or [])[:2]:
+                    t, _ = graph.add(str(inv.get("question", "")), None, inv.get("tools_allowed") or [],
+                                     inv.get("tool_requests") or [], evidence_ids=root_evidence)
+                    roots.append(t)
+                dispatch(graph, roots, ctx, workflow_summary(incumbent))
+                exp_id = f"{prefix}EXP-{lin['next_experiment']:04d}"
+                lin["next_experiment"] += 1
+                rec = propose_experiment(client, store, run_id, exp_id, findings_view(graph), incumbent, history, cprof, set(ctx.evidence))
             it_rec["proposal_record"] = rec
             if rec.get("status") != "valid":
                 exp = {"id": exp_id, "parent_version": incumbent.id, "decision": "INVALID_PROPOSAL", "errors": rec["attempts"][-1]["errors"]}
@@ -293,6 +394,7 @@ def cmd_evolve(args: argparse.Namespace) -> int:
             exp = {"id": exp_id, "parent_version": incumbent.id, "version_dir": final_name, "hypothesis": proposal["hypothesis"],
                    "patch_summary": {k: v for k, v in proposal["candidate_patch"].items() if v}, "decision": decision["decision"],
                    "label_free": decision["label_free"], "labeled_sample": decision.get("labeled_sample"), "topology_change": decision["topology_change"],
+                   "root_causes": proposal.get("root_causes"), "selected_round": proposal.get("selected_round"), "trials": proposal.get("trials"),
                    "shadow_gt": gt, "shadow_gt_heldout": ({"candidate": subset_gt(cand_val, heldout_ids, s), "incumbent": subset_gt(inc_val, heldout_ids, s)}
                                                           if hitl else None)}
             lin["experiments"].append(exp)
