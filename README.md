@@ -5,9 +5,10 @@
 The working environment is robot-video temporal subtask segmentation on [WGO-Bench](https://huggingface.co/datasets/macrodata/WGO-Bench), scored with **Macrodata's own evaluation protocol** so the results sit next to their published model sweep. Everything runs on NVIDIA Nemotron models served by Crusoe Managed Inference.
 
 1. **Version N0** replicates Macrodata's Refiner annotation protocol on `Nemotron-3-Nano-Omni-30B-A3B`: their prompt word for word, 0.5 s sampling, 224 px tiles, 20 frames per sheet, their timestamp badge, all sheets in one call, and no post-processing.
-2. **N → N+1 without ground truth.** A Nemotron-3-Super-120B supervisor reads N's **label-free self-assessment**. It launches investigation agents that work from robot telemetry, close-up frames and the system's own predictions, and an investigator can spawn child investigations through a gated dispatcher. A strategy agent writes a typed, executable `WorkflowPatch`, which a critic reviews. The controller runs the candidate on **the same episodes** and applies a predeclared label-free gate. Ground truth is never shown to agents or used by the gate.
-3. **Measurement.** The protected evaluator scores every version against the human labels afterwards, for this README and the report only.
-4. **Batches.** The 100 benchmark episodes are evaluated in two batches of 50, each with its own lineage, and pooled per recursion level into the full benchmark.
+2. **N → N+1 with a 10% human-labeled sample (main mode).** As in production annotation, humans label a small fixed sample once: 5 of each batch's 50 episodes. After every pass, the main agent (Nemotron-3-Super-120B) gets a root-cause analysis of the current version's errors on that sample. It ranks the causes and rewrites the harness itself: the prompt, parameters or workflow topology. Each rewrite is tried on the same labeled sample and refined for up to 3 rounds; the best round then runs on all 50 episodes. The same 10% is reused every recursion. The other 45 episodes are never labeled for agents or the gate, and they give the honest score.
+3. **N → N+1 without any labels (comparison).** A Nemotron-3-Super-120B supervisor reads N's **label-free self-assessment**. It launches investigation agents that work from robot telemetry, close-up frames and the system's own predictions, and an investigator can spawn child investigations through a gated dispatcher. A strategy agent writes a typed, executable `WorkflowPatch`, which a critic reviews. The controller runs the candidate on **the same episodes** and applies a predeclared label-free gate. Ground truth is never shown to agents or used by the gate.
+4. **Measurement.** The protected evaluator scores every version against the human labels afterwards, for this README and the report only.
+5. **Batches.** The 100 benchmark episodes are evaluated in two batches of 50, each with its own lineage, and pooled per recursion level into the full benchmark.
 
 Every number below comes from persisted runs in `artifacts/` and was re-scored by an independent script (`linear_sum_assignment` matching), which gave identical true-positive counts.
 
@@ -15,7 +16,34 @@ Every number below comes from persisted runs in `artifacts/` and was re-scored b
 
 Metric (Macrodata's): **Segment F1 at temporal IoU ≥ 0.75**, pooled over episodes, one-to-one matching, with the first predicted start and last predicted end snapped to the human episode boundaries. Labels are ignored. Raw (unsnapped) F1@0.75 and snapped F1@0.5 are reported alongside.
 
-### Full benchmark: 100 episodes, pooled per recursion level
+### Main result: human-in-the-loop self-improvement on DROID (50 episodes, 10% labeled)
+
+- **Labeled sample:** 5 episodes, made up of 2 DROID twin pairs plus 1 single episode. It's taken as whole instruction groups, so no twin of a labeled episode is in the held-out set. It's fixed before the run and reused every recursion.
+- **Gate:** snapped F1@0.75 on the labeled sample must strictly improve, and every one of the 50 episodes must produce valid output.
+- **Headline:** snapped F1@0.75 on the **45 held-out episodes**, whose labels no agent ever sees.
+
+| Recursion | Version | What the main agent changed | Labeled sample F1 (gate) | **Held-out 45** snapped F1@0.75 | Held-out 45 raw | All 50 snapped | All 50 raw | Pred / ref (all 50) | Gate |
+|---|---|---|---|---|---|---|---|---|---|
+| 0 | N0 | Macrodata protocol | 0.222 | 0.069 | 0.009 | 0.081 | 0.013 | 320 / 150 | baseline |
+| 1 | hitl-EXP-0001 → **hitl-N001** | + telemetry hints → close-up windows (low-confidence boundaries) → refine → merge (≥ 2 s, cover the full episode) | 0.276 | 0.066 | 0.051 | 0.086 | 0.066 | 153 / 150 | **PROMOTED** |
+| 2 (attempt 1) | **hitl-EXP-0002a** | rewrote `prompt.md` ("most segments 3–12 s") and `refine.md`; 30 frames per sheet; refine every boundary (up to 16 windows) with thinking off; merge ≥ 3 s and merge same-label neighbours | **0.381** | **0.182** | **0.133** | **0.196** | **0.150** | 156 / 150 | REJECTED ⚑ |
+| 2 (attempt 2) | hitl-EXP-0002 | merge ≥ 3 s, no hint-only windows, refine with thinking off, stricter prompt | 0.174 | 0.048 | 0.032 | 0.059 | 0.037 | 121 / 150 | REJECTED (labeled F1 0.174 < 0.276) |
+
+⚑ **hitl-EXP-0002a is the best version the loop found, but the gate rejected it.**
+- **Quality:** held-out snapped F1@0.75 is 0.069 → 0.182 (2.6×), and raw F1@0.75 is 0.009 → 0.133. On all 50 episodes it scores 0.196.
+- **The labeled-sample criterion passed** (0.381 vs 0.276).
+- **The predeclared valid-output rule rejected it**, because 1 of 50 episodes (`robointer_droid_000050`) returned invalid JSON on both attempts. The decision stays REJECTED, so the gated incumbent is still hitl-N001.
+
+How the recursion ran, all on the record:
+- **Recursion 1.** The agent diagnosed over-segmentation (57.5% of N0's predicted segments on all 50 episodes are exactly 1 s, median 1.0 s, against a human median of 8.7 s on the labeled sample) and incomplete coverage (27 of 50 episodes stop before half the video). It added a refine stage and a merge/coverage step. Predictions dropped from 320 to 153 against 150 human segments, and held-out raw F1 rose 0.009 → 0.051. Held-out snapped F1 stayed level, 0.069 → 0.066; a re-run of the same harness gave 0.079.
+- **Recursion 2, attempt 1.** The agent rewrote the prompts itself and raised the minimum segment length. That candidate's original 50-episode run stopped after 41 episodes on a harness crash: a close-up window centred outside the video had zero frames. The crash is fixed. `scripts/complete_interrupted_candidate.py` rebuilt the candidate from the patch recorded in `events.jsonl`, confirmed the workflow hash is identical to the original, re-ran it on all 50 episodes, and applied the gate exactly as predeclared.
+- **Recursion 2, attempt 2.** This was a re-run from scratch after the fix. Because the incumbent's refine calls aren't cached across version ids, the agent saw a slightly different N1 run and wrote a different, weaker patch. It was rejected.
+- **Run-to-run noise.** Re-running the same hitl-N001 harness moved held-out snapped F1 between 0.066 and 0.079. Differences of about ±0.015 are noise.
+
+**Batch 2 (25 Galaxea + 25 HomER) human-in-the-loop run:** in progress; results will be added when it completes.
+
+
+### Comparison: label-free lineage (no labels at all), full benchmark, 100 episodes, pooled per recursion level
 
 | Recursion | Versions (batch 1 + batch 2) | Snapped F1@0.75 | Raw F1@0.75 | Snapped F1@0.5 | Pred / ref | Annotation cost (100 ep) |
 |---|---|---|---|---|---|---|
@@ -46,7 +74,7 @@ The comparison below is Macrodata's original model sweep: Segment F1 at tIoU ≥
 | 17 | **EvoAction recursion 0** (N0, Nemotron-3-Nano-Omni-30B-A3B) | 1498 | **0.036** |
 | 18 | **EvoAction recursion 1–2** (N001 + N0, same model) | 1498 | **0.035** |
 
-### Batch 1: all 50 DROID episodes (150 reference segments)
+### Label-free lineage, batch 1: all 50 DROID episodes (150 reference segments)
 
 | Recursion | Version | Snapped F1@0.75 | Raw F1@0.75 | Snapped F1@0.5 | Pred | Label-free score (gate) | Gate | Annotation cost (50 ep) | Recursion cost |
 |---|---|---|---|---|---|---|---|---|---|
@@ -55,7 +83,7 @@ The comparison below is Macrodata's original model sweep: Segment F1 at tIoU ≥
 | 2 | EXP-0002: 30 frames per sheet, 5 Hz windows, denser hints | 0.074 | 0.052 | 0.195 | 311 | 0.393 | REJECTED | $0.071 | $0.144 |
 | final | **N001** | 0.077 | 0.043 | 0.179 | 320 | 0.418 | incumbent | $0.074 | |
 
-### Batch 2: 25 Galaxea + 25 HomER (593 reference segments)
+### Label-free lineage, batch 2: 25 Galaxea + 25 HomER (593 reference segments)
 
 | Recursion | Version | Snapped F1@0.75 | Raw F1@0.75 | Snapped F1@0.5 | Pred | Label-free score (gate) | Gate | Annotation cost (50 ep) | Recursion cost |
 |---|---|---|---|---|---|---|---|---|---|
@@ -96,7 +124,7 @@ Counts are raw model output. Four HomER items were invalid and dropped by the ev
 
 **Note on further fixes.** Any fix designed now (for example per-sheet calls stitched together, or fewer frames per sheet) would be informed by this ground-truth analysis. It would have to be reported as a human-designed baseline variant, not as an agent-found N+1.
 
-## What the N+1 loop did (no ground truth)
+## What the label-free loop did (no labels at all)
 
 - **Batch 1, recursion 1.** EXP-0001 inserted a telemetry-guided refinement stage, a **topology change** from 3 nodes to 7. It was promoted on the label-free gate: +0.082, with 96% of episodes non-regressing. Measured afterwards, raw F1@0.75 went from 0.013 to 0.043, while the snapped headline lost one match (19 → 18).
 - **Batch 1, recursion 2.** EXP-0002 changed sampling parameters only, and the label-free score fell. The candidate was rejected, then frozen and kept. Measured afterwards, it had the best raw F1@0.75 (0.052) and F1@0.5 (0.195) of any DROID version.
@@ -120,7 +148,8 @@ Counts are raw model output. Four HomER items were invalid and dropped by the ev
     - vision-model confirmation that a state change completes at each boundary (0.35)
     - segment-duration variability (0.15)
     - temporal resolution (0.15)
-- **Promotion gate (controller only):** label-free score +0.03 or more, at least 50% of episodes non-regressing, and valid outputs. There is no per-episode cost cap. **Total cost per recursion** (agents plus candidate run) and per version is recorded and reported.
+- **Human-in-the-loop mode (`--hitl`):** the labeled sample (`artifacts/episode_sets/*_calibration.json`) is fixed before the run. Agents see human segments only for those 5 episodes, through the protected evaluator. The gate promotes only if labeled-sample snapped F1@0.75 strictly improves and all 50 episodes produce valid output. The 45 held-out episodes are scored for the report only.
+- **Label-free promotion gate (controller only):** label-free score +0.03 or more, at least 50% of episodes non-regressing, and valid outputs. There is no per-episode cost cap. **Total cost per recursion** (agents plus candidate run) and per version is recorded and reported.
 - **Ground truth** is read only by `evoaction/evaluation/protected.py`. Guards:
   - tests plant sentinel ground-truth values and check they never appear in an agent prompt
   - a static test checks that agents and self-check code never touch the protected store
@@ -158,6 +187,8 @@ uv run python -m evoaction setup                     # ingest all 100 episodes, 
 uv run python -m evoaction baseline --set droid50    # N0 on batch 1
 uv run python -m evoaction evolve --set droid50      # label-free N -> N+1 -> N+2 on batch 1
 uv run python -m evoaction evolve --set rest50       # same for batch 2
+uv run python -m evoaction evolve --set droid50 --hitl   # human-in-the-loop: fixed 10% labeled sample, prompt/harness rewrites
+uv run python -m evoaction demo                      # live UI: one episode, GT bar, live N0 -> N1 -> N2 bars
 uv run python -m evoaction report                    # artifacts/report.html
 ```
 

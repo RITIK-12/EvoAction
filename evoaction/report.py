@@ -93,7 +93,7 @@ def recursion_levels(lin: dict[str, Any] | None, base: dict[str, Any] | None, se
         if e.get("decision") == "PROMOTED":
             promoted += 1
             inc_id, inc = f"{prefix}N{promoted:03d}", cand
-        levels.append({"level": len(levels), "incumbent_id": inc_id, "incumbent": inc, "candidate_id": e.get("version_dir") or e["id"],
+        levels.append({"level": e.get("recursion") or len(levels), "attempt": e.get("attempt"), "incumbent_id": inc_id, "incumbent": inc, "candidate_id": e.get("version_dir") or e["id"],
                        "candidate": cand, "decision": e.get("decision"), "recursion_cost": e.get("recursion_cost"),
                        "hypothesis": e.get("hypothesis")})
     return levels
@@ -197,13 +197,17 @@ def section_hitl(a: Path) -> str:
         levels_by_set[name] = levels
         cal = _load(a / "episode_sets" / f"{name}_calibration.json") or {}
         rows = ""
+        cands = [L for L in levels if L["level"] and L["candidate"]]
+        best_vid = max(cands, key=lambda L: ((L["candidate"].get("headline_gt_heldout") or {}).get("snapped_f1_075") or 0))["candidate_id"] if cands else None
         for L in levels:
             for kind, rec, vid in ((("candidate", L["candidate"], L["candidate_id"]),) if L["level"] else ()) + (("incumbent", L["incumbent"], L["incumbent_id"]),):
                 r = rec or {}
                 lab, held, full = r.get("headline_gt_labeled") or {}, r.get("headline_gt_heldout") or {}, r.get("headline_gt") or {}
                 dec = L["decision"] if kind == "candidate" else ("baseline" if L["level"] == 0 else "incumbent")
                 cls = "ok" if dec == "PROMOTED" else "bad" if dec == "REJECTED" else ""
-                rows += (f"<tr><td>recursion {L['level']} · {kind} <code>{esc(vid)}</code></td><td class=num>{fmt(lab.get('snapped_f1_075'))}</td>"
+                att = f" (attempt {L['attempt']})" if L.get("attempt") and kind == "candidate" else ""
+                flag = " <span class='pill ok'>best version found</span>" if kind == "candidate" and vid == best_vid else ""
+                rows += (f"<tr><td>recursion {L['level']}{att} · {kind} <code>{esc(vid)}</code>{flag}</td><td class=num>{fmt(lab.get('snapped_f1_075'))}</td>"
                          f"<td class=num><b>{fmt(held.get('snapped_f1_075'))}</b></td><td class=num>{fmt(held.get('raw_f1_075'))}</td>"
                          f"<td class=num>{fmt(held.get('n_pred'))}/{fmt(held.get('n_ref'))}</td><td class=num>{fmt(full.get('snapped_f1_075'))}</td>"
                          f"<td class=num>{('$' + format(r['annotation_cost_usd_total'], '.4f')) if r else '–'}</td><td><span class='pill {cls}'>{esc(dec)}</span></td></tr>")
