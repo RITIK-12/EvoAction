@@ -1,0 +1,18 @@
+{
+ "id": "hitl-EXP-0001_promoted",
+ "parent_id": "N0",
+ "status": "PROMOTED",
+ "frozen": true,
+ "created_at": 1792278496.676459,
+ "workflow_sha256": "b14a7339b862e8f3b0799c760046ccecfd3d4c02f5abb8e6cbe68c152c755a4a",
+ "files": {
+  "workflow.json": "762097acd812bec26c517f9b41af3fa54f56312d08934792acb49d87ba0c7cb7",
+  "config.json": "53e574e73406ebc1eca87fbcf0b8e8a6ca099986a8f08b3dcead2bf810f60cd5",
+  "prompt.md": "4d8af6bfb619f1858738fd9924718e5d9d3207d790f7d1950a0352606b71683e",
+  "refine.md": "f478372773f8a0131d0ff6188feb5e649b2fa6a6cde4379fa9a918b370f4df3b",
+  "experiment.json": "f62afbb904eb742c74720e30c60e0f873efcf529c3376273ad5916eceb24f62c",
+  "validation_report.json": "6690339d2718258e2efe4c782d5e28c348e6aa712573687d5a3100ea6c7d99ca"
+ },
+ "frozen_at": 1792278922.918227,
+ "original_id": "hitl-EXP-0001"
+}

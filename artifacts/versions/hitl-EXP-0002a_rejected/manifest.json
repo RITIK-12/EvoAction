@@ -1,0 +1,18 @@
+{
+ "id": "hitl-EXP-0002a_rejected",
+ "parent_id": "hitl-N001",
+ "status": "REJECTED",
+ "frozen": true,
+ "created_at": 1792280465.490721,
+ "workflow_sha256": "12c888f4b1acfb7401bd4fb28e324bcae3c5497a40dc08a3839c837e5763a2a7",
+ "files": {
+  "workflow.json": "56777ef101312ee7e7d0c95152dab590698cbbffb3d4e9a007c1abe970712049",
+  "config.json": "53e574e73406ebc1eca87fbcf0b8e8a6ca099986a8f08b3dcead2bf810f60cd5",
+  "prompt.md": "3e221563ce584ec67ddb82a504a96c67bc349ce91a883ab95d6f99348d499cd3",
+  "refine.md": "749eb17a0e432e11b32dfe76541484df74c721eaedadd24a8e012d1da6a69d29",
+  "experiment.json": "5cfe26b9f8a64e3b29bd1bf3164ddea809258df7c9ad86d37b6a537c19a238b1",
+  "validation_report.json": "ff1d791ba97cb09b15ccebff8b5d75ccbc13f3523b6e991e979f2de73c510620"
+ },
+ "frozen_at": 1792280644.2892501,
+ "original_id": "hitl-EXP-0002a"
+}

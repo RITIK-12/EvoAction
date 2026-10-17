@@ -1,0 +1,11 @@
+{
+ "episode_id": "robointer_droid_000024",
+ "version_id": "hitl-EXP-0002-trial2",
+ "segments": [
+  {
+   "start_sec": 0.0,
+   "end_sec": 18.0,
+   "subtask": "The robot arm grasps the tomato from the table."
+  }
+ ]
+}

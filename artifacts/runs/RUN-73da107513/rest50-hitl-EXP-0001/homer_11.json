@@ -1,0 +1,666 @@
+{
+ "episode_id": "homer_11",
+ "version_id": "rest50-hitl-EXP-0001",
+ "segments": [
+  {
+   "start_sec": 0.0,
+   "end_sec": 1.0,
+   "subtask": "Open the green container"
+  },
+  {
+   "start_sec": 1.0,
+   "end_sec": 2.0,
+   "subtask": "Open the orange container"
+  },
+  {
+   "start_sec": 2.0,
+   "end_sec": 3.0,
+   "subtask": "Open the pink container"
+  },
+  {
+   "start_sec": 3.0,
+   "end_sec": 4.0,
+   "subtask": "Open the black container"
+  },
+  {
+   "start_sec": 4.0,
+   "end_sec": 5.0,
+   "subtask": "Open the green container"
+  },
+  {
+   "start_sec": 5.0,
+   "end_sec": 6.0,
+   "subtask": "Open the orange container"
+  },
+  {
+   "start_sec": 6.0,
+   "end_sec": 7.0,
+   "subtask": "Open the pink container"
+  },
+  {
+   "start_sec": 7.0,
+   "end_sec": 8.0,
+   "subtask": "Open the black container"
+  },
+  {
+   "start_sec": 8.0,
+   "end_sec": 9.0,
+   "subtask": "Open the green container"
+  },
+  {
+   "start_sec": 9.0,
+   "end_sec": 10.0,
+   "subtask": "Open the orange container"
+  },
+  {
+   "start_sec": 10.0,
+   "end_sec": 11.0,
+   "subtask": "Open the pink container"
+  },
+  {
+   "start_sec": 11.0,
+   "end_sec": 12.0,
+   "subtask": "Open the black container"
+  },
+  {
+   "start_sec": 12.0,
+   "end_sec": 13.0,
+   "subtask": "Open the green container"
+  },
+  {
+   "start_sec": 13.0,
+   "end_sec": 14.0,
+   "subtask": "Open the orange container"
+  },
+  {
+   "start_sec": 14.0,
+   "end_sec": 15.0,
+   "subtask": "Open the pink container"
+  },
+  {
+   "start_sec": 15.0,
+   "end_sec": 16.0,
+   "subtask": "Open the black container"
+  },
+  {
+   "start_sec": 16.0,
+   "end_sec": 17.0,
+   "subtask": "Open the green container"
+  },
+  {
+   "start_sec": 17.0,
+   "end_sec": 18.0,
+   "subtask": "Open the orange container"
+  },
+  {
+   "start_sec": 18.0,
+   "end_sec": 19.0,
+   "subtask": "Open the pink container"
+  },
+  {
+   "start_sec": 19.0,
+   "end_sec": 20.0,
+   "subtask": "Open the black container"
+  },
+  {
+   "start_sec": 20.0,
+   "end_sec": 21.0,
+   "subtask": "Open the green container"
+  },
+  {
+   "start_sec": 21.0,
+   "end_sec": 22.0,
+   "subtask": "Open the orange container"
+  },
+  {
+   "start_sec": 22.0,
+   "end_sec": 23.0,
+   "subtask": "Open the pink container"
+  },
+  {
+   "start_sec": 23.0,
+   "end_sec": 24.0,
+   "subtask": "Open the black container"
+  },
+  {
+   "start_sec": 24.0,
+   "end_sec": 25.0,
+   "subtask": "Open the green container"
+  },
+  {
+   "start_sec": 25.0,
+   "end_sec": 26.0,
+   "subtask": "Open the orange container"
+  },
+  {
+   "start_sec": 26.0,
+   "end_sec": 27.0,
+   "subtask": "Open the pink container"
+  },
+  {
+   "start_sec": 27.0,
+   "end_sec": 28.0,
+   "subtask": "Open the black container"
+  },
+  {
+   "start_sec": 28.0,
+   "end_sec": 29.0,
+   "subtask": "Open the green container"
+  },
+  {
+   "start_sec": 29.0,
+   "end_sec": 30.0,
+   "subtask": "Open the orange container"
+  },
+  {
+   "start_sec": 30.0,
+   "end_sec": 31.0,
+   "subtask": "Open the pink container"
+  },
+  {
+   "start_sec": 31.0,
+   "end_sec": 32.0,
+   "subtask": "Open the black container"
+  },
+  {
+   "start_sec": 32.0,
+   "end_sec": 33.0,
+   "subtask": "Open the green container"
+  },
+  {
+   "start_sec": 33.0,
+   "end_sec": 34.0,
+   "subtask": "Open the orange container"
+  },
+  {
+   "start_sec": 34.0,
+   "end_sec": 35.0,
+   "subtask": "Open the pink container"
+  },
+  {
+   "start_sec": 35.0,
+   "end_sec": 36.0,
+   "subtask": "Open the black container"
+  },
+  {
+   "start_sec": 36.0,
+   "end_sec": 37.0,
+   "subtask": "Open the green container"
+  },
+  {
+   "start_sec": 37.0,
+   "end_sec": 38.0,
+   "subtask": "Open the orange container"
+  },
+  {
+   "start_sec": 38.0,
+   "end_sec": 39.0,
+   "subtask": "Open the pink container"
+  },
+  {
+   "start_sec": 39.0,
+   "end_sec": 40.0,
+   "subtask": "Open the black container"
+  },
+  {
+   "start_sec": 40.0,
+   "end_sec": 41.0,
+   "subtask": "Open the green container"
+  },
+  {
+   "start_sec": 41.0,
+   "end_sec": 42.0,
+   "subtask": "Open the orange container"
+  },
+  {
+   "start_sec": 42.0,
+   "end_sec": 43.0,
+   "subtask": "Open the pink container"
+  },
+  {
+   "start_sec": 43.0,
+   "end_sec": 44.0,
+   "subtask": "Open the black container"
+  },
+  {
+   "start_sec": 44.0,
+   "end_sec": 45.0,
+   "subtask": "Open the green container"
+  },
+  {
+   "start_sec": 45.0,
+   "end_sec": 46.0,
+   "subtask": "Open the orange container"
+  },
+  {
+   "start_sec": 46.0,
+   "end_sec": 47.0,
+   "subtask": "Open the pink container"
+  },
+  {
+   "start_sec": 47.0,
+   "end_sec": 48.0,
+   "subtask": "Open the black container"
+  },
+  {
+   "start_sec": 48.0,
+   "end_sec": 49.0,
+   "subtask": "Open the green container"
+  },
+  {
+   "start_sec": 49.0,
+   "end_sec": 50.0,
+   "subtask": "Open the orange container"
+  },
+  {
+   "start_sec": 50.0,
+   "end_sec": 51.0,
+   "subtask": "Open the pink container"
+  },
+  {
+   "start_sec": 51.0,
+   "end_sec": 52.0,
+   "subtask": "Open the black container"
+  },
+  {
+   "start_sec": 52.0,
+   "end_sec": 53.0,
+   "subtask": "Open the green container"
+  },
+  {
+   "start_sec": 53.0,
+   "end_sec": 54.0,
+   "subtask": "Open the orange container"
+  },
+  {
+   "start_sec": 54.0,
+   "end_sec": 55.0,
+   "subtask": "Open the pink container"
+  },
+  {
+   "start_sec": 55.0,
+   "end_sec": 56.0,
+   "subtask": "Open the black container"
+  },
+  {
+   "start_sec": 56.0,
+   "end_sec": 57.0,
+   "subtask": "Open the green container"
+  },
+  {
+   "start_sec": 57.0,
+   "end_sec": 58.0,
+   "subtask": "Open the orange container"
+  },
+  {
+   "start_sec": 58.0,
+   "end_sec": 59.0,
+   "subtask": "Open the pink container"
+  },
+  {
+   "start_sec": 59.0,
+   "end_sec": 60.0,
+   "subtask": "Open the black container"
+  },
+  {
+   "start_sec": 60.0,
+   "end_sec": 61.0,
+   "subtask": "Open the green container"
+  },
+  {
+   "start_sec": 61.0,
+   "end_sec": 62.0,
+   "subtask": "Open the orange container"
+  },
+  {
+   "start_sec": 62.0,
+   "end_sec": 63.0,
+   "subtask": "Open the pink container"
+  },
+  {
+   "start_sec": 63.0,
+   "end_sec": 64.0,
+   "subtask": "Open the black container"
+  },
+  {
+   "start_sec": 64.0,
+   "end_sec": 65.0,
+   "subtask": "Open the green container"
+  },
+  {
+   "start_sec": 65.0,
+   "end_sec": 66.0,
+   "subtask": "Open the orange container"
+  },
+  {
+   "start_sec": 66.0,
+   "end_sec": 67.0,
+   "subtask": "Open the pink container"
+  },
+  {
+   "start_sec": 67.0,
+   "end_sec": 68.0,
+   "subtask": "Open the black container"
+  },
+  {
+   "start_sec": 68.0,
+   "end_sec": 69.0,
+   "subtask": "Open the green container"
+  },
+  {
+   "start_sec": 69.0,
+   "end_sec": 70.0,
+   "subtask": "Open the orange container"
+  },
+  {
+   "start_sec": 70.0,
+   "end_sec": 71.0,
+   "subtask": "Open the pink container"
+  },
+  {
+   "start_sec": 71.0,
+   "end_sec": 72.0,
+   "subtask": "Open the black container"
+  },
+  {
+   "start_sec": 72.0,
+   "end_sec": 73.0,
+   "subtask": "Open the green container"
+  },
+  {
+   "start_sec": 73.0,
+   "end_sec": 74.0,
+   "subtask": "Open the orange container"
+  },
+  {
+   "start_sec": 74.0,
+   "end_sec": 75.0,
+   "subtask": "Open the pink container"
+  },
+  {
+   "start_sec": 75.0,
+   "end_sec": 76.0,
+   "subtask": "Open the black container"
+  },
+  {
+   "start_sec": 76.0,
+   "end_sec": 77.0,
+   "subtask": "Open the green container"
+  },
+  {
+   "start_sec": 77.0,
+   "end_sec": 78.0,
+   "subtask": "Open the orange container"
+  },
+  {
+   "start_sec": 78.0,
+   "end_sec": 79.0,
+   "subtask": "Open the pink container"
+  },
+  {
+   "start_sec": 79.0,
+   "end_sec": 80.0,
+   "subtask": "Open the black container"
+  },
+  {
+   "start_sec": 80.0,
+   "end_sec": 81.0,
+   "subtask": "Open the green container"
+  },
+  {
+   "start_sec": 81.0,
+   "end_sec": 82.0,
+   "subtask": "Open the orange container"
+  },
+  {
+   "start_sec": 82.0,
+   "end_sec": 83.0,
+   "subtask": "Open the pink container"
+  },
+  {
+   "start_sec": 83.0,
+   "end_sec": 84.0,
+   "subtask": "Open the black container"
+  },
+  {
+   "start_sec": 84.0,
+   "end_sec": 85.0,
+   "subtask": "Open the green container"
+  },
+  {
+   "start_sec": 85.0,
+   "end_sec": 86.0,
+   "subtask": "Open the orange container"
+  },
+  {
+   "start_sec": 86.0,
+   "end_sec": 87.0,
+   "subtask": "Open the pink container"
+  },
+  {
+   "start_sec": 87.0,
+   "end_sec": 88.0,
+   "subtask": "Open the black container"
+  },
+  {
+   "start_sec": 88.0,
+   "end_sec": 89.0,
+   "subtask": "Open the green container"
+  },
+  {
+   "start_sec": 89.0,
+   "end_sec": 90.0,
+   "subtask": "Open the orange container"
+  },
+  {
+   "start_sec": 90.0,
+   "end_sec": 91.0,
+   "subtask": "Open the pink container"
+  },
+  {
+   "start_sec": 91.0,
+   "end_sec": 92.0,
+   "subtask": "Open the black container"
+  },
+  {
+   "start_sec": 92.0,
+   "end_sec": 93.0,
+   "subtask": "Open the green container"
+  },
+  {
+   "start_sec": 93.0,
+   "end_sec": 94.0,
+   "subtask": "Open the orange container"
+  },
+  {
+   "start_sec": 94.0,
+   "end_sec": 95.0,
+   "subtask": "Open the pink container"
+  },
+  {
+   "start_sec": 95.0,
+   "end_sec": 96.0,
+   "subtask": "Open the black container"
+  },
+  {
+   "start_sec": 96.0,
+   "end_sec": 97.0,
+   "subtask": "Open the green container"
+  },
+  {
+   "start_sec": 97.0,
+   "end_sec": 98.0,
+   "subtask": "Open the orange container"
+  },
+  {
+   "start_sec": 98.0,
+   "end_sec": 99.0,
+   "subtask": "Open the pink container"
+  },
+  {
+   "start_sec": 99.0,
+   "end_sec": 100.0,
+   "subtask": "Open the black container"
+  },
+  {
+   "start_sec": 100.0,
+   "end_sec": 101.0,
+   "subtask": "Open the green container"
+  },
+  {
+   "start_sec": 101.0,
+   "end_sec": 102.0,
+   "subtask": "Open the orange container"
+  },
+  {
+   "start_sec": 102.0,
+   "end_sec": 103.0,
+   "subtask": "Open the pink container"
+  },
+  {
+   "start_sec": 103.0,
+   "end_sec": 104.0,
+   "subtask": "Open the black container"
+  },
+  {
+   "start_sec": 104.0,
+   "end_sec": 105.0,
+   "subtask": "Open the green container"
+  },
+  {
+   "start_sec": 105.0,
+   "end_sec": 106.0,
+   "subtask": "Open the orange container"
+  },
+  {
+   "start_sec": 106.0,
+   "end_sec": 107.0,
+   "subtask": "Open the pink container"
+  },
+  {
+   "start_sec": 107.0,
+   "end_sec": 108.0,
+   "subtask": "Open the black container"
+  },
+  {
+   "start_sec": 108.0,
+   "end_sec": 109.0,
+   "subtask": "Open the green container"
+  },
+  {
+   "start_sec": 109.0,
+   "end_sec": 110.0,
+   "subtask": "Open the orange container"
+  },
+  {
+   "start_sec": 110.0,
+   "end_sec": 111.0,
+   "subtask": "Open the pink container"
+  },
+  {
+   "start_sec": 111.0,
+   "end_sec": 112.0,
+   "subtask": "Open the black container"
+  },
+  {
+   "start_sec": 112.0,
+   "end_sec": 113.0,
+   "subtask": "Open the green container"
+  },
+  {
+   "start_sec": 113.0,
+   "end_sec": 114.0,
+   "subtask": "Open the orange container"
+  },
+  {
+   "start_sec": 114.0,
+   "end_sec": 115.0,
+   "subtask": "Open the pink container"
+  },
+  {
+   "start_sec": 115.0,
+   "end_sec": 116.0,
+   "subtask": "Open the black container"
+  },
+  {
+   "start_sec": 116.0,
+   "end_sec": 117.0,
+   "subtask": "Open the green container"
+  },
+  {
+   "start_sec": 117.0,
+   "end_sec": 118.0,
+   "subtask": "Open the orange container"
+  },
+  {
+   "start_sec": 118.0,
+   "end_sec": 119.0,
+   "subtask": "Open the pink container"
+  },
+  {
+   "start_sec": 119.0,
+   "end_sec": 120.0,
+   "subtask": "Open the black container"
+  },
+  {
+   "start_sec": 120.0,
+   "end_sec": 121.0,
+   "subtask": "Open the green container"
+  },
+  {
+   "start_sec": 121.0,
+   "end_sec": 122.0,
+   "subtask": "Open the orange container"
+  },
+  {
+   "start_sec": 122.0,
+   "end_sec": 123.0,
+   "subtask": "Open the pink container"
+  },
+  {
+   "start_sec": 123.0,
+   "end_sec": 124.0,
+   "subtask": "Open the black container"
+  },
+  {
+   "start_sec": 124.0,
+   "end_sec": 125.0,
+   "subtask": "Open the green container"
+  },
+  {
+   "start_sec": 125.0,
+   "end_sec": 126.0,
+   "subtask": "Open the orange container"
+  },
+  {
+   "start_sec": 126.0,
+   "end_sec": 127.0,
+   "subtask": "Open the pink container"
+  },
+  {
+   "start_sec": 127.0,
+   "end_sec": 128.0,
+   "subtask": "Open the black container"
+  },
+  {
+   "start_sec": 128.0,
+   "end_sec": 129.0,
+   "subtask": "Open the green container"
+  },
+  {
+   "start_sec": 129.0,
+   "end_sec": 130.0,
+   "subtask": "Open the orange container"
+  },
+  {
+   "start_sec": 130.0,
+   "end_sec": 131.0,
+   "subtask": "Open the pink container"
+  },
+  {
+   "start_sec": 131.0,
+   "end_sec": 131.685,
+   "subtask": "Open the black container"
+  }
+ ]
+}

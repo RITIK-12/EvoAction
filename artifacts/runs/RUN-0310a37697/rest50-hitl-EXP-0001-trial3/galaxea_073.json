@@ -1,0 +1,16 @@
+{
+ "episode_id": "galaxea_073",
+ "version_id": "rest50-hitl-EXP-0001-trial3",
+ "segments": [
+  {
+   "start_sec": 0.0,
+   "end_sec": 7.0,
+   "subtask": "open the drawer"
+  },
+  {
+   "start_sec": 7.0,
+   "end_sec": 14.867,
+   "subtask": "close the red drawer"
+  }
+ ]
+}

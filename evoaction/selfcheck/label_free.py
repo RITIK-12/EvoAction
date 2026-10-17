@@ -75,8 +75,10 @@ def visual_verification(client: CrusoeClient | None, ep: dict[str, Any], segs: l
     bounds = interior_boundaries(segs)
     if not bounds or client is None:
         return None
-    bounds = bounds[:VERIFY_MAX_WINDOWS]
     half = VERIFY_WINDOW_SEC / 2
+    bounds = [b for b in bounds if min(ep["duration_sec"], b + half) - max(0.0, b - half) >= 1.0 / VERIFY_HZ][:VERIFY_MAX_WINDOWS]
+    if not bounds:  # every boundary lies outside the video: nothing to verify
+        return None
     content: list[dict[str, Any]] = [{"type": "text", "text": (
         f"You are checking a robot manipulation video annotation (task: {ep['instruction']!r}). Each image below is a close-up strip of "
         f"consecutive frames (timestamps in yellow) around one proposed segment boundary. For each window decide whether a manipulation "

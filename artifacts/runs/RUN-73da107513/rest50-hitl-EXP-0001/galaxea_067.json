@@ -1,0 +1,21 @@
+{
+ "episode_id": "galaxea_067",
+ "version_id": "rest50-hitl-EXP-0001",
+ "segments": [
+  {
+   "start_sec": 0.0,
+   "end_sec": 3.0,
+   "subtask": "approach and grasp the banana"
+  },
+  {
+   "start_sec": 3.0,
+   "end_sec": 6.0,
+   "subtask": "lift and move the banana to the pink bowl"
+  },
+  {
+   "start_sec": 6.0,
+   "end_sec": 6.633,
+   "subtask": "place the banana in the pink bowl"
+  }
+ ]
+}

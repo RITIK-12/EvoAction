@@ -1,0 +1,26 @@
+{
+ "episode_id": "robointer_droid_000022",
+ "version_id": "hitl-N001",
+ "segments": [
+  {
+   "start_sec": 0.0,
+   "end_sec": 3.0,
+   "subtask": "grasp the stuffed pineapple"
+  },
+  {
+   "start_sec": 3.0,
+   "end_sec": 6.0,
+   "subtask": "lift the stuffed pineapple"
+  },
+  {
+   "start_sec": 6.0,
+   "end_sec": 8.0,
+   "subtask": "move the stuffed pineapple beside the oven"
+  },
+  {
+   "start_sec": 8.0,
+   "end_sec": 18.7,
+   "subtask": "release the stuffed pineapple"
+  }
+ ]
+}

@@ -1,0 +1,56 @@
+{
+ "episode_id": "robointer_droid_000036",
+ "version_id": "N0",
+ "segments": [
+  {
+   "start_sec": 0.0,
+   "end_sec": 1.0,
+   "subtask": "robot arm approaches white lid"
+  },
+  {
+   "start_sec": 1.0,
+   "end_sec": 2.0,
+   "subtask": "robot arm positions over white lid"
+  },
+  {
+   "start_sec": 2.0,
+   "end_sec": 3.0,
+   "subtask": "robot arm lowers tool toward white lid"
+  },
+  {
+   "start_sec": 3.0,
+   "end_sec": 4.0,
+   "subtask": "robot arm makes contact with white lid"
+  },
+  {
+   "start_sec": 4.0,
+   "end_sec": 5.0,
+   "subtask": "robot arm moves across white lid surface"
+  },
+  {
+   "start_sec": 5.0,
+   "end_sec": 6.0,
+   "subtask": "robot arm continues wiping motion on white lid"
+  },
+  {
+   "start_sec": 6.0,
+   "end_sec": 7.0,
+   "subtask": "robot arm lifts tool from white lid"
+  },
+  {
+   "start_sec": 7.0,
+   "end_sec": 8.0,
+   "subtask": "robot arm retracts from white lid"
+  },
+  {
+   "start_sec": 8.0,
+   "end_sec": 9.0,
+   "subtask": "robot arm moves away from white lid"
+  },
+  {
+   "start_sec": 9.0,
+   "end_sec": 10.0,
+   "subtask": "robot arm completes retraction"
+  }
+ ]
+}

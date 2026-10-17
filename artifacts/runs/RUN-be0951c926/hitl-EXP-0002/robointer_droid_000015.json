@@ -1,0 +1,16 @@
+{
+ "episode_id": "robointer_droid_000015",
+ "version_id": "hitl-EXP-0002",
+ "segments": [
+  {
+   "start_sec": 0.0,
+   "end_sec": 3.0,
+   "subtask": "The robot grasps the silver cup with its gripper."
+  },
+  {
+   "start_sec": 3.0,
+   "end_sec": 16.4,
+   "subtask": "The robot lifts the silver cup and moves it to the right side of the countertop."
+  }
+ ]
+}

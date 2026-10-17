@@ -1,0 +1,31 @@
+{
+ "episode_id": "robointer_droid_000045",
+ "version_id": "hitl-EXP-0002",
+ "segments": [
+  {
+   "start_sec": 0.0,
+   "end_sec": 3.0,
+   "subtask": "grasp the first item from the desktop"
+  },
+  {
+   "start_sec": 3.0,
+   "end_sec": 12.0,
+   "subtask": "move the item to the drawer"
+  },
+  {
+   "start_sec": 12.0,
+   "end_sec": 21.0,
+   "subtask": "move the item to the drawer"
+  },
+  {
+   "start_sec": 21.0,
+   "end_sec": 30.0,
+   "subtask": "move the item to the drawer"
+  },
+  {
+   "start_sec": 30.0,
+   "end_sec": 36.5,
+   "subtask": "move the item to the drawer"
+  }
+ ]
+}

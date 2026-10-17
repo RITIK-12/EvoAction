@@ -1,0 +1,11 @@
+{
+ "episode_id": "robointer_droid_000023",
+ "version_id": "hitl-EXP-0002",
+ "segments": [
+  {
+   "start_sec": 0.0,
+   "end_sec": 18.1,
+   "subtask": "The robot arm moves the cup lid to the right side of the white surface."
+  }
+ ]
+}

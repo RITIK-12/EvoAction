@@ -1,0 +1,74 @@
+{
+ "experiment_id": "hitl-EXP-0002",
+ "protocol": "v3-macrodata",
+ "validation": {
+  "decision": "REJECTED",
+  "gate": {
+   "signal": "human-labeled sample (~10% of the batch, whole instruction groups, fixed before the run)",
+   "rule": "pooled snapped Segment F1@0.75 on the labeled sample strictly improves (ties: raw F1@0.75 strictly improves); valid outputs on every episode",
+   "cost_policy": "no per-episode cost cap; total cost is recorded per recursion (iteration) and per version over the same 50 episodes",
+   "note": "the ~90% held-out episodes are never labeled for agents or the gate; they are measured only for the report"
+  },
+  "checks": {
+   "labeled_sample_snapped_f1_075": {
+    "value": {
+     "delta": -0.1019,
+     "raw_delta": -0.113
+    },
+    "threshold": "> 0 (ties: raw F1@0.75 > 0)",
+    "pass": false
+   },
+   "valid_outputs": {
+    "value": {
+     "bad_status": {},
+     "empty_output_episodes": []
+    },
+    "pass": true
+   }
+  },
+  "labeled_sample": {
+   "candidate": {
+    "snapped_f1_075": 0.17391304347826086,
+    "raw_f1_075": 0.08695652173913043,
+    "snapped_f1_05": 0.5217391304347826,
+    "tp_snapped": 2,
+    "n_pred": 13,
+    "n_ref": 10
+   },
+   "incumbent": {
+    "snapped_f1_075": 0.27586206896551724,
+    "raw_f1_075": 0.2,
+    "snapped_f1_05": 0.41379310344827586,
+    "tp_snapped": 4,
+    "n_pred": 20,
+    "n_ref": 10
+   }
+  },
+  "label_free": {
+   "candidate_self_score": 0.347,
+   "incumbent_self_score": 0.3719,
+   "candidate_components": {
+    "telemetry_agreement": 0.0349,
+    "visual_verification": 0.3733,
+    "duration_variability": 0.4935,
+    "temporal_resolution": 1.0
+   },
+   "incumbent_components": {
+    "telemetry_agreement": 0.1462,
+    "visual_verification": 0.2934,
+    "duration_variability": 0.5089,
+    "temporal_resolution": 1.0
+   }
+  },
+  "uncertainty": "labeled sample of 5 episodes; held-out measured separately",
+  "candidate_usage": {
+   "calls": 131,
+   "cache_hits": 11,
+   "prompt_tokens": 236926,
+   "completion_tokens": 34993,
+   "cost_usd": 0.135115,
+   "model_latency_s": 247.23
+  },
+  "topology_change": false
+ }
+}

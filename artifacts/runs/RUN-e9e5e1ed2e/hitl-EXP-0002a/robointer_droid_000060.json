@@ -1,0 +1,81 @@
+{
+ "episode_id": "robointer_droid_000060",
+ "version_id": "hitl-EXP-0002a",
+ "segments": [
+  {
+   "start_sec": 0.0,
+   "end_sec": 5.0,
+   "subtask": "robot arm grasps the plug"
+  },
+  {
+   "start_sec": 5.0,
+   "end_sec": 10.0,
+   "subtask": "robot arm lifts the plug from the table"
+  },
+  {
+   "start_sec": 10.0,
+   "end_sec": 15.0,
+   "subtask": "robot arm moves the plug towards the power strip"
+  },
+  {
+   "start_sec": 15.0,
+   "end_sec": 20.0,
+   "subtask": "robot arm positions the plug above the power strip"
+  },
+  {
+   "start_sec": 20.0,
+   "end_sec": 25.0,
+   "subtask": "robot arm inserts the plug into the power strip"
+  },
+  {
+   "start_sec": 25.0,
+   "end_sec": 30.0,
+   "subtask": "robot arm releases the plug in the power strip"
+  },
+  {
+   "start_sec": 30.0,
+   "end_sec": 35.0,
+   "subtask": "robot arm retracts from the power strip"
+  },
+  {
+   "start_sec": 35.0,
+   "end_sec": 40.0,
+   "subtask": "robot arm moves back to the table"
+  },
+  {
+   "start_sec": 40.0,
+   "end_sec": 45.0,
+   "subtask": "robot arm approaches the table again"
+  },
+  {
+   "start_sec": 45.0,
+   "end_sec": 50.0,
+   "subtask": "robot arm grasps the plug again"
+  },
+  {
+   "start_sec": 50.0,
+   "end_sec": 55.0,
+   "subtask": "robot arm lifts the plug from the table"
+  },
+  {
+   "start_sec": 55.0,
+   "end_sec": 60.0,
+   "subtask": "robot arm moves the plug towards the power strip"
+  },
+  {
+   "start_sec": 60.0,
+   "end_sec": 65.0,
+   "subtask": "robot arm positions the plug above the power strip"
+  },
+  {
+   "start_sec": 65.0,
+   "end_sec": 70.0,
+   "subtask": "robot arm inserts the plug into the power strip"
+  },
+  {
+   "start_sec": 70.0,
+   "end_sec": 75.9,
+   "subtask": "robot arm releases the plug in the power strip"
+  }
+ ]
+}

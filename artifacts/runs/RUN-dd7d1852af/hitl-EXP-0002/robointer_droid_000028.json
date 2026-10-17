@@ -1,0 +1,21 @@
+{
+ "episode_id": "robointer_droid_000028",
+ "version_id": "hitl-EXP-0002",
+ "segments": [
+  {
+   "start_sec": 0.0,
+   "end_sec": 3.0,
+   "subtask": "grasp the piece of paper"
+  },
+  {
+   "start_sec": 3.0,
+   "end_sec": 12.0,
+   "subtask": "lift and move the piece of paper forward"
+  },
+  {
+   "start_sec": 12.0,
+   "end_sec": 19.4,
+   "subtask": "place the piece of paper on the table"
+  }
+ ]
+}

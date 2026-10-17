@@ -1,0 +1,41 @@
+{
+ "episode_id": "homer_39",
+ "version_id": "rest50-hitl-EXP-0001",
+ "segments": [
+  {
+   "start_sec": 0.0,
+   "end_sec": 2.0,
+   "subtask": "handling a small metal cup"
+  },
+  {
+   "start_sec": 2.0,
+   "end_sec": 4.0,
+   "subtask": "wiping the countertop with a blue cloth"
+  },
+  {
+   "start_sec": 4.0,
+   "end_sec": 6.0,
+   "subtask": "wiping a yellow fruit with a white cloth"
+  },
+  {
+   "start_sec": 6.0,
+   "end_sec": 14.0,
+   "subtask": "wiping the countertop with a blue cloth while holding a metal bowl"
+  },
+  {
+   "start_sec": 14.0,
+   "end_sec": 20.0,
+   "subtask": "wiping the countertop with a blue cloth while holding a white container"
+  },
+  {
+   "start_sec": 20.0,
+   "end_sec": 24.0,
+   "subtask": "wiping the countertop with a blue cloth while holding a blue bottle"
+  },
+  {
+   "start_sec": 24.0,
+   "end_sec": 61.126,
+   "subtask": "wiping the countertop with a blue cloth while holding a metal bowl"
+  }
+ ]
+}

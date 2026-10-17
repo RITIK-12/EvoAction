@@ -1,0 +1,11 @@
+{
+ "episode_id": "robointer_droid_000047",
+ "version_id": "hitl-N001",
+ "segments": [
+  {
+   "start_sec": 0.0,
+   "end_sec": 43.1,
+   "subtask": "The robot arm grasps the building block toys from the top of the cabinet."
+  }
+ ]
+}

@@ -1,0 +1,21 @@
+{
+ "episode_id": "robointer_droid_000001",
+ "version_id": "hitl-EXP-0002",
+ "segments": [
+  {
+   "start_sec": 0.0,
+   "end_sec": 3.0,
+   "subtask": "grasp bowl"
+  },
+  {
+   "start_sec": 3.0,
+   "end_sec": 6.0,
+   "subtask": "lift bowl"
+  },
+  {
+   "start_sec": 6.0,
+   "end_sec": 10.4,
+   "subtask": "move bowl to the right"
+  }
+ ]
+}

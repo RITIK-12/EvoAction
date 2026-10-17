@@ -1,0 +1,16 @@
+{
+ "episode_id": "robointer_droid_000017",
+ "version_id": "hitl-EXP-0002a",
+ "segments": [
+  {
+   "start_sec": 0.0,
+   "end_sec": 9.0,
+   "subtask": "grasp marker"
+  },
+  {
+   "start_sec": 9.0,
+   "end_sec": 17.2,
+   "subtask": "retreat"
+  }
+ ]
+}

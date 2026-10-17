@@ -1,0 +1,21 @@
+{
+ "episode_id": "robointer_droid_000023",
+ "version_id": "hitl-EXP-0002a",
+ "segments": [
+  {
+   "start_sec": 0.0,
+   "end_sec": 11.0,
+   "subtask": "grasp cup lid"
+  },
+  {
+   "start_sec": 11.0,
+   "end_sec": 15.0,
+   "subtask": "retract arm"
+  },
+  {
+   "start_sec": 15.0,
+   "end_sec": 18.1,
+   "subtask": "return to home position"
+  }
+ ]
+}

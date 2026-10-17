@@ -1,0 +1,11 @@
+{
+ "episode_id": "robointer_droid_000046",
+ "version_id": "hitl-EXP-0002a",
+ "segments": [
+  {
+   "start_sec": 0.0,
+   "end_sec": 36.5,
+   "subtask": "grasp the green object on the table"
+  }
+ ]
+}

@@ -1,0 +1,26 @@
+{
+ "episode_id": "galaxea_062",
+ "version_id": "rest50-hitl-EXP-0001",
+ "segments": [
+  {
+   "start_sec": 0.0,
+   "end_sec": 2.0,
+   "subtask": "The scene is static with various objects on a table."
+  },
+  {
+   "start_sec": 2.0,
+   "end_sec": 5.0,
+   "subtask": "A robotic arm enters the frame and grasps the banana."
+  },
+  {
+   "start_sec": 5.0,
+   "end_sec": 8.5,
+   "subtask": "The robotic arm moves the banana towards the grey dish."
+  },
+  {
+   "start_sec": 8.5,
+   "end_sec": 10.667,
+   "subtask": "The robotic arm places the banana in the dish and retracts."
+  }
+ ]
+}

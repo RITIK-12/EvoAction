@@ -1,0 +1,21 @@
+{
+ "episode_id": "robointer_droid_000015",
+ "version_id": "hitl-EXP-0002a",
+ "segments": [
+  {
+   "start_sec": 0.0,
+   "end_sec": 4.0,
+   "subtask": "grasp the silver cup"
+  },
+  {
+   "start_sec": 4.0,
+   "end_sec": 12.0,
+   "subtask": "lift and move the silver cup to the right"
+  },
+  {
+   "start_sec": 12.0,
+   "end_sec": 16.4,
+   "subtask": "release the silver cup and retract"
+  }
+ ]
+}

@@ -1,0 +1,11 @@
+{
+ "episode_id": "robointer_droid_000001",
+ "version_id": "hitl-N001",
+ "segments": [
+  {
+   "start_sec": 0.0,
+   "end_sec": 10.4,
+   "subtask": "The robot arm grasps the bowl and begins to lift it."
+  }
+ ]
+}

@@ -1,0 +1,11 @@
+{
+ "episode_id": "robointer_droid_000043",
+ "version_id": "hitl-EXP-0002a",
+ "segments": [
+  {
+   "start_sec": 0.0,
+   "end_sec": 32.2,
+   "subtask": "Cover the pot with a lid."
+  }
+ ]
+}

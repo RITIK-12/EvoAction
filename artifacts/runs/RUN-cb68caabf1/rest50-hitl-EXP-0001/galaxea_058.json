@@ -1,0 +1,21 @@
+{
+ "episode_id": "galaxea_058",
+ "version_id": "rest50-hitl-EXP-0001",
+ "segments": [
+  {
+   "start_sec": 0.0,
+   "end_sec": 2.0,
+   "subtask": "The robot arm approaches and grasps the banana."
+  },
+  {
+   "start_sec": 2.0,
+   "end_sec": 6.0,
+   "subtask": "The robot lifts and places the banana into the bowl."
+  },
+  {
+   "start_sec": 6.0,
+   "end_sec": 11.767,
+   "subtask": "The robot retracts its arm."
+  }
+ ]
+}

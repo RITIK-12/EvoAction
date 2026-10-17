@@ -1,0 +1,16 @@
+{
+ "episode_id": "robointer_droid_000016",
+ "version_id": "hitl-EXP-0002a",
+ "segments": [
+  {
+   "start_sec": 0.0,
+   "end_sec": 9.7,
+   "subtask": "grasp the rubber band"
+  },
+  {
+   "start_sec": 9.7,
+   "end_sec": 16.5,
+   "subtask": "gripper released"
+  }
+ ]
+}

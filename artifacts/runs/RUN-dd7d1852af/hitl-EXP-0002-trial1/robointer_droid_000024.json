@@ -1,0 +1,21 @@
+{
+ "episode_id": "robointer_droid_000024",
+ "version_id": "hitl-EXP-0002-trial1",
+ "segments": [
+  {
+   "start_sec": 0.0,
+   "end_sec": 4.0,
+   "subtask": "Robot approaches the table"
+  },
+  {
+   "start_sec": 4.0,
+   "end_sec": 11.0,
+   "subtask": "Robot grasps the tomato"
+  },
+  {
+   "start_sec": 11.0,
+   "end_sec": 18.0,
+   "subtask": "Robot places the tomato in the bowl"
+  }
+ ]
+}

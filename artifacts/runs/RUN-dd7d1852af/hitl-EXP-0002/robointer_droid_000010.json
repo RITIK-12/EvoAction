@@ -1,0 +1,21 @@
+{
+ "episode_id": "robointer_droid_000010",
+ "version_id": "hitl-EXP-0002",
+ "segments": [
+  {
+   "start_sec": 0.0,
+   "end_sec": 5.0,
+   "subtask": "grasp blue object"
+  },
+  {
+   "start_sec": 5.0,
+   "end_sec": 10.0,
+   "subtask": "move blue object to drawer"
+  },
+  {
+   "start_sec": 10.0,
+   "end_sec": 15.2,
+   "subtask": "place blue object in drawer"
+  }
+ ]
+}

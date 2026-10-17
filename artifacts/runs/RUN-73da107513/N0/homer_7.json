@@ -1,0 +1,86 @@
+{
+ "episode_id": "homer_7",
+ "version_id": "N0",
+ "segments": [
+  {
+   "start_sec": 0.0,
+   "end_sec": 1.0,
+   "subtask": "The person is holding a pencil and preparing to draw on the paper."
+  },
+  {
+   "start_sec": 1.0,
+   "end_sec": 10.0,
+   "subtask": "The person draws a circle on the paper."
+  },
+  {
+   "start_sec": 10.0,
+   "end_sec": 20.0,
+   "subtask": "The person draws a sun with rays around the circle."
+  },
+  {
+   "start_sec": 20.0,
+   "end_sec": 30.0,
+   "subtask": "The person draws a cloud above the sun."
+  },
+  {
+   "start_sec": 30.0,
+   "end_sec": 40.0,
+   "subtask": "The person draws a wave pattern below the sun."
+  },
+  {
+   "start_sec": 40.0,
+   "end_sec": 50.0,
+   "subtask": "The person draws a tree on the right side of the paper."
+  },
+  {
+   "start_sec": 50.0,
+   "end_sec": 60.0,
+   "subtask": "The person draws another tree on the left side of the paper."
+  },
+  {
+   "start_sec": 60.0,
+   "end_sec": 70.0,
+   "subtask": "The person draws a mountain in the background."
+  },
+  {
+   "start_sec": 70.0,
+   "end_sec": 80.0,
+   "subtask": "The person draws a path leading to the sun."
+  },
+  {
+   "start_sec": 80.0,
+   "end_sec": 90.0,
+   "subtask": "The person draws a beach scene with sand and water."
+  },
+  {
+   "start_sec": 90.0,
+   "end_sec": 100.0,
+   "subtask": "The person draws a boat on the water."
+  },
+  {
+   "start_sec": 100.0,
+   "end_sec": 110.0,
+   "subtask": "The person draws a fish in the water."
+  },
+  {
+   "start_sec": 110.0,
+   "end_sec": 120.0,
+   "subtask": "The person draws a bird flying in the sky."
+  },
+  {
+   "start_sec": 120.0,
+   "end_sec": 130.0,
+   "subtask": "The person draws a flower near the tree."
+  },
+  {
+   "start_sec": 130.0,
+   "end_sec": 140.0,
+   "subtask": "The person draws a fence around the beach area."
+  },
+  {
+   "start_sec": 140.0,
+   "end_sec": 143.815,
+   "subtask": "The person finishes the drawing and lifts the pencil."
+  }
+ ]
+}

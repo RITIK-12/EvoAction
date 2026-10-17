@@ -1,0 +1,2651 @@
+{
+ "protocol": "v3-macrodata",
+ "episode_set": "droid50",
+ "incumbent": "hitl-N001",
+ "next_experiment": 3,
+ "next_version": 2,
+ "experiments": [
+  {
+   "id": "hitl-EXP-0001",
+   "parent_version": "N0",
+   "version_dir": "hitl-EXP-0001_promoted",
+   "hypothesis": "By adding deterministic telemetry\u2011based hint detection, inspecting transition windows around low\u2011confidence or hint\u2011disagreement boundaries, refining those windows with a second multimodal pass, and then applying a longer minimum\u2011duration filter, we will suppress spurious short splits, extend predictions to cover the full video, and shift boundaries toward actual state changes, thereby raising segment F1 at IoU\u22650.75.",
+   "patch_summary": {
+    "insert_nodes": [
+     {
+      "node": {
+       "id": "hints",
+       "operator": "state_hint_detection",
+       "depends_on": [
+        "sample"
+       ],
+       "params": {
+        "signals": [
+         "gripper",
+         "eef_pause"
+        ],
+        "min_gap_sec": 0.8,
+        "pause_speed_quantile": 0.15,
+        "min_pause_sec": 0.3
+       },
+       "when": "always"
+      },
+      "rewire_dependents_of": null
+     },
+     {
+      "node": {
+       "id": "inspect",
+       "operator": "inspect_transition_windows",
+       "depends_on": [
+        "annotate",
+        "hints"
+       ],
+       "params": {
+        "select": "low_confidence",
+        "window_sec": 2.0,
+        "local_hz": 4.0,
+        "max_windows": 8,
+        "include_unmatched_hints": true,
+        "tile_px": 224,
+        "confidence_threshold": 0.7
+       },
+       "when": "always"
+      },
+      "rewire_dependents_of": null
+     },
+     {
+      "node": {
+       "id": "refine",
+       "operator": "refine_intervals",
+       "depends_on": [
+        "inspect"
+       ],
+       "params": {
+        "prompt": "refine.md",
+        "thinking": true,
+        "max_tokens": 8192,
+        "temperature": 0.2,
+        "allow_insert": true,
+        "allow_delete": true
+       },
+       "when": "always"
+      },
+      "rewire_dependents_of": null
+     },
+     {
+      "node": {
+       "id": "merge",
+       "operator": "merge_filter_segments",
+       "depends_on": [
+        "refine"
+       ],
+       "params": {
+        "min_duration_sec": 2.0,
+        "max_gap_sec": 1.0,
+        "tile_full_episode": true,
+        "merge_same_label": false
+       },
+       "when": "always"
+      },
+      "rewire_dependents_of": null
+     }
+    ],
+    "set_depends_on": {
+     "export": [
+      "merge"
+     ]
+    }
+   },
+   "decision": "PROMOTED",
+   "label_free": {
+    "candidate_self_score": 0.3726,
+    "incumbent_self_score": 0.3362,
+    "candidate_components": {
+     "telemetry_agreement": 0.1447,
+     "visual_verification": 0.3154,
+     "duration_variability": 0.4894,
+     "temporal_resolution": 1.0
+    },
+    "incumbent_components": {
+     "telemetry_agreement": 0.1884,
+     "visual_verification": 0.2,
+     "duration_variability": 0.3335,
+     "temporal_resolution": 1.0
+    }
+   },
+   "labeled_sample": {
+    "candidate": {
+     "snapped_f1_075": 0.27586206896551724,
+     "raw_f1_075": 0.2,
+     "snapped_f1_05": 0.41379310344827586,
+     "tp_snapped": 4,
+     "n_pred": 20,
+     "n_ref": 10
+    },
+    "incumbent": {
+     "snapped_f1_075": 0.2222222222222222,
+     "raw_f1_075": 0.05555555555555555,
+     "snapped_f1_05": 0.33333333333333337,
+     "tp_snapped": 4,
+     "n_pred": 26,
+     "n_ref": 10
+    }
+   },
+   "topology_change": true,
+   "root_causes": [
+    {
+     "cause": "Over-segmentation into excessively short segments",
+     "evidence": "Predicted segments exactly 1s fraction 0.575, median predicted segment 1.0\u202fs vs reference median 8.73\u202fs, predicted_segments_le_2s_fraction \u22480.58 (vs 0.0 for references)."
+    },
+    {
+     "cause": "Incomplete temporal coverage of videos",
+     "evidence": "Median coverage last predicted end over video duration 0.49; 27/50 episodes end before halfway; median coverage over reference end 0.88."
+    },
+    {
+     "cause": "Boundary predictions drift toward evenly spaced intervals rather than true manipulation state changes",
+     "evidence": "Mean best IoU per reference 0.582; 4/10 references have best IoU <0.5; only 4/10 references matched at IoU\u22650.75."
+    }
+   ],
+   "selected_round": 2,
+   "trials": [
+    {
+     "round": 1,
+     "hypothesis": "Inserting a deterministic merge/filter step that enforces a minimum segment duration, closes gaps, and tiles the full episode will remove spurious short segments, extend predictions to cover the whole video, and encourage boundaries to align with actual manipulation state changes, thereby raising segment F1 at IoU\u22650.75.",
+     "root_causes": [
+      {
+       "cause": "Over-segmentation into excessively short segments",
+       "evidence": "Predicted segments exactly 1s fraction 0.192, \u22642s fraction 0.538, median predicted segment 1.0\u202fs vs reference median 8.73\u202fs."
+      },
+      {
+       "cause": "Incomplete temporal coverage of videos",
+       "evidence": "Median coverage of last predicted end over reference end 0.88, median coverage over video duration 0.49, 27/50 episodes end before halfway."
+      },
+      {
+       "cause": "Boundary predictions drift toward evenly spaced intervals rather than true state changes",
+       "evidence": "Mean best IoU per reference 0.582, 4/10 references have best IoU <0.5, only 4/10 matched at IoU\u22650.75."
+      }
+     ],
+     "patch": {
+      "insert_nodes": [
+       {
+        "node": {
+         "id": "merge",
+         "operator": "merge_filter_segments",
+         "depends_on": [
+          "annotate"
+         ],
+         "params": {
+          "min_duration_sec": 1.5,
+          "max_gap_sec": 0.5,
+          "tile_full_episode": true,
+          "merge_same_label": false
+         },
+         "when": "always"
+        },
+        "rewire_dependents_of": "export"
+       }
+      ],
+      "remove_nodes": [],
+      "set_params": {},
+      "set_when": {},
+      "set_depends_on": {
+       "export": [
+        "merge"
+       ]
+      },
+      "prompt_updates": {}
+     },
+     "labeled_scores": {
+      "snapped_f1_075": 0.25806451612903225,
+      "raw_f1_075": 0.19354838709677416,
+      "snapped_f1_05": 0.3870967741935483,
+      "tp_snapped": 4,
+      "n_pred": 21,
+      "n_ref": 10
+     },
+     "root_cause_stats_labeled": {
+      "predicted_vs_reference_segments": [
+       21,
+       10
+      ],
+      "median_predicted_segment_sec": 5.0,
+      "median_reference_segment_sec": 8.73,
+      "predicted_segments_le_2s_fraction": 0.238,
+      "reference_segments_le_2s_fraction": 0.0,
+      "predicted_segments_exactly_1s_fraction": 0.0,
+      "median_coverage_last_predicted_end_over_reference_end": 1.09,
+      "episodes_with_coverage_below_50pct": 0,
+      "references_matched_at_iou075": 4,
+      "mean_best_iou_per_reference": 0.607,
+      "references_with_best_iou_below_0.5": 4,
+      "pooled_scores": {
+       "snapped_f1_075": 0.25806451612903225,
+       "raw_f1_075": 0.19354838709677416,
+       "snapped_f1_05": 0.3870967741935483,
+       "tp_snapped": 4,
+       "n_pred": 21,
+       "n_ref": 10
+      }
+     }
+    },
+    {
+     "round": 2,
+     "hypothesis": "By adding deterministic telemetry\u2011based hint detection, inspecting transition windows around low\u2011confidence or hint\u2011disagreement boundaries, refining those windows with a second multimodal pass, and then applying a longer minimum\u2011duration filter, we will suppress spurious short splits, extend predictions to cover the full video, and shift boundaries toward actual state changes, thereby raising segment F1 at IoU\u22650.75.",
+     "root_causes": [
+      {
+       "cause": "Over-segmentation into excessively short segments",
+       "evidence": "Predicted segments exactly 1s fraction 0.575, median predicted segment 1.0\u202fs vs reference median 8.73\u202fs, predicted_segments_le_2s_fraction \u22480.58 (vs 0.0 for references)."
+      },
+      {
+       "cause": "Incomplete temporal coverage of videos",
+       "evidence": "Median coverage last predicted end over video duration 0.49; 27/50 episodes end before halfway; median coverage over reference end 0.88."
+      },
+      {
+       "cause": "Boundary predictions drift toward evenly spaced intervals rather than true manipulation state changes",
+       "evidence": "Mean best IoU per reference 0.582; 4/10 references have best IoU <0.5; only 4/10 references matched at IoU\u22650.75."
+      }
+     ],
+     "patch": {
+      "insert_nodes": [
+       {
+        "node": {
+         "id": "hints",
+         "operator": "state_hint_detection",
+         "depends_on": [
+          "sample"
+         ],
+         "params": {
+          "signals": [
+           "gripper",
+           "eef_pause"
+          ],
+          "min_gap_sec": 0.8,
+          "pause_speed_quantile": 0.15,
+          "min_pause_sec": 0.3
+         },
+         "when": "always"
+        },
+        "rewire_dependents_of": null
+       },
+       {
+        "node": {
+         "id": "inspect",
+         "operator": "inspect_transition_windows",
+         "depends_on": [
+          "annotate",
+          "hints"
+         ],
+         "params": {
+          "select": "low_confidence",
+          "window_sec": 2.0,
+          "local_hz": 4.0,
+          "max_windows": 8,
+          "include_unmatched_hints": true,
+          "tile_px": 224,
+          "confidence_threshold": 0.7
+         },
+         "when": "always"
+        },
+        "rewire_dependents_of": null
+       },
+       {
+        "node": {
+         "id": "refine",
+         "operator": "refine_intervals",
+         "depends_on": [
+          "inspect"
+         ],
+         "params": {
+          "prompt": "refine.md",
+          "thinking": true,
+          "max_tokens": 8192,
+          "temperature": 0.2,
+          "allow_insert": true,
+          "allow_delete": true
+         },
+         "when": "always"
+        },
+        "rewire_dependents_of": null
+       },
+       {
+        "node": {
+         "id": "merge",
+         "operator": "merge_filter_segments",
+         "depends_on": [
+          "refine"
+         ],
+         "params": {
+          "min_duration_sec": 2.0,
+          "max_gap_sec": 1.0,
+          "tile_full_episode": true,
+          "merge_same_label": false
+         },
+         "when": "always"
+        },
+        "rewire_dependents_of": null
+       }
+      ],
+      "remove_nodes": [],
+      "set_params": {},
+      "set_when": {},
+      "set_depends_on": {
+       "export": [
+        "merge"
+       ]
+      },
+      "prompt_updates": {}
+     },
+     "labeled_scores": {
+      "snapped_f1_075": 0.27586206896551724,
+      "raw_f1_075": 0.2,
+      "snapped_f1_05": 0.41379310344827586,
+      "tp_snapped": 4,
+      "n_pred": 20,
+      "n_ref": 10
+     },
+     "root_cause_stats_labeled": {
+      "predicted_vs_reference_segments": [
+       20,
+       10
+      ],
+      "median_predicted_segment_sec": 4.9,
+      "median_reference_segment_sec": 8.73,
+      "predicted_segments_le_2s_fraction": 0.15,
+      "reference_segments_le_2s_fraction": 0.0,
+      "predicted_segments_exactly_1s_fraction": 0.0,
+      "median_coverage_last_predicted_end_over_reference_end": 1.09,
+      "episodes_with_coverage_below_50pct": 0,
+      "references_matched_at_iou075": 4,
+      "mean_best_iou_per_reference": 0.618,
+      "references_with_best_iou_below_0.5": 4,
+      "pooled_scores": {
+       "snapped_f1_075": 0.27586206896551724,
+       "raw_f1_075": 0.2,
+       "snapped_f1_05": 0.41379310344827586,
+       "tp_snapped": 4,
+       "n_pred": 20,
+       "n_ref": 10
+      }
+     }
+    },
+    {
+     "round": 3,
+     "hypothesis": "By lowering the sampling frequency to increase temporal context per contact sheet, adding telemetry\u2011based hint detection, inspecting low\u2011confidence or hint\u2011disagreement windows, refining those windows with a second deliberate pass, and applying a stricter minimum\u2011duration filter that tiles the full episode, we will suppress spurious short splits, align boundaries with true manipulation state changes, and achieve full\u2011video coverage, thereby raising segment F1 at IoU\u22650.75.",
+     "root_causes": [
+      {
+       "cause": "Over-segmentation into excessively short segments",
+       "evidence": "Predicted segments exactly 1s fraction 0.575, median predicted segment 1.0s vs reference median 8.73s; predicted_segments_le_2s fraction \u22480.58 while reference fraction is 0.0."
+      },
+      {
+       "cause": "Incomplete temporal coverage of videos",
+       "evidence": "Median coverage of last predicted end over video duration 0.49; 27/50 episodes end before halfway; median coverage over reference end 0.88."
+      },
+      {
+       "cause": "Boundary predictions drift toward evenly spaced intervals rather than true manipulation state changes",
+       "evidence": "Mean best IoU per reference 0.582; 4/10 references have best IoU <0.5; only 4/10 references matched at IoU\u22650.75."
+      }
+     ],
+     "patch": {
+      "insert_nodes": [
+       {
+        "node": {
+         "id": "hints",
+         "operator": "state_hint_detection",
+         "depends_on": [
+          "sample"
+         ],
+         "params": {
+          "signals": [
+           "gripper",
+           "eef_pause"
+          ],
+          "min_gap_sec": 0.8,
+          "pause_speed_quantile": 0.15,
+          "min_pause_sec": 0.3
+         },
+         "when": "always"
+        },
+        "rewire_dependents_of": null
+       },
+       {
+        "node": {
+         "id": "inspect",
+         "operator": "inspect_transition_windows",
+         "depends_on": [
+          "annotate",
+          "hints"
+         ],
+         "params": {
+          "select": "low_confidence",
+          "window_sec": 2.0,
+          "local_hz": 4.0,
+          "max_windows": 8,
+          "include_unmatched_hints": true,
+          "tile_px": 224,
+          "confidence_threshold": 0.7
+         },
+         "when": "always"
+        },
+        "rewire_dependents_of": null
+       },
+       {
+        "node": {
+         "id": "refine",
+         "operator": "refine_intervals",
+         "depends_on": [
+          "inspect"
+         ],
+         "params": {
+          "prompt": "refine.md",
+          "thinking": true,
+          "max_tokens": 8192,
+          "temperature": 0.2,
+          "allow_insert": true,
+          "allow_delete": true
+         },
+         "when": "always"
+        },
+        "rewire_dependents_of": null
+       },
+       {
+        "node": {
+         "id": "merge",
+         "operator": "merge_filter_segments",
+         "depends_on": [
+          "refine"
+         ],
+         "params": {
+          "min_duration_sec": 3.0,
+          "max_gap_sec": 0.5,
+          "tile_full_episode": true,
+          "merge_same_label": false
+         },
+         "when": "always"
+        },
+        "rewire_dependents_of": null
+       }
+      ],
+      "remove_nodes": [],
+      "set_params": {
+       "sample": {
+        "sampling_hz": 1.0
+       }
+      },
+      "set_when": {},
+      "set_depends_on": {
+       "export": [
+        "merge"
+       ]
+      },
+      "prompt_updates": {}
+     },
+     "labeled_scores": {
+      "snapped_f1_075": 0.24,
+      "raw_f1_075": 0.16,
+      "snapped_f1_05": 0.56,
+      "tp_snapped": 3,
+      "n_pred": 15,
+      "n_ref": 10
+     },
+     "root_cause_stats_labeled": {
+      "predicted_vs_reference_segments": [
+       15,
+       10
+      ],
+      "median_predicted_segment_sec": 5.0,
+      "median_reference_segment_sec": 8.73,
+      "predicted_segments_le_2s_fraction": 0.0,
+      "reference_segments_le_2s_fraction": 0.0,
+      "predicted_segments_exactly_1s_fraction": 0.0,
+      "median_coverage_last_predicted_end_over_reference_end": 1.09,
+      "episodes_with_coverage_below_50pct": 0,
+      "references_matched_at_iou075": 3,
+      "mean_best_iou_per_reference": 0.583,
+      "references_with_best_iou_below_0.5": 3,
+      "pooled_scores": {
+       "snapped_f1_075": 0.24,
+       "raw_f1_075": 0.16,
+       "snapped_f1_05": 0.56,
+       "tp_snapped": 3,
+       "n_pred": 15,
+       "n_ref": 10
+      }
+     }
+    }
+   ],
+   "shadow_gt": {
+    "candidate": {
+     "snapped_f1_075": 0.08609271523178809,
+     "raw_f1_075": 0.06600660066006601,
+     "snapped_f1_05": 0.27814569536423844,
+     "raw_f1_05": 0.2442244224422442,
+     "tp_snapped": 13,
+     "tp_raw": 10,
+     "tp05_snapped": 42,
+     "tp05_raw": 37,
+     "n_pred": 153,
+     "n_pred_snapped": 152,
+     "n_ref": 150,
+     "invalid_items": 0,
+     "empty_output_episodes": 0,
+     "mean_boundary_mae_sec": 6.65387257142857,
+     "episodes": 50,
+     "per_episode_snapped_f1": {
+      "robointer_droid_000001": 0.0,
+      "robointer_droid_000002": 0.0,
+      "robointer_droid_000003": 0.0,
+      "robointer_droid_000004": 0.3333333333333333,
+      "robointer_droid_000005": 0.0,
+      "robointer_droid_000006": 0.0,
+      "robointer_droid_000007": 0.0,
+      "robointer_droid_000008": 0.0,
+      "robointer_droid_000009": 0.4,
+      "robointer_droid_000010": 0.3333333333333333,
+      "robointer_droid_000011": 0.0,
+      "robointer_droid_000012": 0.28571428571428575,
+      "robointer_droid_000013": 0.0,
+      "robointer_droid_000014": 0.4,
+      "robointer_droid_000015": 0.3333333333333333,
+      "robointer_droid_000016": 0.4,
+      "robointer_droid_000017": 0.0,
+      "robointer_droid_000019": 0.3333333333333333,
+      "robointer_droid_000021": 0.0,
+      "robointer_droid_000022": 0.3333333333333333,
+      "robointer_droid_000023": 0.0,
+      "robointer_droid_000024": 0.3333333333333333,
+      "robointer_droid_000025": 0.0,
+      "robointer_droid_000027": 0.3333333333333333,
+      "robointer_droid_000028": 0.0,
+      "robointer_droid_000029": 0.0,
+      "robointer_droid_000030": 0.0,
+      "robointer_droid_000032": 0.0,
+      "robointer_droid_000033": 0.0,
+      "robointer_droid_000034": 0.6666666666666666,
+      "robointer_droid_000035": 0.0,
+      "robointer_droid_000036": 0.0,
+      "robointer_droid_000037": 0.0,
+      "robointer_droid_000038": 0.0,
+      "robointer_droid_000039": 0.0,
+      "robointer_droid_000042": 0.28571428571428575,
+      "robointer_droid_000043": 0.0,
+      "robointer_droid_000044": 0.0,
+      "robointer_droid_000045": 0.0,
+      "robointer_droid_000046": 0.0,
+      "robointer_droid_000047": 0.0,
+      "robointer_droid_000050": 0.0,
+      "robointer_droid_000055": 0.0,
+      "robointer_droid_000056": 0.0,
+      "robointer_droid_000057": 0.0,
+      "robointer_droid_000058": 0.0,
+      "robointer_droid_000059": 0.0,
+      "robointer_droid_000060": 0.0,
+      "robointer_droid_000061": 0.0,
+      "robointer_droid_000062": 0.0
+     }
+    },
+    "incumbent": {
+     "snapped_f1_075": 0.08085106382978724,
+     "raw_f1_075": 0.012765957446808512,
+     "snapped_f1_05": 0.17872340425531916,
+     "raw_f1_05": 0.0425531914893617,
+     "tp_snapped": 19,
+     "tp_raw": 3,
+     "tp05_snapped": 42,
+     "tp05_raw": 10,
+     "n_pred": 320,
+     "n_pred_snapped": 320,
+     "n_ref": 150,
+     "invalid_items": 0,
+     "empty_output_episodes": 0,
+     "mean_boundary_mae_sec": 6.995135714285714,
+     "episodes": 50,
+     "per_episode_snapped_f1": {
+      "robointer_droid_000001": 0.25,
+      "robointer_droid_000002": 0.0,
+      "robointer_droid_000003": 0.0,
+      "robointer_droid_000004": 0.0,
+      "robointer_droid_000005": 0.4,
+      "robointer_droid_000006": 0.0,
+      "robointer_droid_000007": 0.25,
+      "robointer_droid_000008": 0.0,
+      "robointer_droid_000009": 0.0,
+      "robointer_droid_000010": 0.5,
+      "robointer_droid_000011": 0.0,
+      "robointer_droid_000012": 0.2222222222222222,
+      "robointer_droid_000013": 0.22222222222222224,
+      "robointer_droid_000014": 0.28571428571428575,
+      "robointer_droid_000015": 0.25,
+      "robointer_droid_000016": 0.28571428571428575,
+      "robointer_droid_000017": 0.0,
+      "robointer_droid_000019": 0.28571428571428575,
+      "robointer_droid_000021": 0.25,
+      "robointer_droid_000022": 0.28571428571428575,
+      "robointer_droid_000023": 0.0,
+      "robointer_droid_000024": 0.28571428571428575,
+      "robointer_droid_000025": 0.0,
+      "robointer_droid_000027": 0.28571428571428575,
+      "robointer_droid_000028": 0.1818181818181818,
+      "robointer_droid_000029": 0.0,
+      "robointer_droid_000030": 0.0,
+      "robointer_droid_000032": 0.0,
+      "robointer_droid_000033": 0.0,
+      "robointer_droid_000034": 0.0,
+      "robointer_droid_000035": 0.0,
+      "robointer_droid_000036": 0.0,
+      "robointer_droid_000037": 0.0,
+      "robointer_droid_000038": 0.0,
+      "robointer_droid_000039": 0.0,
+      "robointer_droid_000042": 0.25,
+      "robointer_droid_000043": 0.2,
+      "robointer_droid_000044": 0.28571428571428575,
+      "robointer_droid_000045": 0.0,
+      "robointer_droid_000046": 0.0,
+      "robointer_droid_000047": 0.0,
+      "robointer_droid_000050": 0.0,
+      "robointer_droid_000055": 0.0,
+      "robointer_droid_000056": 0.0,
+      "robointer_droid_000057": 0.0,
+      "robointer_droid_000058": 0.0,
+      "robointer_droid_000059": 0.0,
+      "robointer_droid_000060": 0.0,
+      "robointer_droid_000061": 0.0,
+      "robointer_droid_000062": 0.0
+     }
+    }
+   },
+   "shadow_gt_heldout": {
+    "candidate": {
+     "snapped_f1_075": 0.06593406593406592,
+     "raw_f1_075": 0.05128205128205128,
+     "snapped_f1_05": 0.2637362637362637,
+     "raw_f1_05": 0.22710622710622708,
+     "tp_snapped": 9,
+     "tp_raw": 7,
+     "tp05_snapped": 36,
+     "tp05_raw": 31,
+     "n_pred": 133,
+     "n_pred_snapped": 133,
+     "n_ref": 140,
+     "invalid_items": 0,
+     "empty_output_episodes": 0,
+     "mean_boundary_mae_sec": 7.231169523809522,
+     "episodes": 45,
+     "per_episode_snapped_f1": {
+      "robointer_droid_000001": 0.0,
+      "robointer_droid_000002": 0.0,
+      "robointer_droid_000003": 0.0,
+      "robointer_droid_000004": 0.3333333333333333,
+      "robointer_droid_000005": 0.0,
+      "robointer_droid_000006": 0.0,
+      "robointer_droid_000007": 0.0,
+      "robointer_droid_000008": 0.0,
+      "robointer_droid_000010": 0.3333333333333333,
+      "robointer_droid_000011": 0.0,
+      "robointer_droid_000012": 0.28571428571428575,
+      "robointer_droid_000013": 0.0,
+      "robointer_droid_000015": 0.3333333333333333,
+      "robointer_droid_000016": 0.4,
+      "robointer_droid_000017": 0.0,
+      "robointer_droid_000019": 0.3333333333333333,
+      "robointer_droid_000022": 0.3333333333333333,
+      "robointer_droid_000023": 0.0,
+      "robointer_droid_000025": 0.0,
+      "robointer_droid_000027": 0.3333333333333333,
+      "robointer_droid_000028": 0.0,
+      "robointer_droid_000029": 0.0,
+      "robointer_droid_000030": 0.0,
+      "robointer_droid_000032": 0.0,
+      "robointer_droid_000033": 0.0,
+      "robointer_droid_000034": 0.6666666666666666,
+      "robointer_droid_000035": 0.0,
+      "robointer_droid_000036": 0.0,
+      "robointer_droid_000037": 0.0,
+      "robointer_droid_000038": 0.0,
+      "robointer_droid_000039": 0.0,
+      "robointer_droid_000043": 0.0,
+      "robointer_droid_000044": 0.0,
+      "robointer_droid_000045": 0.0,
+      "robointer_droid_000046": 0.0,
+      "robointer_droid_000047": 0.0,
+      "robointer_droid_000050": 0.0,
+      "robointer_droid_000055": 0.0,
+      "robointer_droid_000056": 0.0,
+      "robointer_droid_000057": 0.0,
+      "robointer_droid_000058": 0.0,
+      "robointer_droid_000059": 0.0,
+      "robointer_droid_000060": 0.0,
+      "robointer_droid_000061": 0.0,
+      "robointer_droid_000062": 0.0
+     }
+    },
+    "incumbent": {
+     "snapped_f1_075": 0.06912442396313363,
+     "raw_f1_075": 0.009216589861751152,
+     "snapped_f1_05": 0.1658986175115207,
+     "raw_f1_05": 0.03225806451612903,
+     "tp_snapped": 15,
+     "tp_raw": 2,
+     "tp05_snapped": 36,
+     "tp05_raw": 7,
+     "n_pred": 294,
+     "n_pred_snapped": 294,
+     "n_ref": 140,
+     "invalid_items": 0,
+     "empty_output_episodes": 0,
+     "mean_boundary_mae_sec": 7.661461904761905,
+     "episodes": 45,
+     "per_episode_snapped_f1": {
+      "robointer_droid_000001": 0.25,
+      "robointer_droid_000002": 0.0,
+      "robointer_droid_000003": 0.0,
+      "robointer_droid_000004": 0.0,
+      "robointer_droid_000005": 0.4,
+      "robointer_droid_000006": 0.0,
+      "robointer_droid_000007": 0.25,
+      "robointer_droid_000008": 0.0,
+      "robointer_droid_000010": 0.5,
+      "robointer_droid_000011": 0.0,
+      "robointer_droid_000012": 0.2222222222222222,
+      "robointer_droid_000013": 0.22222222222222224,
+      "robointer_droid_000015": 0.25,
+      "robointer_droid_000016": 0.28571428571428575,
+      "robointer_droid_000017": 0.0,
+      "robointer_droid_000019": 0.28571428571428575,
+      "robointer_droid_000022": 0.28571428571428575,
+      "robointer_droid_000023": 0.0,
+      "robointer_droid_000025": 0.0,
+      "robointer_droid_000027": 0.28571428571428575,
+      "robointer_droid_000028": 0.1818181818181818,
+      "robointer_droid_000029": 0.0,
+      "robointer_droid_000030": 0.0,
+      "robointer_droid_000032": 0.0,
+      "robointer_droid_000033": 0.0,
+      "robointer_droid_000034": 0.0,
+      "robointer_droid_000035": 0.0,
+      "robointer_droid_000036": 0.0,
+      "robointer_droid_000037": 0.0,
+      "robointer_droid_000038": 0.0,
+      "robointer_droid_000039": 0.0,
+      "robointer_droid_000043": 0.2,
+      "robointer_droid_000044": 0.28571428571428575,
+      "robointer_droid_000045": 0.0,
+      "robointer_droid_000046": 0.0,
+      "robointer_droid_000047": 0.0,
+      "robointer_droid_000050": 0.0,
+      "robointer_droid_000055": 0.0,
+      "robointer_droid_000056": 0.0,
+      "robointer_droid_000057": 0.0,
+      "robointer_droid_000058": 0.0,
+      "robointer_droid_000059": 0.0,
+      "robointer_droid_000060": 0.0,
+      "robointer_droid_000061": 0.0,
+      "robointer_droid_000062": 0.0
+     }
+    }
+   },
+   "recursion_cost": {
+    "by_role": {
+     "nemotron": {
+      "calls": 3,
+      "cache_hits": 0,
+      "cost_usd": 0.02924,
+      "prompt_tokens": 15572,
+      "completion_tokens": 10237
+     },
+     "vision": {
+      "calls": 271,
+      "cache_hits": 166,
+      "cost_usd": 0.783434,
+      "prompt_tokens": 269259,
+      "completion_tokens": 383965
+     }
+    },
+    "total_cost_usd": 0.812674
+   }
+  },
+  {
+   "id": "hitl-EXP-0002",
+   "parent_version": "hitl-N001",
+   "version_dir": "hitl-EXP-0002_rejected",
+   "hypothesis": "By increasing the minimum segment duration filter to 3\u202fs, disabling hint\u2011only windows, switching the refine step to fast non\u2011thinking mode, and strengthening the initial annotate prompt to prohibit splitting unless a manipulation state change occurs, we will suppress spurious splits, align boundaries with actual state completions, and improve segment F1 at IoU\u22650.75.",
+   "patch_summary": {
+    "set_params": {
+     "merge": {
+      "min_duration_sec": 3.0
+     },
+     "refine": {
+      "thinking": false
+     },
+     "inspect": {
+      "include_unmatched_hints": false
+     }
+    },
+    "prompt_updates": {
+     "prompt.md": "Reconstruct the sequence of manipulation events in this robot video from the timestamped contact sheets.\n\nReturn only JSON with this shape:\n{\"segments\":[{\"start_sec\":0.0,\"end_sec\":1.0,\"subtask\":\"short action description\"}]}\n\nRules:\n- Segment only completed robot manipulation events, not every visible movement.\n- Good boundaries happen when a held object changes, an object is placed or released, a tool starts/stops changing a surface, a container/door/lid opens or closes, or contents move between containers.\n- Do not split approach, grasp adjustment, small repositioning, and retreat unless the world state changes.\n- Do not merge separate pick/place/open/close/pour/wipe events when they complete different states.\n- Most segments should be 3\u201112 seconds. Shorter segments are only allowed for instantaneous events such as release, grasp, or tool actuation; otherwise merge with neighboring segment.\n- Use the visible timestamps for start_sec and end_sec.\n- Ignore label wording quality; prioritize temporally correct boundaries.\n\nEpisode instruction: $instruction"
+    }
+   },
+   "decision": "REJECTED",
+   "label_free": {
+    "candidate_self_score": 0.347,
+    "incumbent_self_score": 0.3719,
+    "candidate_components": {
+     "telemetry_agreement": 0.0349,
+     "visual_verification": 0.3733,
+     "duration_variability": 0.4935,
+     "temporal_resolution": 1.0
+    },
+    "incumbent_components": {
+     "telemetry_agreement": 0.1462,
+     "visual_verification": 0.2934,
+     "duration_variability": 0.5089,
+     "temporal_resolution": 1.0
+    }
+   },
+   "labeled_sample": {
+    "candidate": {
+     "snapped_f1_075": 0.17391304347826086,
+     "raw_f1_075": 0.08695652173913043,
+     "snapped_f1_05": 0.5217391304347826,
+     "tp_snapped": 2,
+     "n_pred": 13,
+     "n_ref": 10
+    },
+    "incumbent": {
+     "snapped_f1_075": 0.27586206896551724,
+     "raw_f1_075": 0.2,
+     "snapped_f1_05": 0.41379310344827586,
+     "tp_snapped": 4,
+     "n_pred": 20,
+     "n_ref": 10
+    }
+   },
+   "topology_change": false,
+   "root_causes": [
+    {
+     "cause": "Initial annotate over-splits approach/grasp adjustments into short segments",
+     "evidence": "Predicted 20 segments vs 10 reference; median predicted segment 4.9s vs reference 8.73s; 15% of predicted segments \u22642s while reference has 0%; examples show a single reference segment split into 2\u20113 short predictions (e.g., 0\u20113,3\u20115,5\u20117s)."
+    },
+    {
+     "cause": "Merge filter min_duration_sec too low (2.0s) fails to remove spurious short segments",
+     "evidence": "Many predicted segments are 2\u20113s long (e.g., 0\u20113,3\u20115,5\u20117) and survive the merge step; raising the threshold would merge them into longer, correct segments."
+    },
+    {
+     "cause": "Refine step with thinking=true causes token exhaustion and invalid JSON in most attempts, and hint windows generate false insertions",
+     "evidence": "Measured cost profile: thinking=true multi\u2011image calls returned invalid JSON in 31/42 attempts (token cap exhausted) and took 40\u2011170s; thinking=false returns valid JSON in 2\u201111s with far fewer tokens. Additionally, include_unmatched_hints=true creates windows at telemetry hints that do not correspond to state changes, leading to spurious boundary insertions."
+    }
+   ],
+   "selected_round": 2,
+   "trials": [
+    {
+     "round": 1,
+     "hypothesis": "Increasing the minimum segment duration to 3 seconds, strengthening the prompt to prohibit splitting of approach/grasp adjustments unless a state change occurs, and disabling hint-only windows will reduce spurious splits, align boundaries with actual state changes, and improve segment F1 at IoU\u22650.75.",
+     "root_causes": [
+      {
+       "cause": "Initial annotate over-splits approach/grasp adjustments into short segments",
+       "evidence": "Predicted 20 segments vs 10 reference; median predicted segment 4.9s vs reference 8.73s; 15% predicted \u22642s while reference 0%; examples show splits at 0-3,3-5,5-7s for a single reference segment."
+      },
+      {
+       "cause": "Merge filter min_duration_sec too low (2.0s) fails to remove spurious short segments",
+       "evidence": "Many predicted segments are 2-3s long (e.g., 0-3,3-5,5-7) and survive merge; raising min_duration_sec would merge them."
+      },
+      {
+       "cause": "Hint detection leads to false insertions via refine step",
+       "evidence": "refine processes hint windows with include_unmatched_hints=true, inserting boundaries at eef_pause/gripper transitions that do not correspond to state changes, contributing to over-segmentation."
+      }
+     ],
+     "patch": {
+      "insert_nodes": [],
+      "remove_nodes": [],
+      "set_params": {
+       "merge": {
+        "min_duration_sec": 3.0
+       },
+       "inspect": {
+        "include_unmatched_hints": false
+       }
+      },
+      "set_when": {},
+      "set_depends_on": {},
+      "prompt_updates": {
+       "prompt.md": "Reconstruct the sequence of manipulation events in this robot video from the timestamped contact sheets.\n\nReturn only JSON with this shape:\n{\"segments\":[{\"start_sec\":0.0,\"end_sec\":1.0,\"subtask\":\"short action description\"}]}\n\nRules:\n- Segment only completed robot manipulation events, not every visible movement.\n- Good boundaries happen when a held object changes, an object is placed or released, a tool starts/stops changing a surface, a container/door/lid opens or closes, or contents move between containers.\n- Do not split approach, grasp adjustment, small repositioning, and retreat unless the world state changes.\n- Do not merge separate pick/place/open/close/pour/wipe events when they complete different states.\n- Most segments should be 3-12 seconds. Shorter segments are only allowed for instantaneous events such as release, grasp, or tool actuation; otherwise merge with neighboring segment.\n- Use the visible timestamps for start_sec and end_sec.\n- Ignore label wording quality; prioritize temporally correct boundaries.\n\nEpisode instruction: $instruction"
+      }
+     },
+     "labeled_scores": {
+      "snapped_f1_075": 0.0,
+      "raw_f1_075": 0.0,
+      "snapped_f1_05": 0.47058823529411764,
+      "tp_snapped": 0,
+      "n_pred": 7,
+      "n_ref": 10
+     },
+     "root_cause_stats_labeled": {
+      "predicted_vs_reference_segments": [
+       7,
+       10
+      ],
+      "median_predicted_segment_sec": 15.4,
+      "median_reference_segment_sec": 8.73,
+      "predicted_segments_le_2s_fraction": 0.0,
+      "reference_segments_le_2s_fraction": 0.0,
+      "predicted_segments_exactly_1s_fraction": 0.0,
+      "median_coverage_last_predicted_end_over_reference_end": 1.09,
+      "episodes_with_coverage_below_50pct": 0,
+      "references_matched_at_iou075": 0,
+      "mean_best_iou_per_reference": 0.479,
+      "references_with_best_iou_below_0.5": 6,
+      "pooled_scores": {
+       "snapped_f1_075": 0.0,
+       "raw_f1_075": 0.0,
+       "snapped_f1_05": 0.47058823529411764,
+       "tp_snapped": 0,
+       "n_pred": 7,
+       "n_ref": 10
+      }
+     }
+    },
+    {
+     "round": 2,
+     "hypothesis": "By increasing the minimum segment duration filter to 3\u202fs, disabling hint\u2011only windows, switching the refine step to fast non\u2011thinking mode, and strengthening the initial annotate prompt to prohibit splitting unless a manipulation state change occurs, we will suppress spurious splits, align boundaries with actual state completions, and improve segment F1 at IoU\u22650.75.",
+     "root_causes": [
+      {
+       "cause": "Initial annotate over-splits approach/grasp adjustments into short segments",
+       "evidence": "Predicted 20 segments vs 10 reference; median predicted segment 4.9s vs reference 8.73s; 15% of predicted segments \u22642s while reference has 0%; examples show a single reference segment split into 2\u20113 short predictions (e.g., 0\u20113,3\u20115,5\u20117s)."
+      },
+      {
+       "cause": "Merge filter min_duration_sec too low (2.0s) fails to remove spurious short segments",
+       "evidence": "Many predicted segments are 2\u20113s long (e.g., 0\u20113,3\u20115,5\u20117) and survive the merge step; raising the threshold would merge them into longer, correct segments."
+      },
+      {
+       "cause": "Refine step with thinking=true causes token exhaustion and invalid JSON in most attempts, and hint windows generate false insertions",
+       "evidence": "Measured cost profile: thinking=true multi\u2011image calls returned invalid JSON in 31/42 attempts (token cap exhausted) and took 40\u2011170s; thinking=false returns valid JSON in 2\u201111s with far fewer tokens. Additionally, include_unmatched_hints=true creates windows at telemetry hints that do not correspond to state changes, leading to spurious boundary insertions."
+      }
+     ],
+     "patch": {
+      "set_params": {
+       "merge": {
+        "min_duration_sec": 3.0
+       },
+       "refine": {
+        "thinking": false
+       },
+       "inspect": {
+        "include_unmatched_hints": false
+       }
+      },
+      "prompt_updates": {
+       "prompt.md": "Reconstruct the sequence of manipulation events in this robot video from the timestamped contact sheets.\n\nReturn only JSON with this shape:\n{\"segments\":[{\"start_sec\":0.0,\"end_sec\":1.0,\"subtask\":\"short action description\"}]}\n\nRules:\n- Segment only completed robot manipulation events, not every visible movement.\n- Good boundaries happen when a held object changes, an object is placed or released, a tool starts/stops changing a surface, a container/door/lid opens or closes, or contents move between containers.\n- Do not split approach, grasp adjustment, small repositioning, and retreat unless the world state changes.\n- Do not merge separate pick/place/open/close/pour/wipe events when they complete different states.\n- Most segments should be 3\u201112 seconds. Shorter segments are only allowed for instantaneous events such as release, grasp, or tool actuation; otherwise merge with neighboring segment.\n- Use the visible timestamps for start_sec and end_sec.\n- Ignore label wording quality; prioritize temporally correct boundaries.\n\nEpisode instruction: $instruction"
+      }
+     },
+     "labeled_scores": {
+      "snapped_f1_075": 0.17391304347826086,
+      "raw_f1_075": 0.08695652173913043,
+      "snapped_f1_05": 0.5217391304347826,
+      "tp_snapped": 2,
+      "n_pred": 13,
+      "n_ref": 10
+     },
+     "root_cause_stats_labeled": {
+      "predicted_vs_reference_segments": [
+       13,
+       10
+      ],
+      "median_predicted_segment_sec": 5.0,
+      "median_reference_segment_sec": 8.73,
+      "predicted_segments_le_2s_fraction": 0.0,
+      "reference_segments_le_2s_fraction": 0.0,
+      "predicted_segments_exactly_1s_fraction": 0.0,
+      "median_coverage_last_predicted_end_over_reference_end": 1.09,
+      "episodes_with_coverage_below_50pct": 0,
+      "references_matched_at_iou075": 2,
+      "mean_best_iou_per_reference": 0.566,
+      "references_with_best_iou_below_0.5": 4,
+      "pooled_scores": {
+       "snapped_f1_075": 0.17391304347826086,
+       "raw_f1_075": 0.08695652173913043,
+       "snapped_f1_05": 0.5217391304347826,
+       "tp_snapped": 2,
+       "n_pred": 13,
+       "n_ref": 10
+      }
+     }
+    },
+    {
+     "round": 3,
+     "hypothesis": "By increasing the minimum segment duration to 3.5 seconds, strengthening the prompt to prohibit splitting unless a state change occurs, and disabling hint\u2011only windows, we will suppress spurious splits, align boundaries with actual state completions, and improve segment F1 at IoU\u22650.75.",
+     "root_causes": [
+      {
+       "cause": "Initial annotate over-splits approach/grasp adjustments into short segments",
+       "evidence": "Predicted 20 segments vs 10 reference; median predicted segment 4.9s vs reference 8.73s; 15% of predicted segments \u22642s while reference has 0%; examples show a single reference segment split into 2\u20113 short predictions (e.g., 0\u20113,3\u20115,5\u20117s)."
+      },
+      {
+       "cause": "Merge filter min_duration_sec too low (2.0s) fails to remove spurious short segments",
+       "evidence": "Many predicted segments are 2\u20113s long (e.g., 0\u20113,3\u20115,5\u20117) and survive the merge step; raising the threshold would merge them into longer, correct segments."
+      },
+      {
+       "cause": "Hint detection leads to false insertions via refine step",
+       "evidence": "include_unmatched_hints=true creates windows at telemetry hints (gripper/eef_pause) that do not correspond to state changes, causing refine to insert boundaries; this contributes to over\u2011segmentation and is reflected in the high count of short predicted segments."
+      }
+     ],
+     "patch": {
+      "set_params": {
+       "merge": {
+        "min_duration_sec": 3.5
+       },
+       "inspect": {
+        "include_unmatched_hints": false
+       }
+      },
+      "prompt_updates": {
+       "prompt.md": "Reconstruct the sequence of manipulation events in this robot video from the timestamped contact sheets.\n\nReturn only JSON with this shape:\n{\"segments\":[{\"start_sec\":0.0,\"end_sec\":1.0,\"subtask\":\"short action description\"}]}\n\nRules:\n- Segment only completed robot manipulation events, not every visible movement.\n- Good boundaries happen when a held object changes, an object is placed or released, a tool starts/stops changing a surface, a container/door/lid opens or closes, or contents move between containers.\n- Do not split approach, grasp adjustment, small repositioning, and retreat unless the world state changes.\n- Do not merge separate pick/place/open/close/pour/wipe events when they complete different states.\n- Most segments should be 4-12 seconds. Shorter segments are only allowed for instantaneous events such as release, grasp, or tool actuation; otherwise merge with neighboring segment.\n- Use the visible timestamps for start_sec and end_sec.\n- Ignore label wording quality; prioritize temporally correct boundaries.\n\nEpisode instruction: $instruction"
+      }
+     },
+     "labeled_scores": {
+      "snapped_f1_075": 0.11111111111111112,
+      "raw_f1_075": 0.11111111111111112,
+      "snapped_f1_05": 0.6666666666666665,
+      "tp_snapped": 1,
+      "n_pred": 8,
+      "n_ref": 10
+     },
+     "root_cause_stats_labeled": {
+      "predicted_vs_reference_segments": [
+       8,
+       10
+      ],
+      "median_predicted_segment_sec": 9.45,
+      "median_reference_segment_sec": 8.73,
+      "predicted_segments_le_2s_fraction": 0.0,
+      "reference_segments_le_2s_fraction": 0.0,
+      "predicted_segments_exactly_1s_fraction": 0.0,
+      "median_coverage_last_predicted_end_over_reference_end": 1.09,
+      "episodes_with_coverage_below_50pct": 0,
+      "references_matched_at_iou075": 1,
+      "mean_best_iou_per_reference": 0.531,
+      "references_with_best_iou_below_0.5": 4,
+      "pooled_scores": {
+       "snapped_f1_075": 0.11111111111111112,
+       "raw_f1_075": 0.11111111111111112,
+       "snapped_f1_05": 0.6666666666666665,
+       "tp_snapped": 1,
+       "n_pred": 8,
+       "n_ref": 10
+      }
+     }
+    }
+   ],
+   "shadow_gt": {
+    "candidate": {
+     "snapped_f1_075": 0.05904059040590406,
+     "raw_f1_075": 0.036900369003690044,
+     "snapped_f1_05": 0.3394833948339483,
+     "raw_f1_05": 0.3173431734317343,
+     "tp_snapped": 8,
+     "tp_raw": 5,
+     "tp05_snapped": 46,
+     "tp05_raw": 43,
+     "n_pred": 121,
+     "n_pred_snapped": 121,
+     "n_ref": 150,
+     "invalid_items": 0,
+     "empty_output_episodes": 0,
+     "mean_boundary_mae_sec": 6.990846952380954,
+     "episodes": 50,
+     "per_episode_snapped_f1": {
+      "robointer_droid_000001": 0.0,
+      "robointer_droid_000002": 0.0,
+      "robointer_droid_000003": 0.4,
+      "robointer_droid_000004": 0.0,
+      "robointer_droid_000005": 0.0,
+      "robointer_droid_000006": 0.0,
+      "robointer_droid_000007": 0.0,
+      "robointer_droid_000008": 0.0,
+      "robointer_droid_000009": 0.4,
+      "robointer_droid_000010": 0.0,
+      "robointer_droid_000011": 0.0,
+      "robointer_droid_000012": 0.0,
+      "robointer_droid_000013": 0.0,
+      "robointer_droid_000014": 0.0,
+      "robointer_droid_000015": 0.0,
+      "robointer_droid_000016": 0.0,
+      "robointer_droid_000017": 0.0,
+      "robointer_droid_000019": 0.0,
+      "robointer_droid_000021": 0.0,
+      "robointer_droid_000022": 0.0,
+      "robointer_droid_000023": 0.0,
+      "robointer_droid_000024": 0.0,
+      "robointer_droid_000025": 0.0,
+      "robointer_droid_000027": 0.0,
+      "robointer_droid_000028": 0.0,
+      "robointer_droid_000029": 0.3333333333333333,
+      "robointer_droid_000030": 0.3333333333333333,
+      "robointer_droid_000032": 0.0,
+      "robointer_droid_000033": 0.0,
+      "robointer_droid_000034": 0.6666666666666666,
+      "robointer_droid_000035": 0.0,
+      "robointer_droid_000036": 0.0,
+      "robointer_droid_000037": 0.0,
+      "robointer_droid_000038": 0.4,
+      "robointer_droid_000039": 0.0,
+      "robointer_droid_000042": 0.28571428571428575,
+      "robointer_droid_000043": 0.0,
+      "robointer_droid_000044": 0.4,
+      "robointer_droid_000045": 0.0,
+      "robointer_droid_000046": 0.0,
+      "robointer_droid_000047": 0.0,
+      "robointer_droid_000050": 0.0,
+      "robointer_droid_000055": 0.0,
+      "robointer_droid_000056": 0.0,
+      "robointer_droid_000057": 0.0,
+      "robointer_droid_000058": 0.0,
+      "robointer_droid_000059": 0.0,
+      "robointer_droid_000060": 0.0,
+      "robointer_droid_000061": 0.0,
+      "robointer_droid_000062": 0.0
+     }
+    },
+    "incumbent": {
+     "snapped_f1_075": 0.09771986970684039,
+     "raw_f1_075": 0.07792207792207792,
+     "snapped_f1_05": 0.28013029315960913,
+     "raw_f1_05": 0.24675324675324678,
+     "tp_snapped": 15,
+     "tp_raw": 12,
+     "tp05_snapped": 43,
+     "tp05_raw": 38,
+     "n_pred": 158,
+     "n_pred_snapped": 157,
+     "n_ref": 150,
+     "invalid_items": 0,
+     "empty_output_episodes": 0,
+     "mean_boundary_mae_sec": 6.54315257142857,
+     "episodes": 50,
+     "per_episode_snapped_f1": {
+      "robointer_droid_000001": 0.0,
+      "robointer_droid_000002": 0.0,
+      "robointer_droid_000003": 0.0,
+      "robointer_droid_000004": 0.3333333333333333,
+      "robointer_droid_000005": 0.0,
+      "robointer_droid_000006": 0.3333333333333333,
+      "robointer_droid_000007": 0.0,
+      "robointer_droid_000008": 0.0,
+      "robointer_droid_000009": 0.4,
+      "robointer_droid_000010": 0.5714285714285715,
+      "robointer_droid_000011": 0.0,
+      "robointer_droid_000012": 0.28571428571428575,
+      "robointer_droid_000013": 0.0,
+      "robointer_droid_000014": 0.4,
+      "robointer_droid_000015": 0.3333333333333333,
+      "robointer_droid_000016": 0.4,
+      "robointer_droid_000017": 0.0,
+      "robointer_droid_000019": 0.3333333333333333,
+      "robointer_droid_000021": 0.0,
+      "robointer_droid_000022": 0.3333333333333333,
+      "robointer_droid_000023": 0.0,
+      "robointer_droid_000024": 0.3333333333333333,
+      "robointer_droid_000025": 0.0,
+      "robointer_droid_000027": 0.3333333333333333,
+      "robointer_droid_000028": 0.0,
+      "robointer_droid_000029": 0.0,
+      "robointer_droid_000030": 0.0,
+      "robointer_droid_000032": 0.0,
+      "robointer_droid_000033": 0.0,
+      "robointer_droid_000034": 0.6666666666666666,
+      "robointer_droid_000035": 0.0,
+      "robointer_droid_000036": 0.0,
+      "robointer_droid_000037": 0.0,
+      "robointer_droid_000038": 0.0,
+      "robointer_droid_000039": 0.0,
+      "robointer_droid_000042": 0.28571428571428575,
+      "robointer_droid_000043": 0.0,
+      "robointer_droid_000044": 0.0,
+      "robointer_droid_000045": 0.0,
+      "robointer_droid_000046": 0.0,
+      "robointer_droid_000047": 0.0,
+      "robointer_droid_000050": 0.0,
+      "robointer_droid_000055": 0.0,
+      "robointer_droid_000056": 0.0,
+      "robointer_droid_000057": 0.0,
+      "robointer_droid_000058": 0.0,
+      "robointer_droid_000059": 0.0,
+      "robointer_droid_000060": 0.0,
+      "robointer_droid_000061": 0.0,
+      "robointer_droid_000062": 0.0
+     }
+    }
+   },
+   "shadow_gt_heldout": {
+    "candidate": {
+     "snapped_f1_075": 0.04838709677419355,
+     "raw_f1_075": 0.03225806451612903,
+     "snapped_f1_05": 0.3225806451612903,
+     "raw_f1_05": 0.29838709677419356,
+     "tp_snapped": 6,
+     "tp_raw": 4,
+     "tp05_snapped": 40,
+     "tp05_raw": 37,
+     "n_pred": 108,
+     "n_pred_snapped": 108,
+     "n_ref": 140,
+     "invalid_items": 0,
+     "empty_output_episodes": 0,
+     "mean_boundary_mae_sec": 7.34065216931217,
+     "episodes": 45,
+     "per_episode_snapped_f1": {
+      "robointer_droid_000001": 0.0,
+      "robointer_droid_000002": 0.0,
+      "robointer_droid_000003": 0.4,
+      "robointer_droid_000004": 0.0,
+      "robointer_droid_000005": 0.0,
+      "robointer_droid_000006": 0.0,
+      "robointer_droid_000007": 0.0,
+      "robointer_droid_000008": 0.0,
+      "robointer_droid_000010": 0.0,
+      "robointer_droid_000011": 0.0,
+      "robointer_droid_000012": 0.0,
+      "robointer_droid_000013": 0.0,
+      "robointer_droid_000015": 0.0,
+      "robointer_droid_000016": 0.0,
+      "robointer_droid_000017": 0.0,
+      "robointer_droid_000019": 0.0,
+      "robointer_droid_000022": 0.0,
+      "robointer_droid_000023": 0.0,
+      "robointer_droid_000025": 0.0,
+      "robointer_droid_000027": 0.0,
+      "robointer_droid_000028": 0.0,
+      "robointer_droid_000029": 0.3333333333333333,
+      "robointer_droid_000030": 0.3333333333333333,
+      "robointer_droid_000032": 0.0,
+      "robointer_droid_000033": 0.0,
+      "robointer_droid_000034": 0.6666666666666666,
+      "robointer_droid_000035": 0.0,
+      "robointer_droid_000036": 0.0,
+      "robointer_droid_000037": 0.0,
+      "robointer_droid_000038": 0.4,
+      "robointer_droid_000039": 0.0,
+      "robointer_droid_000043": 0.0,
+      "robointer_droid_000044": 0.4,
+      "robointer_droid_000045": 0.0,
+      "robointer_droid_000046": 0.0,
+      "robointer_droid_000047": 0.0,
+      "robointer_droid_000050": 0.0,
+      "robointer_droid_000055": 0.0,
+      "robointer_droid_000056": 0.0,
+      "robointer_droid_000057": 0.0,
+      "robointer_droid_000058": 0.0,
+      "robointer_droid_000059": 0.0,
+      "robointer_droid_000060": 0.0,
+      "robointer_droid_000061": 0.0,
+      "robointer_droid_000062": 0.0
+     }
+    },
+    "incumbent": {
+     "snapped_f1_075": 0.07913669064748202,
+     "raw_f1_075": 0.0647482014388489,
+     "snapped_f1_05": 0.26618705035971224,
+     "raw_f1_05": 0.2302158273381295,
+     "tp_snapped": 11,
+     "tp_raw": 9,
+     "tp05_snapped": 37,
+     "tp05_raw": 32,
+     "n_pred": 138,
+     "n_pred_snapped": 138,
+     "n_ref": 140,
+     "invalid_items": 0,
+     "empty_output_episodes": 0,
+     "mean_boundary_mae_sec": 7.108147301587301,
+     "episodes": 45,
+     "per_episode_snapped_f1": {
+      "robointer_droid_000001": 0.0,
+      "robointer_droid_000002": 0.0,
+      "robointer_droid_000003": 0.0,
+      "robointer_droid_000004": 0.3333333333333333,
+      "robointer_droid_000005": 0.0,
+      "robointer_droid_000006": 0.3333333333333333,
+      "robointer_droid_000007": 0.0,
+      "robointer_droid_000008": 0.0,
+      "robointer_droid_000010": 0.5714285714285715,
+      "robointer_droid_000011": 0.0,
+      "robointer_droid_000012": 0.28571428571428575,
+      "robointer_droid_000013": 0.0,
+      "robointer_droid_000015": 0.3333333333333333,
+      "robointer_droid_000016": 0.4,
+      "robointer_droid_000017": 0.0,
+      "robointer_droid_000019": 0.3333333333333333,
+      "robointer_droid_000022": 0.3333333333333333,
+      "robointer_droid_000023": 0.0,
+      "robointer_droid_000025": 0.0,
+      "robointer_droid_000027": 0.3333333333333333,
+      "robointer_droid_000028": 0.0,
+      "robointer_droid_000029": 0.0,
+      "robointer_droid_000030": 0.0,
+      "robointer_droid_000032": 0.0,
+      "robointer_droid_000033": 0.0,
+      "robointer_droid_000034": 0.6666666666666666,
+      "robointer_droid_000035": 0.0,
+      "robointer_droid_000036": 0.0,
+      "robointer_droid_000037": 0.0,
+      "robointer_droid_000038": 0.0,
+      "robointer_droid_000039": 0.0,
+      "robointer_droid_000043": 0.0,
+      "robointer_droid_000044": 0.0,
+      "robointer_droid_000045": 0.0,
+      "robointer_droid_000046": 0.0,
+      "robointer_droid_000047": 0.0,
+      "robointer_droid_000050": 0.0,
+      "robointer_droid_000055": 0.0,
+      "robointer_droid_000056": 0.0,
+      "robointer_droid_000057": 0.0,
+      "robointer_droid_000058": 0.0,
+      "robointer_droid_000059": 0.0,
+      "robointer_droid_000060": 0.0,
+      "robointer_droid_000061": 0.0,
+      "robointer_droid_000062": 0.0
+     }
+    }
+   },
+   "recursion_cost": {
+    "by_role": {
+     "nemotron": {
+      "calls": 3,
+      "cache_hits": 0,
+      "cost_usd": 0.030061,
+      "prompt_tokens": 19459,
+      "completion_tokens": 10093
+     },
+     "vision": {
+      "calls": 297,
+      "cache_hits": 139,
+      "cost_usd": 0.328331,
+      "prompt_tokens": 309014,
+      "completion_tokens": 128758
+     }
+    },
+    "total_cost_usd": 0.358392
+   }
+  },
+  {
+   "id": "hitl-EXP-0002a",
+   "parent_version": "hitl-N001",
+   "version_dir": "hitl-EXP-0002a_rejected",
+   "hypothesis": "By raising the minimum segment duration, enabling merging of same-label segments, refining all boundaries with more windows, and steering the initial annotator toward longer, coverage\u2011complete segments (while keeping thinking=false to avoid token caps), we will suppress spurious short splits, align boundaries with actual manipulation state changes, and improve segment F1 at IoU\u22650.75.",
+   "patch_summary": {
+    "set_params": {
+     "sample": {
+      "frames_per_sheet": 30,
+      "sampling_hz": 2.0,
+      "tile_px": 224,
+      "cols": 5,
+      "badge": "macrodata",
+      "jpeg_quality": 95
+     },
+     "annotate": {
+      "thinking": false,
+      "max_tokens": 16384,
+      "temperature": 0.1
+     },
+     "inspect": {
+      "select": "all_boundaries",
+      "window_sec": 2.0,
+      "local_hz": 4.0,
+      "max_windows": 16,
+      "include_unmatched_hints": true,
+      "tile_px": 224,
+      "confidence_threshold": 0.7
+     },
+     "merge": {
+      "min_duration_sec": 3.0,
+      "max_gap_sec": 1.5,
+      "tile_full_episode": true,
+      "merge_same_label": true
+     },
+     "refine": {
+      "thinking": false,
+      "max_tokens": 16384,
+      "temperature": 0.2,
+      "allow_insert": true,
+      "allow_delete": true
+     }
+    },
+    "prompt_updates": {
+     "prompt.md": "Reconstruct the sequence of manipulation events in this robot video from the timestamped contact sheets.\n\nReturn only JSON with this shape:\n{\"segments\":[{\"start_sec\":0.0,\"end_sec\":1.0,\"subtask\":\"short action description\"}]}\n\nRules:\n- Segment only completed robot manipulation events, not every visible movement.\n- Good boundaries happen when a held object changes, an object is placed or released, a tool starts/stops changing a surface, a container/door/lid opens or closes, or contents move between containers.\n- Do not split approach, grasp adjustment, small repositioning, and retreat unless the world state changes.\n- Do not merge separate pick/place/open/close/pour/wipe events when they complete different states.\n- Most segments should be 3\u201112 seconds. Shorter segments are okay only for fast pick, place, open, close, or release events.\n- Use the visible timestamps for start_sec and end_sec.\n- Ignore label wording quality; prioritize temporally correct boundaries.\n- The segments must collectively cover the entire video from start to end with no gaps.\n- Prefer fewer, longer segments that each represent a distinct completed manipulation event.\n- Adjacent segments with the same subtask label should be merged unless there is a clear state change between them.\n\nEpisode instruction: $instruction",
+     "refine.md": "You are refining the temporal boundaries of a robot manipulation video annotation.\nTask instruction: \"$instruction\". Video length: $duration_sec s.\nCurrent segments (JSON): $segments_json\n\nEach following image is a close-up strip of consecutive frames (timestamps printed in yellow) around one current boundary or one robot\u2011telemetry hint:\n$windows\n\nPolicy: a boundary belongs at the first frame where the earlier subtask's world\u2011state change is complete (object released and at rest, gripper opened, drawer closed, pour finished).\nFor each window choose one action:\n- \"keep\": the current boundary is already within 0.25\u202fs of the correct moment\n- \"move\": give boundary_sec, the corrected time (must lie inside the window)\n- \"delete\": there is no real state change here; the two neighbouring segments are one event\n- \"insert\": (hint windows only) a distinct completed state change happens here and is missing; give boundary_sec and new_subtask for the segment that starts there\n\nReturn only JSON: {\"windows\": [{\"window_id\": \"W1\", \"action\": \"keep|move|delete|insert\", \"boundary_sec\": <float or null>, \"new_subtask\": <string or null>, \"reason\": \"<one short sentence>\"}]}"
+    }
+   },
+   "decision": "REJECTED",
+   "selected_round": 3,
+   "labeled_sample": {
+    "candidate": {
+     "snapped_f1_075": 0.380952380952381,
+     "raw_f1_075": 0.380952380952381,
+     "snapped_f1_05": 0.761904761904762,
+     "tp_snapped": 4,
+     "n_pred": 11,
+     "n_ref": 10
+    },
+    "incumbent": {
+     "snapped_f1_075": 0.27586206896551724,
+     "raw_f1_075": 0.2,
+     "snapped_f1_05": 0.41379310344827586,
+     "tp_snapped": 4,
+     "n_pred": 20,
+     "n_ref": 10
+    }
+   },
+   "topology_change": false,
+   "label_free": {
+    "candidate_self_score": 0.4011
+   },
+   "shadow_gt_heldout": {
+    "candidate": {
+     "snapped_f1_075": 0.18245614035087718,
+     "raw_f1_075": 0.13333333333333333,
+     "snapped_f1_05": 0.37894736842105264,
+     "raw_f1_05": 0.36491228070175435,
+     "tp_snapped": 26,
+     "tp_raw": 19,
+     "tp05_snapped": 54,
+     "tp05_raw": 52,
+     "n_pred": 145,
+     "n_pred_snapped": 145,
+     "n_ref": 140,
+     "invalid_items": 0,
+     "empty_output_episodes": 1,
+     "mean_boundary_mae_sec": 5.116665367965369,
+     "episodes": 45,
+     "per_episode_snapped_f1": {
+      "robointer_droid_000001": 0.4,
+      "robointer_droid_000002": 1.0,
+      "robointer_droid_000003": 0.4,
+      "robointer_droid_000004": 1.0,
+      "robointer_droid_000005": 0.0,
+      "robointer_droid_000006": 1.0,
+      "robointer_droid_000007": 0.0,
+      "robointer_droid_000008": 1.0,
+      "robointer_droid_000010": 0.6666666666666666,
+      "robointer_droid_000011": 0.4,
+      "robointer_droid_000012": 0.0,
+      "robointer_droid_000013": 0.0,
+      "robointer_droid_000015": 0.0,
+      "robointer_droid_000016": 1.0,
+      "robointer_droid_000017": 1.0,
+      "robointer_droid_000019": 1.0,
+      "robointer_droid_000022": 0.0,
+      "robointer_droid_000023": 0.4,
+      "robointer_droid_000025": 0.0,
+      "robointer_droid_000027": 0.0,
+      "robointer_droid_000028": 0.0,
+      "robointer_droid_000029": 0.3333333333333333,
+      "robointer_droid_000030": 0.0,
+      "robointer_droid_000032": 0.0,
+      "robointer_droid_000033": 0.0,
+      "robointer_droid_000034": 0.0,
+      "robointer_droid_000035": 0.0,
+      "robointer_droid_000036": 0.28571428571428575,
+      "robointer_droid_000037": 0.0,
+      "robointer_droid_000038": 0.4,
+      "robointer_droid_000039": 0.4,
+      "robointer_droid_000043": 0.0,
+      "robointer_droid_000044": 0.3333333333333333,
+      "robointer_droid_000045": 0.0,
+      "robointer_droid_000046": 0.0,
+      "robointer_droid_000047": 0.14285714285714288,
+      "robointer_droid_000050": 0.0,
+      "robointer_droid_000055": 0.0,
+      "robointer_droid_000056": 0.0,
+      "robointer_droid_000057": 0.0,
+      "robointer_droid_000058": 0.0,
+      "robointer_droid_000059": 0.0,
+      "robointer_droid_000060": 0.0,
+      "robointer_droid_000061": 0.0,
+      "robointer_droid_000062": 0.0
+     }
+    }
+   },
+   "recursion": 2,
+   "attempt": 1,
+   "recursion_cost": {
+    "by_role": {
+     "vision": {
+      "calls": 143,
+      "cache_hits": 88,
+      "cost_usd": 0.152931,
+      "prompt_tokens": 133893,
+      "completion_tokens": 61619
+     }
+    },
+    "total_cost_usd": 0.152931
+   },
+   "note": "Recursion 2, attempt 1. The agent selected round 3 of RUN-dd7d1852af; that run stopped after 41/50 episodes on a zero-frame-window crash (harness bug, fixed). Rebuilt from the recorded patch (workflow hash identical), re-run on all 50 after the fix, predeclared labeled-sample gate applied against the incumbent run the agent saw in that attempt."
+  }
+ ],
+ "versions": {
+  "N0": {
+   "headline_gt_heldout": {
+    "snapped_f1_075": 0.06912442396313363,
+    "raw_f1_075": 0.009216589861751152,
+    "snapped_f1_05": 0.1658986175115207,
+    "raw_f1_05": 0.03225806451612903,
+    "tp_snapped": 15,
+    "tp_raw": 2,
+    "tp05_snapped": 36,
+    "tp05_raw": 7,
+    "n_pred": 294,
+    "n_pred_snapped": 294,
+    "n_ref": 140,
+    "invalid_items": 0,
+    "empty_output_episodes": 0,
+    "mean_boundary_mae_sec": 7.661461904761905,
+    "episodes": 45,
+    "per_episode_snapped_f1": {
+     "robointer_droid_000001": 0.25,
+     "robointer_droid_000002": 0.0,
+     "robointer_droid_000003": 0.0,
+     "robointer_droid_000004": 0.0,
+     "robointer_droid_000005": 0.4,
+     "robointer_droid_000006": 0.0,
+     "robointer_droid_000007": 0.25,
+     "robointer_droid_000008": 0.0,
+     "robointer_droid_000010": 0.5,
+     "robointer_droid_000011": 0.0,
+     "robointer_droid_000012": 0.2222222222222222,
+     "robointer_droid_000013": 0.22222222222222224,
+     "robointer_droid_000015": 0.25,
+     "robointer_droid_000016": 0.28571428571428575,
+     "robointer_droid_000017": 0.0,
+     "robointer_droid_000019": 0.28571428571428575,
+     "robointer_droid_000022": 0.28571428571428575,
+     "robointer_droid_000023": 0.0,
+     "robointer_droid_000025": 0.0,
+     "robointer_droid_000027": 0.28571428571428575,
+     "robointer_droid_000028": 0.1818181818181818,
+     "robointer_droid_000029": 0.0,
+     "robointer_droid_000030": 0.0,
+     "robointer_droid_000032": 0.0,
+     "robointer_droid_000033": 0.0,
+     "robointer_droid_000034": 0.0,
+     "robointer_droid_000035": 0.0,
+     "robointer_droid_000036": 0.0,
+     "robointer_droid_000037": 0.0,
+     "robointer_droid_000038": 0.0,
+     "robointer_droid_000039": 0.0,
+     "robointer_droid_000043": 0.2,
+     "robointer_droid_000044": 0.28571428571428575,
+     "robointer_droid_000045": 0.0,
+     "robointer_droid_000046": 0.0,
+     "robointer_droid_000047": 0.0,
+     "robointer_droid_000050": 0.0,
+     "robointer_droid_000055": 0.0,
+     "robointer_droid_000056": 0.0,
+     "robointer_droid_000057": 0.0,
+     "robointer_droid_000058": 0.0,
+     "robointer_droid_000059": 0.0,
+     "robointer_droid_000060": 0.0,
+     "robointer_droid_000061": 0.0,
+     "robointer_droid_000062": 0.0
+    }
+   },
+   "headline_gt_labeled": {
+    "snapped_f1_075": 0.2222222222222222,
+    "raw_f1_075": 0.05555555555555555,
+    "snapped_f1_05": 0.33333333333333337,
+    "raw_f1_05": 0.16666666666666669,
+    "tp_snapped": 4,
+    "tp_raw": 1,
+    "tp05_snapped": 6,
+    "tp05_raw": 3,
+    "n_pred": 26,
+    "n_pred_snapped": 26,
+    "n_ref": 10,
+    "invalid_items": 0,
+    "empty_output_episodes": 0,
+    "mean_boundary_mae_sec": 0.9982000000000004,
+    "episodes": 5,
+    "per_episode_snapped_f1": {
+     "robointer_droid_000009": 0.0,
+     "robointer_droid_000014": 0.28571428571428575,
+     "robointer_droid_000021": 0.25,
+     "robointer_droid_000024": 0.28571428571428575,
+     "robointer_droid_000042": 0.25
+    }
+   },
+   "heldout_episodes": 45,
+   "labeled_episodes": 5,
+   "version_id": "N0",
+   "episodes": 50,
+   "headline_gt": {
+    "snapped_f1_075": 0.08085106382978724,
+    "raw_f1_075": 0.012765957446808512,
+    "snapped_f1_05": 0.17872340425531916,
+    "raw_f1_05": 0.0425531914893617,
+    "tp_snapped": 19,
+    "tp_raw": 3,
+    "tp05_snapped": 42,
+    "tp05_raw": 10,
+    "n_pred": 320,
+    "n_pred_snapped": 320,
+    "n_ref": 150,
+    "invalid_items": 0,
+    "empty_output_episodes": 0,
+    "mean_boundary_mae_sec": 6.995135714285714,
+    "episodes": 50,
+    "per_episode_snapped_f1": {
+     "robointer_droid_000001": 0.25,
+     "robointer_droid_000002": 0.0,
+     "robointer_droid_000003": 0.0,
+     "robointer_droid_000004": 0.0,
+     "robointer_droid_000005": 0.4,
+     "robointer_droid_000006": 0.0,
+     "robointer_droid_000007": 0.25,
+     "robointer_droid_000008": 0.0,
+     "robointer_droid_000009": 0.0,
+     "robointer_droid_000010": 0.5,
+     "robointer_droid_000011": 0.0,
+     "robointer_droid_000012": 0.2222222222222222,
+     "robointer_droid_000013": 0.22222222222222224,
+     "robointer_droid_000014": 0.28571428571428575,
+     "robointer_droid_000015": 0.25,
+     "robointer_droid_000016": 0.28571428571428575,
+     "robointer_droid_000017": 0.0,
+     "robointer_droid_000019": 0.28571428571428575,
+     "robointer_droid_000021": 0.25,
+     "robointer_droid_000022": 0.28571428571428575,
+     "robointer_droid_000023": 0.0,
+     "robointer_droid_000024": 0.28571428571428575,
+     "robointer_droid_000025": 0.0,
+     "robointer_droid_000027": 0.28571428571428575,
+     "robointer_droid_000028": 0.1818181818181818,
+     "robointer_droid_000029": 0.0,
+     "robointer_droid_000030": 0.0,
+     "robointer_droid_000032": 0.0,
+     "robointer_droid_000033": 0.0,
+     "robointer_droid_000034": 0.0,
+     "robointer_droid_000035": 0.0,
+     "robointer_droid_000036": 0.0,
+     "robointer_droid_000037": 0.0,
+     "robointer_droid_000038": 0.0,
+     "robointer_droid_000039": 0.0,
+     "robointer_droid_000042": 0.25,
+     "robointer_droid_000043": 0.2,
+     "robointer_droid_000044": 0.28571428571428575,
+     "robointer_droid_000045": 0.0,
+     "robointer_droid_000046": 0.0,
+     "robointer_droid_000047": 0.0,
+     "robointer_droid_000050": 0.0,
+     "robointer_droid_000055": 0.0,
+     "robointer_droid_000056": 0.0,
+     "robointer_droid_000057": 0.0,
+     "robointer_droid_000058": 0.0,
+     "robointer_droid_000059": 0.0,
+     "robointer_droid_000060": 0.0,
+     "robointer_droid_000061": 0.0,
+     "robointer_droid_000062": 0.0
+    }
+   },
+   "label_free_self_score": 0.3362,
+   "label_free_components": {
+    "telemetry_agreement": 0.1884,
+    "visual_verification": 0.2,
+    "duration_variability": 0.3335,
+    "temporal_resolution": 1.0
+   },
+   "annotation_cost_usd_total": 0.055826,
+   "annotation_calls": 50,
+   "statuses": {
+    "robointer_droid_000001": "ok",
+    "robointer_droid_000002": "ok",
+    "robointer_droid_000003": "ok",
+    "robointer_droid_000004": "ok",
+    "robointer_droid_000005": "ok",
+    "robointer_droid_000006": "ok",
+    "robointer_droid_000007": "ok",
+    "robointer_droid_000008": "ok",
+    "robointer_droid_000009": "ok",
+    "robointer_droid_000010": "ok",
+    "robointer_droid_000011": "ok",
+    "robointer_droid_000012": "ok",
+    "robointer_droid_000013": "ok",
+    "robointer_droid_000014": "ok",
+    "robointer_droid_000015": "ok",
+    "robointer_droid_000016": "ok",
+    "robointer_droid_000017": "ok",
+    "robointer_droid_000019": "ok",
+    "robointer_droid_000021": "ok",
+    "robointer_droid_000022": "ok",
+    "robointer_droid_000023": "ok",
+    "robointer_droid_000024": "ok",
+    "robointer_droid_000025": "ok",
+    "robointer_droid_000027": "ok",
+    "robointer_droid_000028": "ok",
+    "robointer_droid_000029": "ok",
+    "robointer_droid_000030": "ok",
+    "robointer_droid_000032": "ok",
+    "robointer_droid_000033": "ok",
+    "robointer_droid_000034": "ok",
+    "robointer_droid_000035": "ok",
+    "robointer_droid_000036": "ok",
+    "robointer_droid_000037": "ok",
+    "robointer_droid_000038": "ok",
+    "robointer_droid_000039": "ok",
+    "robointer_droid_000042": "ok",
+    "robointer_droid_000043": "ok",
+    "robointer_droid_000044": "ok",
+    "robointer_droid_000045": "ok",
+    "robointer_droid_000046": "ok",
+    "robointer_droid_000047": "ok",
+    "robointer_droid_000050": "ok",
+    "robointer_droid_000055": "ok",
+    "robointer_droid_000056": "ok",
+    "robointer_droid_000057": "ok",
+    "robointer_droid_000058": "ok",
+    "robointer_droid_000059": "ok",
+    "robointer_droid_000060": "ok",
+    "robointer_droid_000061": "ok",
+    "robointer_droid_000062": "ok"
+   }
+  },
+  "hitl-EXP-0001_promoted": {
+   "headline_gt_heldout": {
+    "snapped_f1_075": 0.06593406593406592,
+    "raw_f1_075": 0.05128205128205128,
+    "snapped_f1_05": 0.2637362637362637,
+    "raw_f1_05": 0.22710622710622708,
+    "tp_snapped": 9,
+    "tp_raw": 7,
+    "tp05_snapped": 36,
+    "tp05_raw": 31,
+    "n_pred": 133,
+    "n_pred_snapped": 133,
+    "n_ref": 140,
+    "invalid_items": 0,
+    "empty_output_episodes": 0,
+    "mean_boundary_mae_sec": 7.231169523809522,
+    "episodes": 45,
+    "per_episode_snapped_f1": {
+     "robointer_droid_000001": 0.0,
+     "robointer_droid_000002": 0.0,
+     "robointer_droid_000003": 0.0,
+     "robointer_droid_000004": 0.3333333333333333,
+     "robointer_droid_000005": 0.0,
+     "robointer_droid_000006": 0.0,
+     "robointer_droid_000007": 0.0,
+     "robointer_droid_000008": 0.0,
+     "robointer_droid_000010": 0.3333333333333333,
+     "robointer_droid_000011": 0.0,
+     "robointer_droid_000012": 0.28571428571428575,
+     "robointer_droid_000013": 0.0,
+     "robointer_droid_000015": 0.3333333333333333,
+     "robointer_droid_000016": 0.4,
+     "robointer_droid_000017": 0.0,
+     "robointer_droid_000019": 0.3333333333333333,
+     "robointer_droid_000022": 0.3333333333333333,
+     "robointer_droid_000023": 0.0,
+     "robointer_droid_000025": 0.0,
+     "robointer_droid_000027": 0.3333333333333333,
+     "robointer_droid_000028": 0.0,
+     "robointer_droid_000029": 0.0,
+     "robointer_droid_000030": 0.0,
+     "robointer_droid_000032": 0.0,
+     "robointer_droid_000033": 0.0,
+     "robointer_droid_000034": 0.6666666666666666,
+     "robointer_droid_000035": 0.0,
+     "robointer_droid_000036": 0.0,
+     "robointer_droid_000037": 0.0,
+     "robointer_droid_000038": 0.0,
+     "robointer_droid_000039": 0.0,
+     "robointer_droid_000043": 0.0,
+     "robointer_droid_000044": 0.0,
+     "robointer_droid_000045": 0.0,
+     "robointer_droid_000046": 0.0,
+     "robointer_droid_000047": 0.0,
+     "robointer_droid_000050": 0.0,
+     "robointer_droid_000055": 0.0,
+     "robointer_droid_000056": 0.0,
+     "robointer_droid_000057": 0.0,
+     "robointer_droid_000058": 0.0,
+     "robointer_droid_000059": 0.0,
+     "robointer_droid_000060": 0.0,
+     "robointer_droid_000061": 0.0,
+     "robointer_droid_000062": 0.0
+    }
+   },
+   "headline_gt_labeled": {
+    "snapped_f1_075": 0.27586206896551724,
+    "raw_f1_075": 0.2,
+    "snapped_f1_05": 0.41379310344827586,
+    "raw_f1_05": 0.4,
+    "tp_snapped": 4,
+    "tp_raw": 3,
+    "tp05_snapped": 6,
+    "tp05_raw": 6,
+    "n_pred": 20,
+    "n_pred_snapped": 19,
+    "n_ref": 10,
+    "invalid_items": 0,
+    "empty_output_episodes": 0,
+    "mean_boundary_mae_sec": 1.4582000000000006,
+    "episodes": 5,
+    "per_episode_snapped_f1": {
+     "robointer_droid_000009": 0.4,
+     "robointer_droid_000014": 0.4,
+     "robointer_droid_000021": 0.0,
+     "robointer_droid_000024": 0.3333333333333333,
+     "robointer_droid_000042": 0.28571428571428575
+    }
+   },
+   "heldout_episodes": 45,
+   "labeled_episodes": 5,
+   "version_id": "hitl-EXP-0001",
+   "episodes": 50,
+   "headline_gt": {
+    "snapped_f1_075": 0.08609271523178809,
+    "raw_f1_075": 0.06600660066006601,
+    "snapped_f1_05": 0.27814569536423844,
+    "raw_f1_05": 0.2442244224422442,
+    "tp_snapped": 13,
+    "tp_raw": 10,
+    "tp05_snapped": 42,
+    "tp05_raw": 37,
+    "n_pred": 153,
+    "n_pred_snapped": 152,
+    "n_ref": 150,
+    "invalid_items": 0,
+    "empty_output_episodes": 0,
+    "mean_boundary_mae_sec": 6.65387257142857,
+    "episodes": 50,
+    "per_episode_snapped_f1": {
+     "robointer_droid_000001": 0.0,
+     "robointer_droid_000002": 0.0,
+     "robointer_droid_000003": 0.0,
+     "robointer_droid_000004": 0.3333333333333333,
+     "robointer_droid_000005": 0.0,
+     "robointer_droid_000006": 0.0,
+     "robointer_droid_000007": 0.0,
+     "robointer_droid_000008": 0.0,
+     "robointer_droid_000009": 0.4,
+     "robointer_droid_000010": 0.3333333333333333,
+     "robointer_droid_000011": 0.0,
+     "robointer_droid_000012": 0.28571428571428575,
+     "robointer_droid_000013": 0.0,
+     "robointer_droid_000014": 0.4,
+     "robointer_droid_000015": 0.3333333333333333,
+     "robointer_droid_000016": 0.4,
+     "robointer_droid_000017": 0.0,
+     "robointer_droid_000019": 0.3333333333333333,
+     "robointer_droid_000021": 0.0,
+     "robointer_droid_000022": 0.3333333333333333,
+     "robointer_droid_000023": 0.0,
+     "robointer_droid_000024": 0.3333333333333333,
+     "robointer_droid_000025": 0.0,
+     "robointer_droid_000027": 0.3333333333333333,
+     "robointer_droid_000028": 0.0,
+     "robointer_droid_000029": 0.0,
+     "robointer_droid_000030": 0.0,
+     "robointer_droid_000032": 0.0,
+     "robointer_droid_000033": 0.0,
+     "robointer_droid_000034": 0.6666666666666666,
+     "robointer_droid_000035": 0.0,
+     "robointer_droid_000036": 0.0,
+     "robointer_droid_000037": 0.0,
+     "robointer_droid_000038": 0.0,
+     "robointer_droid_000039": 0.0,
+     "robointer_droid_000042": 0.28571428571428575,
+     "robointer_droid_000043": 0.0,
+     "robointer_droid_000044": 0.0,
+     "robointer_droid_000045": 0.0,
+     "robointer_droid_000046": 0.0,
+     "robointer_droid_000047": 0.0,
+     "robointer_droid_000050": 0.0,
+     "robointer_droid_000055": 0.0,
+     "robointer_droid_000056": 0.0,
+     "robointer_droid_000057": 0.0,
+     "robointer_droid_000058": 0.0,
+     "robointer_droid_000059": 0.0,
+     "robointer_droid_000060": 0.0,
+     "robointer_droid_000061": 0.0,
+     "robointer_droid_000062": 0.0
+    }
+   },
+   "label_free_self_score": 0.3726,
+   "label_free_components": {
+    "telemetry_agreement": 0.1447,
+    "visual_verification": 0.3154,
+    "duration_variability": 0.4894,
+    "temporal_resolution": 1.0
+   },
+   "annotation_cost_usd_total": 0.460554,
+   "annotation_calls": 100,
+   "statuses": {
+    "robointer_droid_000001": "ok",
+    "robointer_droid_000002": "ok",
+    "robointer_droid_000003": "ok",
+    "robointer_droid_000004": "ok",
+    "robointer_droid_000005": "ok",
+    "robointer_droid_000006": "ok",
+    "robointer_droid_000007": "ok",
+    "robointer_droid_000008": "ok",
+    "robointer_droid_000009": "ok",
+    "robointer_droid_000010": "ok",
+    "robointer_droid_000011": "ok",
+    "robointer_droid_000012": "ok",
+    "robointer_droid_000013": "partial",
+    "robointer_droid_000014": "ok",
+    "robointer_droid_000015": "ok",
+    "robointer_droid_000016": "ok",
+    "robointer_droid_000017": "ok",
+    "robointer_droid_000019": "ok",
+    "robointer_droid_000021": "ok",
+    "robointer_droid_000022": "ok",
+    "robointer_droid_000023": "ok",
+    "robointer_droid_000024": "ok",
+    "robointer_droid_000025": "ok",
+    "robointer_droid_000027": "ok",
+    "robointer_droid_000028": "ok",
+    "robointer_droid_000029": "partial",
+    "robointer_droid_000030": "ok",
+    "robointer_droid_000032": "ok",
+    "robointer_droid_000033": "ok",
+    "robointer_droid_000034": "ok",
+    "robointer_droid_000035": "ok",
+    "robointer_droid_000036": "ok",
+    "robointer_droid_000037": "ok",
+    "robointer_droid_000038": "ok",
+    "robointer_droid_000039": "ok",
+    "robointer_droid_000042": "ok",
+    "robointer_droid_000043": "ok",
+    "robointer_droid_000044": "ok",
+    "robointer_droid_000045": "ok",
+    "robointer_droid_000046": "ok",
+    "robointer_droid_000047": "ok",
+    "robointer_droid_000050": "ok",
+    "robointer_droid_000055": "ok",
+    "robointer_droid_000056": "ok",
+    "robointer_droid_000057": "ok",
+    "robointer_droid_000058": "ok",
+    "robointer_droid_000059": "partial",
+    "robointer_droid_000060": "ok",
+    "robointer_droid_000061": "ok",
+    "robointer_droid_000062": "ok"
+   }
+  },
+  "hitl-N001": {
+   "headline_gt_heldout": {
+    "snapped_f1_075": 0.07913669064748202,
+    "raw_f1_075": 0.0647482014388489,
+    "snapped_f1_05": 0.26618705035971224,
+    "raw_f1_05": 0.2302158273381295,
+    "tp_snapped": 11,
+    "tp_raw": 9,
+    "tp05_snapped": 37,
+    "tp05_raw": 32,
+    "n_pred": 138,
+    "n_pred_snapped": 138,
+    "n_ref": 140,
+    "invalid_items": 0,
+    "empty_output_episodes": 0,
+    "mean_boundary_mae_sec": 7.108147301587301,
+    "episodes": 45,
+    "per_episode_snapped_f1": {
+     "robointer_droid_000001": 0.0,
+     "robointer_droid_000002": 0.0,
+     "robointer_droid_000003": 0.0,
+     "robointer_droid_000004": 0.3333333333333333,
+     "robointer_droid_000005": 0.0,
+     "robointer_droid_000006": 0.3333333333333333,
+     "robointer_droid_000007": 0.0,
+     "robointer_droid_000008": 0.0,
+     "robointer_droid_000010": 0.5714285714285715,
+     "robointer_droid_000011": 0.0,
+     "robointer_droid_000012": 0.28571428571428575,
+     "robointer_droid_000013": 0.0,
+     "robointer_droid_000015": 0.3333333333333333,
+     "robointer_droid_000016": 0.4,
+     "robointer_droid_000017": 0.0,
+     "robointer_droid_000019": 0.3333333333333333,
+     "robointer_droid_000022": 0.3333333333333333,
+     "robointer_droid_000023": 0.0,
+     "robointer_droid_000025": 0.0,
+     "robointer_droid_000027": 0.3333333333333333,
+     "robointer_droid_000028": 0.0,
+     "robointer_droid_000029": 0.0,
+     "robointer_droid_000030": 0.0,
+     "robointer_droid_000032": 0.0,
+     "robointer_droid_000033": 0.0,
+     "robointer_droid_000034": 0.6666666666666666,
+     "robointer_droid_000035": 0.0,
+     "robointer_droid_000036": 0.0,
+     "robointer_droid_000037": 0.0,
+     "robointer_droid_000038": 0.0,
+     "robointer_droid_000039": 0.0,
+     "robointer_droid_000043": 0.0,
+     "robointer_droid_000044": 0.0,
+     "robointer_droid_000045": 0.0,
+     "robointer_droid_000046": 0.0,
+     "robointer_droid_000047": 0.0,
+     "robointer_droid_000050": 0.0,
+     "robointer_droid_000055": 0.0,
+     "robointer_droid_000056": 0.0,
+     "robointer_droid_000057": 0.0,
+     "robointer_droid_000058": 0.0,
+     "robointer_droid_000059": 0.0,
+     "robointer_droid_000060": 0.0,
+     "robointer_droid_000061": 0.0,
+     "robointer_droid_000062": 0.0
+    }
+   },
+   "headline_gt_labeled": {
+    "snapped_f1_075": 0.27586206896551724,
+    "raw_f1_075": 0.2,
+    "snapped_f1_05": 0.41379310344827586,
+    "raw_f1_05": 0.4,
+    "tp_snapped": 4,
+    "tp_raw": 3,
+    "tp05_snapped": 6,
+    "tp05_raw": 6,
+    "n_pred": 20,
+    "n_pred_snapped": 19,
+    "n_ref": 10,
+    "invalid_items": 0,
+    "empty_output_episodes": 0,
+    "mean_boundary_mae_sec": 1.4582000000000006,
+    "episodes": 5,
+    "per_episode_snapped_f1": {
+     "robointer_droid_000009": 0.4,
+     "robointer_droid_000014": 0.4,
+     "robointer_droid_000021": 0.0,
+     "robointer_droid_000024": 0.3333333333333333,
+     "robointer_droid_000042": 0.28571428571428575
+    }
+   },
+   "heldout_episodes": 45,
+   "labeled_episodes": 5,
+   "version_id": "hitl-N001",
+   "episodes": 50,
+   "headline_gt": {
+    "snapped_f1_075": 0.09771986970684039,
+    "raw_f1_075": 0.07792207792207792,
+    "snapped_f1_05": 0.28013029315960913,
+    "raw_f1_05": 0.24675324675324678,
+    "tp_snapped": 15,
+    "tp_raw": 12,
+    "tp05_snapped": 43,
+    "tp05_raw": 38,
+    "n_pred": 158,
+    "n_pred_snapped": 157,
+    "n_ref": 150,
+    "invalid_items": 0,
+    "empty_output_episodes": 0,
+    "mean_boundary_mae_sec": 6.54315257142857,
+    "episodes": 50,
+    "per_episode_snapped_f1": {
+     "robointer_droid_000001": 0.0,
+     "robointer_droid_000002": 0.0,
+     "robointer_droid_000003": 0.0,
+     "robointer_droid_000004": 0.3333333333333333,
+     "robointer_droid_000005": 0.0,
+     "robointer_droid_000006": 0.3333333333333333,
+     "robointer_droid_000007": 0.0,
+     "robointer_droid_000008": 0.0,
+     "robointer_droid_000009": 0.4,
+     "robointer_droid_000010": 0.5714285714285715,
+     "robointer_droid_000011": 0.0,
+     "robointer_droid_000012": 0.28571428571428575,
+     "robointer_droid_000013": 0.0,
+     "robointer_droid_000014": 0.4,
+     "robointer_droid_000015": 0.3333333333333333,
+     "robointer_droid_000016": 0.4,
+     "robointer_droid_000017": 0.0,
+     "robointer_droid_000019": 0.3333333333333333,
+     "robointer_droid_000021": 0.0,
+     "robointer_droid_000022": 0.3333333333333333,
+     "robointer_droid_000023": 0.0,
+     "robointer_droid_000024": 0.3333333333333333,
+     "robointer_droid_000025": 0.0,
+     "robointer_droid_000027": 0.3333333333333333,
+     "robointer_droid_000028": 0.0,
+     "robointer_droid_000029": 0.0,
+     "robointer_droid_000030": 0.0,
+     "robointer_droid_000032": 0.0,
+     "robointer_droid_000033": 0.0,
+     "robointer_droid_000034": 0.6666666666666666,
+     "robointer_droid_000035": 0.0,
+     "robointer_droid_000036": 0.0,
+     "robointer_droid_000037": 0.0,
+     "robointer_droid_000038": 0.0,
+     "robointer_droid_000039": 0.0,
+     "robointer_droid_000042": 0.28571428571428575,
+     "robointer_droid_000043": 0.0,
+     "robointer_droid_000044": 0.0,
+     "robointer_droid_000045": 0.0,
+     "robointer_droid_000046": 0.0,
+     "robointer_droid_000047": 0.0,
+     "robointer_droid_000050": 0.0,
+     "robointer_droid_000055": 0.0,
+     "robointer_droid_000056": 0.0,
+     "robointer_droid_000057": 0.0,
+     "robointer_droid_000058": 0.0,
+     "robointer_droid_000059": 0.0,
+     "robointer_droid_000060": 0.0,
+     "robointer_droid_000061": 0.0,
+     "robointer_droid_000062": 0.0
+    }
+   },
+   "label_free_self_score": 0.3719,
+   "label_free_components": {
+    "telemetry_agreement": 0.1462,
+    "visual_verification": 0.2934,
+    "duration_variability": 0.5089,
+    "temporal_resolution": 1.0
+   },
+   "annotation_cost_usd_total": 0.469961,
+   "annotation_calls": 100,
+   "statuses": {
+    "robointer_droid_000001": "ok",
+    "robointer_droid_000002": "ok",
+    "robointer_droid_000003": "ok",
+    "robointer_droid_000004": "ok",
+    "robointer_droid_000005": "ok",
+    "robointer_droid_000006": "ok",
+    "robointer_droid_000007": "ok",
+    "robointer_droid_000008": "ok",
+    "robointer_droid_000009": "ok",
+    "robointer_droid_000010": "ok",
+    "robointer_droid_000011": "ok",
+    "robointer_droid_000012": "ok",
+    "robointer_droid_000013": "ok",
+    "robointer_droid_000014": "ok",
+    "robointer_droid_000015": "ok",
+    "robointer_droid_000016": "ok",
+    "robointer_droid_000017": "ok",
+    "robointer_droid_000019": "ok",
+    "robointer_droid_000021": "ok",
+    "robointer_droid_000022": "ok",
+    "robointer_droid_000023": "ok",
+    "robointer_droid_000024": "ok",
+    "robointer_droid_000025": "ok",
+    "robointer_droid_000027": "ok",
+    "robointer_droid_000028": "ok",
+    "robointer_droid_000029": "partial",
+    "robointer_droid_000030": "ok",
+    "robointer_droid_000032": "ok",
+    "robointer_droid_000033": "ok",
+    "robointer_droid_000034": "ok",
+    "robointer_droid_000035": "ok",
+    "robointer_droid_000036": "ok",
+    "robointer_droid_000037": "ok",
+    "robointer_droid_000038": "ok",
+    "robointer_droid_000039": "ok",
+    "robointer_droid_000042": "ok",
+    "robointer_droid_000043": "ok",
+    "robointer_droid_000044": "ok",
+    "robointer_droid_000045": "ok",
+    "robointer_droid_000046": "ok",
+    "robointer_droid_000047": "ok",
+    "robointer_droid_000050": "ok",
+    "robointer_droid_000055": "ok",
+    "robointer_droid_000056": "ok",
+    "robointer_droid_000057": "ok",
+    "robointer_droid_000058": "ok",
+    "robointer_droid_000059": "ok",
+    "robointer_droid_000060": "ok",
+    "robointer_droid_000061": "ok",
+    "robointer_droid_000062": "ok"
+   }
+  },
+  "hitl-EXP-0002_rejected": {
+   "headline_gt_heldout": {
+    "snapped_f1_075": 0.04838709677419355,
+    "raw_f1_075": 0.03225806451612903,
+    "snapped_f1_05": 0.3225806451612903,
+    "raw_f1_05": 0.29838709677419356,
+    "tp_snapped": 6,
+    "tp_raw": 4,
+    "tp05_snapped": 40,
+    "tp05_raw": 37,
+    "n_pred": 108,
+    "n_pred_snapped": 108,
+    "n_ref": 140,
+    "invalid_items": 0,
+    "empty_output_episodes": 0,
+    "mean_boundary_mae_sec": 7.34065216931217,
+    "episodes": 45,
+    "per_episode_snapped_f1": {
+     "robointer_droid_000001": 0.0,
+     "robointer_droid_000002": 0.0,
+     "robointer_droid_000003": 0.4,
+     "robointer_droid_000004": 0.0,
+     "robointer_droid_000005": 0.0,
+     "robointer_droid_000006": 0.0,
+     "robointer_droid_000007": 0.0,
+     "robointer_droid_000008": 0.0,
+     "robointer_droid_000010": 0.0,
+     "robointer_droid_000011": 0.0,
+     "robointer_droid_000012": 0.0,
+     "robointer_droid_000013": 0.0,
+     "robointer_droid_000015": 0.0,
+     "robointer_droid_000016": 0.0,
+     "robointer_droid_000017": 0.0,
+     "robointer_droid_000019": 0.0,
+     "robointer_droid_000022": 0.0,
+     "robointer_droid_000023": 0.0,
+     "robointer_droid_000025": 0.0,
+     "robointer_droid_000027": 0.0,
+     "robointer_droid_000028": 0.0,
+     "robointer_droid_000029": 0.3333333333333333,
+     "robointer_droid_000030": 0.3333333333333333,
+     "robointer_droid_000032": 0.0,
+     "robointer_droid_000033": 0.0,
+     "robointer_droid_000034": 0.6666666666666666,
+     "robointer_droid_000035": 0.0,
+     "robointer_droid_000036": 0.0,
+     "robointer_droid_000037": 0.0,
+     "robointer_droid_000038": 0.4,
+     "robointer_droid_000039": 0.0,
+     "robointer_droid_000043": 0.0,
+     "robointer_droid_000044": 0.4,
+     "robointer_droid_000045": 0.0,
+     "robointer_droid_000046": 0.0,
+     "robointer_droid_000047": 0.0,
+     "robointer_droid_000050": 0.0,
+     "robointer_droid_000055": 0.0,
+     "robointer_droid_000056": 0.0,
+     "robointer_droid_000057": 0.0,
+     "robointer_droid_000058": 0.0,
+     "robointer_droid_000059": 0.0,
+     "robointer_droid_000060": 0.0,
+     "robointer_droid_000061": 0.0,
+     "robointer_droid_000062": 0.0
+    }
+   },
+   "headline_gt_labeled": {
+    "snapped_f1_075": 0.17391304347826086,
+    "raw_f1_075": 0.08695652173913043,
+    "snapped_f1_05": 0.5217391304347826,
+    "raw_f1_05": 0.5217391304347826,
+    "tp_snapped": 2,
+    "tp_raw": 1,
+    "tp05_snapped": 6,
+    "tp05_raw": 6,
+    "n_pred": 13,
+    "n_pred_snapped": 13,
+    "n_ref": 10,
+    "invalid_items": 0,
+    "empty_output_episodes": 0,
+    "mean_boundary_mae_sec": 3.842600000000001,
+    "episodes": 5,
+    "per_episode_snapped_f1": {
+     "robointer_droid_000009": 0.4,
+     "robointer_droid_000014": 0.0,
+     "robointer_droid_000021": 0.0,
+     "robointer_droid_000024": 0.0,
+     "robointer_droid_000042": 0.28571428571428575
+    }
+   },
+   "heldout_episodes": 45,
+   "labeled_episodes": 5,
+   "version_id": "hitl-EXP-0002",
+   "episodes": 50,
+   "headline_gt": {
+    "snapped_f1_075": 0.05904059040590406,
+    "raw_f1_075": 0.036900369003690044,
+    "snapped_f1_05": 0.3394833948339483,
+    "raw_f1_05": 0.3173431734317343,
+    "tp_snapped": 8,
+    "tp_raw": 5,
+    "tp05_snapped": 46,
+    "tp05_raw": 43,
+    "n_pred": 121,
+    "n_pred_snapped": 121,
+    "n_ref": 150,
+    "invalid_items": 0,
+    "empty_output_episodes": 0,
+    "mean_boundary_mae_sec": 6.990846952380954,
+    "episodes": 50,
+    "per_episode_snapped_f1": {
+     "robointer_droid_000001": 0.0,
+     "robointer_droid_000002": 0.0,
+     "robointer_droid_000003": 0.4,
+     "robointer_droid_000004": 0.0,
+     "robointer_droid_000005": 0.0,
+     "robointer_droid_000006": 0.0,
+     "robointer_droid_000007": 0.0,
+     "robointer_droid_000008": 0.0,
+     "robointer_droid_000009": 0.4,
+     "robointer_droid_000010": 0.0,
+     "robointer_droid_000011": 0.0,
+     "robointer_droid_000012": 0.0,
+     "robointer_droid_000013": 0.0,
+     "robointer_droid_000014": 0.0,
+     "robointer_droid_000015": 0.0,
+     "robointer_droid_000016": 0.0,
+     "robointer_droid_000017": 0.0,
+     "robointer_droid_000019": 0.0,
+     "robointer_droid_000021": 0.0,
+     "robointer_droid_000022": 0.0,
+     "robointer_droid_000023": 0.0,
+     "robointer_droid_000024": 0.0,
+     "robointer_droid_000025": 0.0,
+     "robointer_droid_000027": 0.0,
+     "robointer_droid_000028": 0.0,
+     "robointer_droid_000029": 0.3333333333333333,
+     "robointer_droid_000030": 0.3333333333333333,
+     "robointer_droid_000032": 0.0,
+     "robointer_droid_000033": 0.0,
+     "robointer_droid_000034": 0.6666666666666666,
+     "robointer_droid_000035": 0.0,
+     "robointer_droid_000036": 0.0,
+     "robointer_droid_000037": 0.0,
+     "robointer_droid_000038": 0.4,
+     "robointer_droid_000039": 0.0,
+     "robointer_droid_000042": 0.28571428571428575,
+     "robointer_droid_000043": 0.0,
+     "robointer_droid_000044": 0.4,
+     "robointer_droid_000045": 0.0,
+     "robointer_droid_000046": 0.0,
+     "robointer_droid_000047": 0.0,
+     "robointer_droid_000050": 0.0,
+     "robointer_droid_000055": 0.0,
+     "robointer_droid_000056": 0.0,
+     "robointer_droid_000057": 0.0,
+     "robointer_droid_000058": 0.0,
+     "robointer_droid_000059": 0.0,
+     "robointer_droid_000060": 0.0,
+     "robointer_droid_000061": 0.0,
+     "robointer_droid_000062": 0.0
+    }
+   },
+   "label_free_self_score": 0.347,
+   "label_free_components": {
+    "telemetry_agreement": 0.0349,
+    "visual_verification": 0.3733,
+    "duration_variability": 0.4935,
+    "temporal_resolution": 1.0
+   },
+   "annotation_cost_usd_total": 0.118019,
+   "annotation_calls": 100,
+   "statuses": {
+    "robointer_droid_000001": "ok",
+    "robointer_droid_000002": "ok",
+    "robointer_droid_000003": "ok",
+    "robointer_droid_000004": "ok",
+    "robointer_droid_000005": "ok",
+    "robointer_droid_000006": "ok",
+    "robointer_droid_000007": "ok",
+    "robointer_droid_000008": "ok",
+    "robointer_droid_000009": "ok",
+    "robointer_droid_000010": "ok",
+    "robointer_droid_000011": "ok",
+    "robointer_droid_000012": "ok",
+    "robointer_droid_000013": "ok",
+    "robointer_droid_000014": "ok",
+    "robointer_droid_000015": "ok",
+    "robointer_droid_000016": "ok",
+    "robointer_droid_000017": "ok",
+    "robointer_droid_000019": "ok",
+    "robointer_droid_000021": "ok",
+    "robointer_droid_000022": "ok",
+    "robointer_droid_000023": "ok",
+    "robointer_droid_000024": "ok",
+    "robointer_droid_000025": "ok",
+    "robointer_droid_000027": "ok",
+    "robointer_droid_000028": "ok",
+    "robointer_droid_000029": "ok",
+    "robointer_droid_000030": "ok",
+    "robointer_droid_000032": "ok",
+    "robointer_droid_000033": "ok",
+    "robointer_droid_000034": "ok",
+    "robointer_droid_000035": "ok",
+    "robointer_droid_000036": "ok",
+    "robointer_droid_000037": "ok",
+    "robointer_droid_000038": "ok",
+    "robointer_droid_000039": "ok",
+    "robointer_droid_000042": "ok",
+    "robointer_droid_000043": "ok",
+    "robointer_droid_000044": "ok",
+    "robointer_droid_000045": "ok",
+    "robointer_droid_000046": "ok",
+    "robointer_droid_000047": "ok",
+    "robointer_droid_000050": "ok",
+    "robointer_droid_000055": "ok",
+    "robointer_droid_000056": "ok",
+    "robointer_droid_000057": "ok",
+    "robointer_droid_000058": "ok",
+    "robointer_droid_000059": "ok",
+    "robointer_droid_000060": "ok",
+    "robointer_droid_000061": "ok",
+    "robointer_droid_000062": "ok"
+   }
+  },
+  "hitl-EXP-0002a_rejected": {
+   "headline_gt_heldout": {
+    "snapped_f1_075": 0.18245614035087718,
+    "raw_f1_075": 0.13333333333333333,
+    "snapped_f1_05": 0.37894736842105264,
+    "raw_f1_05": 0.36491228070175435,
+    "tp_snapped": 26,
+    "tp_raw": 19,
+    "tp05_snapped": 54,
+    "tp05_raw": 52,
+    "n_pred": 145,
+    "n_pred_snapped": 145,
+    "n_ref": 140,
+    "invalid_items": 0,
+    "empty_output_episodes": 1,
+    "mean_boundary_mae_sec": 5.116665367965369,
+    "episodes": 45,
+    "per_episode_snapped_f1": {
+     "robointer_droid_000001": 0.4,
+     "robointer_droid_000002": 1.0,
+     "robointer_droid_000003": 0.4,
+     "robointer_droid_000004": 1.0,
+     "robointer_droid_000005": 0.0,
+     "robointer_droid_000006": 1.0,
+     "robointer_droid_000007": 0.0,
+     "robointer_droid_000008": 1.0,
+     "robointer_droid_000010": 0.6666666666666666,
+     "robointer_droid_000011": 0.4,
+     "robointer_droid_000012": 0.0,
+     "robointer_droid_000013": 0.0,
+     "robointer_droid_000015": 0.0,
+     "robointer_droid_000016": 1.0,
+     "robointer_droid_000017": 1.0,
+     "robointer_droid_000019": 1.0,
+     "robointer_droid_000022": 0.0,
+     "robointer_droid_000023": 0.4,
+     "robointer_droid_000025": 0.0,
+     "robointer_droid_000027": 0.0,
+     "robointer_droid_000028": 0.0,
+     "robointer_droid_000029": 0.3333333333333333,
+     "robointer_droid_000030": 0.0,
+     "robointer_droid_000032": 0.0,
+     "robointer_droid_000033": 0.0,
+     "robointer_droid_000034": 0.0,
+     "robointer_droid_000035": 0.0,
+     "robointer_droid_000036": 0.28571428571428575,
+     "robointer_droid_000037": 0.0,
+     "robointer_droid_000038": 0.4,
+     "robointer_droid_000039": 0.4,
+     "robointer_droid_000043": 0.0,
+     "robointer_droid_000044": 0.3333333333333333,
+     "robointer_droid_000045": 0.0,
+     "robointer_droid_000046": 0.0,
+     "robointer_droid_000047": 0.14285714285714288,
+     "robointer_droid_000050": 0.0,
+     "robointer_droid_000055": 0.0,
+     "robointer_droid_000056": 0.0,
+     "robointer_droid_000057": 0.0,
+     "robointer_droid_000058": 0.0,
+     "robointer_droid_000059": 0.0,
+     "robointer_droid_000060": 0.0,
+     "robointer_droid_000061": 0.0,
+     "robointer_droid_000062": 0.0
+    }
+   },
+   "headline_gt_labeled": {
+    "snapped_f1_075": 0.380952380952381,
+    "raw_f1_075": 0.380952380952381,
+    "snapped_f1_05": 0.761904761904762,
+    "raw_f1_05": 0.761904761904762,
+    "tp_snapped": 4,
+    "tp_raw": 4,
+    "tp05_snapped": 8,
+    "tp05_raw": 8,
+    "n_pred": 11,
+    "n_pred_snapped": 11,
+    "n_ref": 10,
+    "invalid_items": 0,
+    "empty_output_episodes": 0,
+    "mean_boundary_mae_sec": 4.5742,
+    "episodes": 5,
+    "per_episode_snapped_f1": {
+     "robointer_droid_000009": 0.4,
+     "robointer_droid_000014": 1.0,
+     "robointer_droid_000021": 0.0,
+     "robointer_droid_000024": 0.3333333333333333,
+     "robointer_droid_000042": 0.0
+    }
+   },
+   "heldout_episodes": 45,
+   "labeled_episodes": 5,
+   "version_id": "hitl-EXP-0002a",
+   "episodes": 50,
+   "headline_gt": {
+    "snapped_f1_075": 0.19607843137254902,
+    "raw_f1_075": 0.1503267973856209,
+    "snapped_f1_05": 0.40522875816993464,
+    "raw_f1_05": 0.39215686274509803,
+    "tp_snapped": 30,
+    "tp_raw": 23,
+    "tp05_snapped": 62,
+    "tp05_raw": 60,
+    "n_pred": 156,
+    "n_pred_snapped": 156,
+    "n_ref": 150,
+    "invalid_items": 0,
+    "empty_output_episodes": 1,
+    "mean_boundary_mae_sec": 5.06131175898931,
+    "episodes": 50,
+    "per_episode_snapped_f1": {
+     "robointer_droid_000001": 0.4,
+     "robointer_droid_000002": 1.0,
+     "robointer_droid_000003": 0.4,
+     "robointer_droid_000004": 1.0,
+     "robointer_droid_000005": 0.0,
+     "robointer_droid_000006": 1.0,
+     "robointer_droid_000007": 0.0,
+     "robointer_droid_000008": 1.0,
+     "robointer_droid_000009": 0.4,
+     "robointer_droid_000010": 0.6666666666666666,
+     "robointer_droid_000011": 0.4,
+     "robointer_droid_000012": 0.0,
+     "robointer_droid_000013": 0.0,
+     "robointer_droid_000014": 1.0,
+     "robointer_droid_000015": 0.0,
+     "robointer_droid_000016": 1.0,
+     "robointer_droid_000017": 1.0,
+     "robointer_droid_000019": 1.0,
+     "robointer_droid_000021": 0.0,
+     "robointer_droid_000022": 0.0,
+     "robointer_droid_000023": 0.4,
+     "robointer_droid_000024": 0.3333333333333333,
+     "robointer_droid_000025": 0.0,
+     "robointer_droid_000027": 0.0,
+     "robointer_droid_000028": 0.0,
+     "robointer_droid_000029": 0.3333333333333333,
+     "robointer_droid_000030": 0.0,
+     "robointer_droid_000032": 0.0,
+     "robointer_droid_000033": 0.0,
+     "robointer_droid_000034": 0.0,
+     "robointer_droid_000035": 0.0,
+     "robointer_droid_000036": 0.28571428571428575,
+     "robointer_droid_000037": 0.0,
+     "robointer_droid_000038": 0.4,
+     "robointer_droid_000039": 0.4,
+     "robointer_droid_000042": 0.0,
+     "robointer_droid_000043": 0.0,
+     "robointer_droid_000044": 0.3333333333333333,
+     "robointer_droid_000045": 0.0,
+     "robointer_droid_000046": 0.0,
+     "robointer_droid_000047": 0.14285714285714288,
+     "robointer_droid_000050": 0.0,
+     "robointer_droid_000055": 0.0,
+     "robointer_droid_000056": 0.0,
+     "robointer_droid_000057": 0.0,
+     "robointer_droid_000058": 0.0,
+     "robointer_droid_000059": 0.0,
+     "robointer_droid_000060": 0.0,
+     "robointer_droid_000061": 0.0,
+     "robointer_droid_000062": 0.0
+    }
+   },
+   "label_free_self_score": 0.4011,
+   "label_free_components": {
+    "telemetry_agreement": 0.0765,
+    "visual_verification": 0.4504,
+    "duration_variability": 0.5571,
+    "temporal_resolution": 0.98
+   },
+   "annotation_cost_usd_total": 0.163611,
+   "annotation_calls": 99,
+   "statuses": {
+    "robointer_droid_000001": "ok",
+    "robointer_droid_000002": "ok",
+    "robointer_droid_000003": "ok",
+    "robointer_droid_000004": "ok",
+    "robointer_droid_000005": "ok",
+    "robointer_droid_000006": "ok",
+    "robointer_droid_000007": "ok",
+    "robointer_droid_000008": "ok",
+    "robointer_droid_000009": "ok",
+    "robointer_droid_000010": "ok",
+    "robointer_droid_000011": "ok",
+    "robointer_droid_000012": "ok",
+    "robointer_droid_000013": "ok",
+    "robointer_droid_000014": "ok",
+    "robointer_droid_000015": "ok",
+    "robointer_droid_000016": "ok",
+    "robointer_droid_000017": "ok",
+    "robointer_droid_000019": "ok",
+    "robointer_droid_000021": "ok",
+    "robointer_droid_000022": "ok",
+    "robointer_droid_000023": "ok",
+    "robointer_droid_000024": "ok",
+    "robointer_droid_000025": "ok",
+    "robointer_droid_000027": "ok",
+    "robointer_droid_000028": "ok",
+    "robointer_droid_000029": "ok",
+    "robointer_droid_000030": "ok",
+    "robointer_droid_000032": "ok",
+    "robointer_droid_000033": "ok",
+    "robointer_droid_000034": "ok",
+    "robointer_droid_000035": "ok",
+    "robointer_droid_000036": "ok",
+    "robointer_droid_000037": "ok",
+    "robointer_droid_000038": "ok",
+    "robointer_droid_000039": "ok",
+    "robointer_droid_000042": "ok",
+    "robointer_droid_000043": "ok",
+    "robointer_droid_000044": "ok",
+    "robointer_droid_000045": "ok",
+    "robointer_droid_000046": "ok",
+    "robointer_droid_000047": "ok",
+    "robointer_droid_000050": "model_error",
+    "robointer_droid_000055": "ok",
+    "robointer_droid_000056": "ok",
+    "robointer_droid_000057": "ok",
+    "robointer_droid_000058": "ok",
+    "robointer_droid_000059": "ok",
+    "robointer_droid_000060": "ok",
+    "robointer_droid_000061": "ok",
+    "robointer_droid_000062": "ok"
+   }
+  }
+ },
+ "mode": "hitl",
+ "labeled_ids": [
+  "robointer_droid_000009",
+  "robointer_droid_000014",
+  "robointer_droid_000021",
+  "robointer_droid_000024",
+  "robointer_droid_000042"
+ ]
+}

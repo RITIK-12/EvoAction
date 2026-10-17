@@ -1,0 +1,46 @@
+{
+ "episode_id": "homer_56",
+ "version_id": "rest50-hitl-EXP-0001",
+ "segments": [
+  {
+   "start_sec": 0.0,
+   "end_sec": 1.0,
+   "subtask": "Place hands on cloth"
+  },
+  {
+   "start_sec": 1.0,
+   "end_sec": 7.0,
+   "subtask": "Grab cloth and unfold it"
+  },
+  {
+   "start_sec": 7.0,
+   "end_sec": 14.0,
+   "subtask": "Fold cloth in half"
+  },
+  {
+   "start_sec": 14.0,
+   "end_sec": 20.0,
+   "subtask": "Fold cloth in half again"
+  },
+  {
+   "start_sec": 20.0,
+   "end_sec": 29.0,
+   "subtask": "Roll cloth into a cylinder"
+  },
+  {
+   "start_sec": 29.0,
+   "end_sec": 40.0,
+   "subtask": "Fold cylinder in half"
+  },
+  {
+   "start_sec": 40.0,
+   "end_sec": 50.0,
+   "subtask": "Fold cylinder in half again"
+  },
+  {
+   "start_sec": 50.0,
+   "end_sec": 55.167,
+   "subtask": "Adjust cylinder on table"
+  }
+ ]
+}

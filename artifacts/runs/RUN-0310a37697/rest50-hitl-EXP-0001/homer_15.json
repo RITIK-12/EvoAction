@@ -1,0 +1,26 @@
+{
+ "episode_id": "homer_15",
+ "version_id": "rest50-hitl-EXP-0001",
+ "segments": [
+  {
+   "start_sec": 0.0,
+   "end_sec": 30.0,
+   "subtask": "folding a white cloth"
+  },
+  {
+   "start_sec": 30.0,
+   "end_sec": 67.0,
+   "subtask": "folding a patterned cloth"
+  },
+  {
+   "start_sec": 67.0,
+   "end_sec": 117.0,
+   "subtask": "folding a blue towel"
+  },
+  {
+   "start_sec": 117.0,
+   "end_sec": 132.3,
+   "subtask": "folding a striped cloth"
+  }
+ ]
+}

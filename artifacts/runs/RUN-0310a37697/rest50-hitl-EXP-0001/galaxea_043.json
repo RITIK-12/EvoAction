@@ -1,0 +1,21 @@
+{
+ "episode_id": "galaxea_043",
+ "version_id": "rest50-hitl-EXP-0001",
+ "segments": [
+  {
+   "start_sec": 0.0,
+   "end_sec": 4.2,
+   "subtask": "Robot arm transports the mouse to the mouse pad."
+  },
+  {
+   "start_sec": 4.2,
+   "end_sec": 6.3,
+   "subtask": "Robot arm places the mouse on the mouse pad and releases it."
+  },
+  {
+   "start_sec": 6.3,
+   "end_sec": 9.167,
+   "subtask": "Robot arm retreats from the table."
+  }
+ ]
+}

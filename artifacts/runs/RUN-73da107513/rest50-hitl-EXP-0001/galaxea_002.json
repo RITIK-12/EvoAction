@@ -1,0 +1,56 @@
+{
+ "episode_id": "galaxea_002",
+ "version_id": "rest50-hitl-EXP-0001",
+ "segments": [
+  {
+   "start_sec": 0.0,
+   "end_sec": 1.0,
+   "subtask": "The robot arm approaches the scattered letters on the table."
+  },
+  {
+   "start_sec": 1.0,
+   "end_sec": 3.0,
+   "subtask": "The robot arm grasps the letter 'B' from the table."
+  },
+  {
+   "start_sec": 3.0,
+   "end_sec": 5.0,
+   "subtask": "The robot arm moves the letter 'B' to the left side of the table."
+  },
+  {
+   "start_sec": 5.0,
+   "end_sec": 7.0,
+   "subtask": "The robot arm grasps the letter 'A' from the table."
+  },
+  {
+   "start_sec": 7.0,
+   "end_sec": 9.0,
+   "subtask": "The robot arm moves the letter 'A' to the left side of the table next to 'B'."
+  },
+  {
+   "start_sec": 9.0,
+   "end_sec": 11.0,
+   "subtask": "The robot arm grasps the letter 'I' from the table."
+  },
+  {
+   "start_sec": 11.0,
+   "end_sec": 13.0,
+   "subtask": "The robot arm moves the letter 'I' to the left side of the table next to 'A'."
+  },
+  {
+   "start_sec": 13.0,
+   "end_sec": 15.0,
+   "subtask": "The robot arm grasps the letter 'N' from the table."
+  },
+  {
+   "start_sec": 15.0,
+   "end_sec": 17.0,
+   "subtask": "The robot arm moves the letter 'N' to the left side of the table next to 'I'."
+  },
+  {
+   "start_sec": 17.0,
+   "end_sec": 43.833,
+   "subtask": "The robot arm places the letters in the correct order to spell 'brain'."
+  }
+ ]
+}

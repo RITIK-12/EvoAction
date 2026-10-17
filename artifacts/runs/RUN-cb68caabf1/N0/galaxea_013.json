@@ -1,0 +1,26 @@
+{
+ "episode_id": "galaxea_013",
+ "version_id": "N0",
+ "segments": [
+  {
+   "start_sec": 0.0,
+   "end_sec": 1.0,
+   "subtask": "The robot arm moves to the green mat and picks up the food with the right gripper."
+  },
+  {
+   "start_sec": 1.0,
+   "end_sec": 2.0,
+   "subtask": "The robot arm moves to the right basket and places the food inside."
+  },
+  {
+   "start_sec": 2.0,
+   "end_sec": 3.0,
+   "subtask": "The robot arm moves to the green mat and picks up the non-food item with the left gripper."
+  },
+  {
+   "start_sec": 3.0,
+   "end_sec": 4.0,
+   "subtask": "The robot arm moves to the left basket and places the non-food item inside."
+  }
+ ]
+}

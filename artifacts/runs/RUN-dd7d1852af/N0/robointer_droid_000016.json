@@ -1,0 +1,31 @@
+{
+ "episode_id": "robointer_droid_000016",
+ "version_id": "N0",
+ "segments": [
+  {
+   "start_sec": 0.0,
+   "end_sec": 1.0,
+   "subtask": "The robot arm is positioned above the jar on the table, preparing to interact with it."
+  },
+  {
+   "start_sec": 1.0,
+   "end_sec": 5.0,
+   "subtask": "The robot arm descends and grasps the rubber band, lifting it from the table."
+  },
+  {
+   "start_sec": 5.0,
+   "end_sec": 10.0,
+   "subtask": "The robot arm moves the rubber band over the jar and begins to wrap it around the jar's neck."
+  },
+  {
+   "start_sec": 10.0,
+   "end_sec": 15.0,
+   "subtask": "The robot arm continues to adjust and tighten the rubber band around the jar, ensuring it is securely in place."
+  },
+  {
+   "start_sec": 15.0,
+   "end_sec": 16.5,
+   "subtask": "The robot arm releases the rubber band, completing the task of putting the rubber band around the jar."
+  }
+ ]
+}

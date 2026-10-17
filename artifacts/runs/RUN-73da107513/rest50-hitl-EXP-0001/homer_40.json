@@ -1,0 +1,316 @@
+{
+ "episode_id": "homer_40",
+ "version_id": "rest50-hitl-EXP-0001",
+ "segments": [
+  {
+   "start_sec": 0.0,
+   "end_sec": 1.0,
+   "subtask": "spray and wipe countertop"
+  },
+  {
+   "start_sec": 1.0,
+   "end_sec": 2.0,
+   "subtask": "spray and wipe countertop"
+  },
+  {
+   "start_sec": 2.0,
+   "end_sec": 3.0,
+   "subtask": "spray and wipe countertop"
+  },
+  {
+   "start_sec": 3.0,
+   "end_sec": 4.0,
+   "subtask": "spray and wipe countertop"
+  },
+  {
+   "start_sec": 4.0,
+   "end_sec": 5.0,
+   "subtask": "spray and wipe countertop"
+  },
+  {
+   "start_sec": 5.0,
+   "end_sec": 6.0,
+   "subtask": "spray and wipe countertop"
+  },
+  {
+   "start_sec": 6.0,
+   "end_sec": 7.0,
+   "subtask": "spray and wipe countertop"
+  },
+  {
+   "start_sec": 7.0,
+   "end_sec": 8.0,
+   "subtask": "spray and wipe countertop"
+  },
+  {
+   "start_sec": 8.0,
+   "end_sec": 9.0,
+   "subtask": "spray and wipe countertop"
+  },
+  {
+   "start_sec": 9.0,
+   "end_sec": 10.0,
+   "subtask": "spray and wipe countertop"
+  },
+  {
+   "start_sec": 10.0,
+   "end_sec": 11.0,
+   "subtask": "spray and wipe countertop"
+  },
+  {
+   "start_sec": 11.0,
+   "end_sec": 12.0,
+   "subtask": "spray and wipe countertop"
+  },
+  {
+   "start_sec": 12.0,
+   "end_sec": 13.0,
+   "subtask": "spray and wipe countertop"
+  },
+  {
+   "start_sec": 13.0,
+   "end_sec": 14.0,
+   "subtask": "spray and wipe countertop"
+  },
+  {
+   "start_sec": 14.0,
+   "end_sec": 15.0,
+   "subtask": "spray and wipe countertop"
+  },
+  {
+   "start_sec": 15.0,
+   "end_sec": 16.0,
+   "subtask": "spray and wipe countertop"
+  },
+  {
+   "start_sec": 16.0,
+   "end_sec": 17.0,
+   "subtask": "spray and wipe countertop"
+  },
+  {
+   "start_sec": 17.0,
+   "end_sec": 18.0,
+   "subtask": "spray and wipe countertop"
+  },
+  {
+   "start_sec": 18.0,
+   "end_sec": 19.0,
+   "subtask": "spray and wipe countertop"
+  },
+  {
+   "start_sec": 19.0,
+   "end_sec": 20.0,
+   "subtask": "spray and wipe countertop"
+  },
+  {
+   "start_sec": 20.0,
+   "end_sec": 21.0,
+   "subtask": "spray and wipe countertop"
+  },
+  {
+   "start_sec": 21.0,
+   "end_sec": 22.0,
+   "subtask": "spray and wipe countertop"
+  },
+  {
+   "start_sec": 22.0,
+   "end_sec": 23.0,
+   "subtask": "spray and wipe countertop"
+  },
+  {
+   "start_sec": 23.0,
+   "end_sec": 24.0,
+   "subtask": "spray and wipe countertop"
+  },
+  {
+   "start_sec": 24.0,
+   "end_sec": 25.0,
+   "subtask": "spray and wipe countertop"
+  },
+  {
+   "start_sec": 25.0,
+   "end_sec": 26.0,
+   "subtask": "spray and wipe countertop"
+  },
+  {
+   "start_sec": 26.0,
+   "end_sec": 27.0,
+   "subtask": "spray and wipe countertop"
+  },
+  {
+   "start_sec": 27.0,
+   "end_sec": 28.0,
+   "subtask": "spray and wipe countertop"
+  },
+  {
+   "start_sec": 28.0,
+   "end_sec": 29.0,
+   "subtask": "spray and wipe countertop"
+  },
+  {
+   "start_sec": 29.0,
+   "end_sec": 30.0,
+   "subtask": "spray and wipe countertop"
+  },
+  {
+   "start_sec": 30.0,
+   "end_sec": 31.0,
+   "subtask": "spray and wipe countertop"
+  },
+  {
+   "start_sec": 31.0,
+   "end_sec": 32.0,
+   "subtask": "spray and wipe countertop"
+  },
+  {
+   "start_sec": 32.0,
+   "end_sec": 33.0,
+   "subtask": "spray and wipe countertop"
+  },
+  {
+   "start_sec": 33.0,
+   "end_sec": 34.0,
+   "subtask": "spray and wipe countertop"
+  },
+  {
+   "start_sec": 34.0,
+   "end_sec": 35.0,
+   "subtask": "spray and wipe countertop"
+  },
+  {
+   "start_sec": 35.0,
+   "end_sec": 36.0,
+   "subtask": "spray and wipe countertop"
+  },
+  {
+   "start_sec": 36.0,
+   "end_sec": 37.0,
+   "subtask": "spray and wipe countertop"
+  },
+  {
+   "start_sec": 37.0,
+   "end_sec": 38.0,
+   "subtask": "spray and wipe countertop"
+  },
+  {
+   "start_sec": 38.0,
+   "end_sec": 39.0,
+   "subtask": "spray and wipe countertop"
+  },
+  {
+   "start_sec": 39.0,
+   "end_sec": 40.0,
+   "subtask": "spray and wipe countertop"
+  },
+  {
+   "start_sec": 40.0,
+   "end_sec": 41.0,
+   "subtask": "spray and wipe countertop"
+  },
+  {
+   "start_sec": 41.0,
+   "end_sec": 42.0,
+   "subtask": "spray and wipe countertop"
+  },
+  {
+   "start_sec": 42.0,
+   "end_sec": 43.0,
+   "subtask": "spray and wipe countertop"
+  },
+  {
+   "start_sec": 43.0,
+   "end_sec": 44.0,
+   "subtask": "spray and wipe countertop"
+  },
+  {
+   "start_sec": 44.0,
+   "end_sec": 45.0,
+   "subtask": "spray and wipe countertop"
+  },
+  {
+   "start_sec": 45.0,
+   "end_sec": 46.0,
+   "subtask": "spray and wipe countertop"
+  },
+  {
+   "start_sec": 46.0,
+   "end_sec": 47.0,
+   "subtask": "spray and wipe countertop"
+  },
+  {
+   "start_sec": 47.0,
+   "end_sec": 48.0,
+   "subtask": "spray and wipe countertop"
+  },
+  {
+   "start_sec": 48.0,
+   "end_sec": 49.0,
+   "subtask": "spray and wipe countertop"
+  },
+  {
+   "start_sec": 49.0,
+   "end_sec": 50.0,
+   "subtask": "spray and wipe countertop"
+  },
+  {
+   "start_sec": 50.0,
+   "end_sec": 51.0,
+   "subtask": "spray and wipe countertop"
+  },
+  {
+   "start_sec": 51.0,
+   "end_sec": 52.0,
+   "subtask": "spray and wipe countertop"
+  },
+  {
+   "start_sec": 52.0,
+   "end_sec": 53.0,
+   "subtask": "spray and wipe countertop"
+  },
+  {
+   "start_sec": 53.0,
+   "end_sec": 54.0,
+   "subtask": "spray and wipe countertop"
+  },
+  {
+   "start_sec": 54.0,
+   "end_sec": 55.0,
+   "subtask": "spray and wipe countertop"
+  },
+  {
+   "start_sec": 55.0,
+   "end_sec": 56.0,
+   "subtask": "spray and wipe countertop"
+  },
+  {
+   "start_sec": 56.0,
+   "end_sec": 57.0,
+   "subtask": "spray and wipe countertop"
+  },
+  {
+   "start_sec": 57.0,
+   "end_sec": 58.0,
+   "subtask": "spray and wipe countertop"
+  },
+  {
+   "start_sec": 58.0,
+   "end_sec": 59.0,
+   "subtask": "spray and wipe countertop"
+  },
+  {
+   "start_sec": 59.0,
+   "end_sec": 60.0,
+   "subtask": "spray and wipe countertop"
+  },
+  {
+   "start_sec": 60.0,
+   "end_sec": 61.0,
+   "subtask": "spray and wipe countertop"
+  },
+  {
+   "start_sec": 61.0,
+   "end_sec": 61.508,
+   "subtask": "spray and wipe countertop"
+  }
+ ]
+}

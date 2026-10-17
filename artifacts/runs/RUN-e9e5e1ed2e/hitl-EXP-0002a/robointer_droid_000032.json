@@ -1,0 +1,16 @@
+{
+ "episode_id": "robointer_droid_000032",
+ "version_id": "hitl-EXP-0002a",
+ "segments": [
+  {
+   "start_sec": 0.0,
+   "end_sec": 7.0,
+   "subtask": "open drawer"
+  },
+  {
+   "start_sec": 7.0,
+   "end_sec": 27.7,
+   "subtask": "lift spoon from drawer"
+  }
+ ]
+}

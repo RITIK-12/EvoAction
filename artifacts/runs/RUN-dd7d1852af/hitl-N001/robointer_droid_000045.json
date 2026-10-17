@@ -1,0 +1,21 @@
+{
+ "episode_id": "robointer_droid_000045",
+ "version_id": "hitl-N001",
+ "segments": [
+  {
+   "start_sec": 0.0,
+   "end_sec": 3.5,
+   "subtask": "grasp the desktop items"
+  },
+  {
+   "start_sec": 3.5,
+   "end_sec": 5.5,
+   "subtask": "move the desktop items to the drawer"
+  },
+  {
+   "start_sec": 5.5,
+   "end_sec": 36.5,
+   "subtask": "place the desktop items in the drawer"
+  }
+ ]
+}

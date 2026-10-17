@@ -1,0 +1,36 @@
+{
+ "episode_id": "robointer_droid_000039",
+ "version_id": "N0",
+ "segments": [
+  {
+   "start_sec": 0.0,
+   "end_sec": 1.0,
+   "subtask": "approach small white drawer"
+  },
+  {
+   "start_sec": 1.0,
+   "end_sec": 3.0,
+   "subtask": "grasp small white drawer"
+  },
+  {
+   "start_sec": 3.0,
+   "end_sec": 5.0,
+   "subtask": "lift small white drawer"
+  },
+  {
+   "start_sec": 5.0,
+   "end_sec": 7.0,
+   "subtask": "move small white drawer to top drawer"
+  },
+  {
+   "start_sec": 7.0,
+   "end_sec": 8.0,
+   "subtask": "place small white drawer in top drawer"
+  },
+  {
+   "start_sec": 8.0,
+   "end_sec": 10.0,
+   "subtask": "close top drawer"
+  }
+ ]
+}

@@ -1,0 +1,26 @@
+{
+ "episode_id": "robointer_droid_000042",
+ "version_id": "hitl-EXP-0001-trial3",
+ "segments": [
+  {
+   "start_sec": 0.0,
+   "end_sec": 5.0,
+   "subtask": "robot arm grasps the glass cup on the grey plate"
+  },
+  {
+   "start_sec": 5.0,
+   "end_sec": 10.0,
+   "subtask": "robot arm lifts the glass cup from the grey plate"
+  },
+  {
+   "start_sec": 10.0,
+   "end_sec": 15.0,
+   "subtask": "robot arm moves the glass cup away from the grey plate"
+  },
+  {
+   "start_sec": 15.0,
+   "end_sec": 31.2,
+   "subtask": "robot arm places the glass cup on the wooden surface"
+  }
+ ]
+}

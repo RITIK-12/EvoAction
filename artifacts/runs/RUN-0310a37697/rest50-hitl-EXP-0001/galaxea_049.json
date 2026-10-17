@@ -1,0 +1,36 @@
+{
+ "episode_id": "galaxea_049",
+ "version_id": "rest50-hitl-EXP-0001",
+ "segments": [
+  {
+   "start_sec": 0.0,
+   "end_sec": 1.0,
+   "subtask": "Static scene with bowl and cup"
+  },
+  {
+   "start_sec": 1.0,
+   "end_sec": 1.8,
+   "subtask": "Robot approaches and grasps the cup"
+  },
+  {
+   "start_sec": 1.8,
+   "end_sec": 4.0,
+   "subtask": "Robot lifts cup and moves it over the bowl"
+  },
+  {
+   "start_sec": 4.0,
+   "end_sec": 5.8,
+   "subtask": "Robot pours contents into the bowl"
+  },
+  {
+   "start_sec": 5.8,
+   "end_sec": 10.0,
+   "subtask": "Robot places cup back and retreats"
+  },
+  {
+   "start_sec": 10.0,
+   "end_sec": 13.167,
+   "subtask": "Robot retreats and scene is static"
+  }
+ ]
+}

@@ -1,0 +1,16 @@
+{
+ "episode_id": "robointer_droid_000014",
+ "version_id": "hitl-EXP-0002",
+ "segments": [
+  {
+   "start_sec": 0.0,
+   "end_sec": 3.0,
+   "subtask": "robot arm grasps the cloth"
+  },
+  {
+   "start_sec": 3.0,
+   "end_sec": 15.4,
+   "subtask": "robot arm lifts the cloth and moves it to the countertop shield"
+  }
+ ]
+}

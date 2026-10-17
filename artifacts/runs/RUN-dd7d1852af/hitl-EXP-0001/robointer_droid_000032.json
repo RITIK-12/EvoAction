@@ -1,0 +1,51 @@
+{
+ "episode_id": "robointer_droid_000032",
+ "version_id": "hitl-EXP-0001",
+ "segments": [
+  {
+   "start_sec": 0.0,
+   "end_sec": 3.0,
+   "subtask": "open drawer"
+  },
+  {
+   "start_sec": 3.0,
+   "end_sec": 5.0,
+   "subtask": "reach into drawer"
+  },
+  {
+   "start_sec": 5.0,
+   "end_sec": 7.0,
+   "subtask": "grasp measuring spoon"
+  },
+  {
+   "start_sec": 7.0,
+   "end_sec": 9.0,
+   "subtask": "lift spoon from drawer"
+  },
+  {
+   "start_sec": 9.0,
+   "end_sec": 11.0,
+   "subtask": "move spoon to counter"
+  },
+  {
+   "start_sec": 11.0,
+   "end_sec": 13.0,
+   "subtask": "place spoon on counter"
+  },
+  {
+   "start_sec": 13.0,
+   "end_sec": 15.0,
+   "subtask": "release spoon"
+  },
+  {
+   "start_sec": 15.0,
+   "end_sec": 17.0,
+   "subtask": "retract arm"
+  },
+  {
+   "start_sec": 17.0,
+   "end_sec": 27.7,
+   "subtask": "close drawer"
+  }
+ ]
+}

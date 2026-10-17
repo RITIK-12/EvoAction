@@ -1,0 +1,16 @@
+{
+ "episode_id": "robointer_droid_000055",
+ "version_id": "hitl-EXP-0002",
+ "segments": [
+  {
+   "start_sec": 0.0,
+   "end_sec": 3.0,
+   "subtask": "The robot arm grasps the blue bowl and lifts it slightly."
+  },
+  {
+   "start_sec": 3.0,
+   "end_sec": 64.7,
+   "subtask": "The robot arm moves the blue bowl over the small crate and tilts it to pour half a spoon of contents."
+  }
+ ]
+}

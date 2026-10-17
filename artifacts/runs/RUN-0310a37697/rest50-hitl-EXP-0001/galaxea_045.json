@@ -1,0 +1,21 @@
+{
+ "episode_id": "galaxea_045",
+ "version_id": "rest50-hitl-EXP-0001",
+ "segments": [
+  {
+   "start_sec": 0.0,
+   "end_sec": 3.5,
+   "subtask": "robot arm approaches and grasps the cup"
+  },
+  {
+   "start_sec": 3.5,
+   "end_sec": 7.0,
+   "subtask": "robot pours liquid into the bowl"
+  },
+  {
+   "start_sec": 7.0,
+   "end_sec": 12.633,
+   "subtask": "robot places cup back and retracts"
+  }
+ ]
+}

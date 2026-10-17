@@ -1,0 +1,31 @@
+{
+ "episode_id": "robointer_droid_000030",
+ "version_id": "hitl-EXP-0002a",
+ "segments": [
+  {
+   "start_sec": 0.0,
+   "end_sec": 5.0,
+   "subtask": "grasp bottle"
+  },
+  {
+   "start_sec": 5.0,
+   "end_sec": 10.0,
+   "subtask": "lift bottle"
+  },
+  {
+   "start_sec": 10.0,
+   "end_sec": 15.0,
+   "subtask": "move bottle to table"
+  },
+  {
+   "start_sec": 15.0,
+   "end_sec": 20.0,
+   "subtask": "place bottle on table"
+  },
+  {
+   "start_sec": 20.0,
+   "end_sec": 23.2,
+   "subtask": "release bottle"
+  }
+ ]
+}

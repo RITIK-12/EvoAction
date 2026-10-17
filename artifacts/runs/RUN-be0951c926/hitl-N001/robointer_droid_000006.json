@@ -1,0 +1,26 @@
+{
+ "episode_id": "robointer_droid_000006",
+ "version_id": "hitl-N001",
+ "segments": [
+  {
+   "start_sec": 0.0,
+   "end_sec": 3.0,
+   "subtask": "grasp the pen"
+  },
+  {
+   "start_sec": 3.0,
+   "end_sec": 5.5,
+   "subtask": "lift the pen from the mug"
+  },
+  {
+   "start_sec": 5.5,
+   "end_sec": 7.5,
+   "subtask": "move the pen to the table"
+  },
+  {
+   "start_sec": 7.5,
+   "end_sec": 12.6,
+   "subtask": "place the pen on the table"
+  }
+ ]
+}

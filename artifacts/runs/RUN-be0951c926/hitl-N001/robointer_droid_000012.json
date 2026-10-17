@@ -1,0 +1,26 @@
+{
+ "episode_id": "robointer_droid_000012",
+ "version_id": "hitl-N001",
+ "segments": [
+  {
+   "start_sec": 0.0,
+   "end_sec": 3.0,
+   "subtask": "The robot arm descends and grasps the blue object."
+  },
+  {
+   "start_sec": 3.0,
+   "end_sec": 5.0,
+   "subtask": "The robot arm lifts the blue object from the workbench."
+  },
+  {
+   "start_sec": 5.0,
+   "end_sec": 7.0,
+   "subtask": "The robot arm moves the blue object towards the open drawer."
+  },
+  {
+   "start_sec": 7.0,
+   "end_sec": 15.2,
+   "subtask": "The robot arm places the blue object inside the drawer."
+  }
+ ]
+}

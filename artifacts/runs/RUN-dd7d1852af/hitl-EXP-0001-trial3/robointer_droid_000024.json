@@ -1,0 +1,26 @@
+{
+ "episode_id": "robointer_droid_000024",
+ "version_id": "hitl-EXP-0001-trial3",
+ "segments": [
+  {
+   "start_sec": 0.0,
+   "end_sec": 6.0,
+   "subtask": "Approach the tomato on the table"
+  },
+  {
+   "start_sec": 6.0,
+   "end_sec": 9.0,
+   "subtask": "Move the tomato to the silver bowl"
+  },
+  {
+   "start_sec": 9.0,
+   "end_sec": 14.0,
+   "subtask": "Place the tomato inside the silver bowl"
+  },
+  {
+   "start_sec": 14.0,
+   "end_sec": 18.0,
+   "subtask": "Release the tomato and retract the arm"
+  }
+ ]
+}

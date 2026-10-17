@@ -1,0 +1,26 @@
+{
+ "episode_id": "galaxea_071",
+ "version_id": "rest50-hitl-EXP-0001",
+ "segments": [
+  {
+   "start_sec": 0.0,
+   "end_sec": 1.0,
+   "subtask": "Approach the red object on the floor"
+  },
+  {
+   "start_sec": 1.0,
+   "end_sec": 2.0,
+   "subtask": "Grasp the red object"
+  },
+  {
+   "start_sec": 2.0,
+   "end_sec": 3.0,
+   "subtask": "Lift and move the red object to the yellow basket"
+  },
+  {
+   "start_sec": 3.0,
+   "end_sec": 4.333,
+   "subtask": "Place the red object in the yellow basket"
+  }
+ ]
+}

@@ -1,0 +1,26 @@
+{
+ "episode_id": "homer_52",
+ "version_id": "rest50-hitl-EXP-0001",
+ "segments": [
+  {
+   "start_sec": 0.0,
+   "end_sec": 10.0,
+   "subtask": "The person holds the shoe and manipulates the laces, crossing them and forming loops to begin tying."
+  },
+  {
+   "start_sec": 10.0,
+   "end_sec": 20.0,
+   "subtask": "The person pulls the loops and laces to tighten the knot and secure it."
+  },
+  {
+   "start_sec": 20.0,
+   "end_sec": 30.0,
+   "subtask": "The person makes final adjustments to the knot and bow shape."
+  },
+  {
+   "start_sec": 30.0,
+   "end_sec": 37.985,
+   "subtask": "The person releases the laces, completing the task."
+  }
+ ]
+}

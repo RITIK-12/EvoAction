@@ -1,0 +1,16 @@
+{
+ "episode_id": "robointer_droid_000005",
+ "version_id": "hitl-EXP-0002",
+ "segments": [
+  {
+   "start_sec": 0.0,
+   "end_sec": 4.5,
+   "subtask": "The robot arm approaches the mug and grasps the pen."
+  },
+  {
+   "start_sec": 4.5,
+   "end_sec": 12.6,
+   "subtask": "The robot lifts the pen out of the mug and moves it over the table."
+  }
+ ]
+}

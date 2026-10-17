@@ -1,0 +1,36 @@
+{
+ "episode_id": "robointer_droid_000047",
+ "version_id": "hitl-EXP-0002",
+ "segments": [
+  {
+   "start_sec": 0.0,
+   "end_sec": 3.0,
+   "subtask": "grasp the first building block toy"
+  },
+  {
+   "start_sec": 3.0,
+   "end_sec": 12.0,
+   "subtask": "lift and move the first building block toy to the black bowl"
+  },
+  {
+   "start_sec": 12.0,
+   "end_sec": 21.0,
+   "subtask": "lift and move the second building block toy to the black bowl"
+  },
+  {
+   "start_sec": 21.0,
+   "end_sec": 30.0,
+   "subtask": "lift and move the third building block toy to the black bowl"
+  },
+  {
+   "start_sec": 30.0,
+   "end_sec": 39.0,
+   "subtask": "lift and move the fourth building block toy to the black bowl"
+  },
+  {
+   "start_sec": 39.0,
+   "end_sec": 43.1,
+   "subtask": "lift and move the fifth building block toy to the black bowl"
+  }
+ ]
+}

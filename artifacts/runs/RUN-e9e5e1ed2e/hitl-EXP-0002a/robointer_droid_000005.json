@@ -1,0 +1,16 @@
+{
+ "episode_id": "robointer_droid_000005",
+ "version_id": "hitl-EXP-0002a",
+ "segments": [
+  {
+   "start_sec": 0.0,
+   "end_sec": 5.5,
+   "subtask": "approach and grasp the pen"
+  },
+  {
+   "start_sec": 5.5,
+   "end_sec": 12.6,
+   "subtask": "lift the pen from the mug"
+  }
+ ]
+}

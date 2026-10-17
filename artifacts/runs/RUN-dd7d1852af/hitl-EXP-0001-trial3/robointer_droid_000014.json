@@ -1,0 +1,21 @@
+{
+ "episode_id": "robointer_droid_000014",
+ "version_id": "hitl-EXP-0001-trial3",
+ "segments": [
+  {
+   "start_sec": 0.0,
+   "end_sec": 5.0,
+   "subtask": "Approach and grasp the cloth"
+  },
+  {
+   "start_sec": 5.0,
+   "end_sec": 10.5,
+   "subtask": "Lift and move the cloth to the countertop shield"
+  },
+  {
+   "start_sec": 10.5,
+   "end_sec": 15.4,
+   "subtask": "Place the cloth on the countertop shield"
+  }
+ ]
+}

@@ -1,0 +1,15 @@
+{
+ "id": "rest50-hitl-EXP-0001",
+ "parent_id": "N0",
+ "status": "candidate",
+ "frozen": false,
+ "created_at": 1792280084.411537,
+ "workflow_sha256": "5e253e95621bf56406fbdcab728889322688adb2f612a2d12ff00ce03cb5d5b7",
+ "files": {
+  "workflow.json": "5e319b5a7617c70cf0c9793d0f857dbd71111bf4c4a66e3f6fc01384182f1ce2",
+  "config.json": "53e574e73406ebc1eca87fbcf0b8e8a6ca099986a8f08b3dcead2bf810f60cd5",
+  "prompt.md": "bb5090b57f91801230df7b2d601860d706915b1f87e77d4b2454254929f95acc",
+  "refine.md": "f478372773f8a0131d0ff6188feb5e649b2fa6a6cde4379fa9a918b370f4df3b",
+  "experiment.json": "8aeb978a7339f236ce11c43f13c475552edce8466cb7c0bfe2721e25a5b9ad18"
+ }
+}

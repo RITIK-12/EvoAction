@@ -1,0 +1,26 @@
+{
+ "episode_id": "robointer_droid_000059",
+ "version_id": "hitl-EXP-0002",
+ "segments": [
+  {
+   "start_sec": 0.0,
+   "end_sec": 5.0,
+   "subtask": "The robot arm grasps the plug and lifts it from the table."
+  },
+  {
+   "start_sec": 5.0,
+   "end_sec": 10.0,
+   "subtask": "The robot arm moves the plug towards the power strip."
+  },
+  {
+   "start_sec": 10.0,
+   "end_sec": 15.0,
+   "subtask": "The robot arm inserts the plug into the power strip."
+  },
+  {
+   "start_sec": 15.0,
+   "end_sec": 75.9,
+   "subtask": "The robot arm releases the plug and retracts."
+  }
+ ]
+}

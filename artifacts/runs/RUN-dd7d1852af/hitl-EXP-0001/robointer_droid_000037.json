@@ -1,0 +1,11 @@
+{
+ "episode_id": "robointer_droid_000037",
+ "version_id": "hitl-EXP-0001",
+ "segments": [
+  {
+   "start_sec": 0.0,
+   "end_sec": 28.5,
+   "subtask": "grasp the small white drawer"
+  }
+ ]
+}

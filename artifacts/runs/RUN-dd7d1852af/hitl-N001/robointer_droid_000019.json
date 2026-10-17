@@ -1,0 +1,26 @@
+{
+ "episode_id": "robointer_droid_000019",
+ "version_id": "hitl-N001",
+ "segments": [
+  {
+   "start_sec": 0.0,
+   "end_sec": 3.0,
+   "subtask": "Grasp the marker from the pot"
+  },
+  {
+   "start_sec": 3.0,
+   "end_sec": 5.0,
+   "subtask": "Lift the marker from the pot"
+  },
+  {
+   "start_sec": 5.0,
+   "end_sec": 7.0,
+   "subtask": "Move the marker to the table"
+  },
+  {
+   "start_sec": 7.0,
+   "end_sec": 17.2,
+   "subtask": "Place the marker on the table"
+  }
+ ]
+}

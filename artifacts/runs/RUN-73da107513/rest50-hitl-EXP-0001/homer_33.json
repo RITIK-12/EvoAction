@@ -1,0 +1,51 @@
+{
+ "episode_id": "homer_33",
+ "version_id": "rest50-hitl-EXP-0001",
+ "segments": [
+  {
+   "start_sec": 0.0,
+   "end_sec": 1.0,
+   "subtask": "Place onion on cutting board"
+  },
+  {
+   "start_sec": 1.0,
+   "end_sec": 10.0,
+   "subtask": "Cut onion in half"
+  },
+  {
+   "start_sec": 10.0,
+   "end_sec": 20.0,
+   "subtask": "Peel outer layer of onion"
+  },
+  {
+   "start_sec": 20.0,
+   "end_sec": 30.0,
+   "subtask": "Cut onion into quarters"
+  },
+  {
+   "start_sec": 30.0,
+   "end_sec": 40.0,
+   "subtask": "Cut onion into wedges"
+  },
+  {
+   "start_sec": 40.0,
+   "end_sec": 50.0,
+   "subtask": "Cut onion into slices"
+  },
+  {
+   "start_sec": 50.0,
+   "end_sec": 60.0,
+   "subtask": "Cut onion into smaller pieces"
+  },
+  {
+   "start_sec": 60.0,
+   "end_sec": 70.0,
+   "subtask": "Cut onion into dice"
+  },
+  {
+   "start_sec": 70.0,
+   "end_sec": 72.233,
+   "subtask": "Finish dicing onion"
+  }
+ ]
+}

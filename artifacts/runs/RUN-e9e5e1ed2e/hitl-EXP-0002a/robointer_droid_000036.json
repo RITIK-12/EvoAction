@@ -1,0 +1,26 @@
+{
+ "episode_id": "robointer_droid_000036",
+ "version_id": "hitl-EXP-0002a",
+ "segments": [
+  {
+   "start_sec": 0.0,
+   "end_sec": 7.0,
+   "subtask": "grasp the white lid"
+  },
+  {
+   "start_sec": 7.0,
+   "end_sec": 12.0,
+   "subtask": "clean the white lid"
+  },
+  {
+   "start_sec": 12.0,
+   "end_sec": 15.0,
+   "subtask": "release the white lid"
+  },
+  {
+   "start_sec": 15.0,
+   "end_sec": 27.7,
+   "subtask": "retract the tool"
+  }
+ ]
+}

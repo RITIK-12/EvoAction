@@ -1,0 +1,21 @@
+{
+ "episode_id": "robointer_droid_000062",
+ "version_id": "hitl-EXP-0002",
+ "segments": [
+  {
+   "start_sec": 0.0,
+   "end_sec": 3.0,
+   "subtask": "The robot arm lowers its gripper and grasps the spoon inside the white bowl."
+  },
+  {
+   "start_sec": 3.0,
+   "end_sec": 12.0,
+   "subtask": "The robot arm lifts the spoon with contents from the white bowl and moves it towards the green bowl."
+  },
+  {
+   "start_sec": 12.0,
+   "end_sec": 107.3,
+   "subtask": "The robot arm lifts the spoon with contents from the white bowl and moves it towards the green bowl."
+  }
+ ]
+}

@@ -1,0 +1,21 @@
+{
+ "episode_id": "homer_40",
+ "version_id": "rest50-hitl-EXP-0001",
+ "segments": [
+  {
+   "start_sec": 0.0,
+   "end_sec": 5.0,
+   "subtask": "spraying the table"
+  },
+  {
+   "start_sec": 5.0,
+   "end_sec": 57.0,
+   "subtask": "wiping the table"
+  },
+  {
+   "start_sec": 57.0,
+   "end_sec": 61.508,
+   "subtask": "placing the cloth and finishing"
+  }
+ ]
+}

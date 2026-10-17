@@ -1,0 +1,16 @@
+{
+ "episode_id": "robointer_droid_000025",
+ "version_id": "hitl-EXP-0002",
+ "segments": [
+  {
+   "start_sec": 0.0,
+   "end_sec": 3.0,
+   "subtask": "The robot arm grasps the cup lid."
+  },
+  {
+   "start_sec": 3.0,
+   "end_sec": 18.1,
+   "subtask": "The robot arm lifts the cup lid and moves it to the right."
+  }
+ ]
+}

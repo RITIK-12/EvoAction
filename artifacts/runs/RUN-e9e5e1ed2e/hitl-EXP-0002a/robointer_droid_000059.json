@@ -1,0 +1,51 @@
+{
+ "episode_id": "robointer_droid_000059",
+ "version_id": "hitl-EXP-0002a",
+ "segments": [
+  {
+   "start_sec": 0.0,
+   "end_sec": 10.0,
+   "subtask": "robot arm grasps the plug"
+  },
+  {
+   "start_sec": 10.0,
+   "end_sec": 15.0,
+   "subtask": "robot arm lifts the plug from the table"
+  },
+  {
+   "start_sec": 15.0,
+   "end_sec": 25.0,
+   "subtask": "robot arm moves the plug to the power strip"
+  },
+  {
+   "start_sec": 25.0,
+   "end_sec": 30.0,
+   "subtask": "robot arm inserts the plug into the power strip"
+  },
+  {
+   "start_sec": 30.0,
+   "end_sec": 35.0,
+   "subtask": "robot arm releases the plug"
+  },
+  {
+   "start_sec": 35.0,
+   "end_sec": 40.0,
+   "subtask": "robot arm retracts from the power strip"
+  },
+  {
+   "start_sec": 40.0,
+   "end_sec": 45.0,
+   "subtask": "robot arm returns to home position"
+  },
+  {
+   "start_sec": 45.0,
+   "end_sec": 50.0,
+   "subtask": "robot arm stabilizes in home position"
+  },
+  {
+   "start_sec": 50.0,
+   "end_sec": 75.9,
+   "subtask": "robot arm remains stationary"
+  }
+ ]
+}

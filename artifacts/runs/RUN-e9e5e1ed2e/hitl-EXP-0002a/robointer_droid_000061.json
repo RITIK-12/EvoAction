@@ -1,0 +1,56 @@
+{
+ "episode_id": "robointer_droid_000061",
+ "version_id": "hitl-EXP-0002a",
+ "segments": [
+  {
+   "start_sec": 0.0,
+   "end_sec": 10.5,
+   "subtask": "approach and grasp spoon from white bowl"
+  },
+  {
+   "start_sec": 10.5,
+   "end_sec": 15.5,
+   "subtask": "lift spoon with contents from white bowl"
+  },
+  {
+   "start_sec": 15.5,
+   "end_sec": 20.5,
+   "subtask": "move spoon to green bowl"
+  },
+  {
+   "start_sec": 20.5,
+   "end_sec": 25.5,
+   "subtask": "pour contents from spoon into green bowl"
+  },
+  {
+   "start_sec": 25.5,
+   "end_sec": 30.5,
+   "subtask": "return spoon to white bowl"
+  },
+  {
+   "start_sec": 30.5,
+   "end_sec": 35.5,
+   "subtask": "grasp spoon from white bowl"
+  },
+  {
+   "start_sec": 35.5,
+   "end_sec": 40.5,
+   "subtask": "lift spoon with contents from white bowl"
+  },
+  {
+   "start_sec": 40.5,
+   "end_sec": 45.5,
+   "subtask": "move spoon to green bowl"
+  },
+  {
+   "start_sec": 45.5,
+   "end_sec": 50.5,
+   "subtask": "pour contents from spoon into green bowl"
+  },
+  {
+   "start_sec": 50.5,
+   "end_sec": 107.3,
+   "subtask": "return spoon to white bowl"
+  }
+ ]
+}

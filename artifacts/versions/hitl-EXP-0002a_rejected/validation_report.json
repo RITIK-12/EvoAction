@@ -1,0 +1,22 @@
+{
+ "experiment_id": "hitl-EXP-0002a",
+ "protocol": "v3-macrodata",
+ "labeled_sample": {
+  "candidate": {
+   "snapped_f1_075": 0.380952380952381,
+   "raw_f1_075": 0.380952380952381,
+   "snapped_f1_05": 0.761904761904762,
+   "tp_snapped": 4,
+   "n_pred": 11,
+   "n_ref": 10
+  },
+  "incumbent": {
+   "snapped_f1_075": 0.27586206896551724,
+   "raw_f1_075": 0.2,
+   "snapped_f1_05": 0.41379310344827586,
+   "tp_snapped": 4,
+   "n_pred": 20,
+   "n_ref": 10
+  }
+ }
+}

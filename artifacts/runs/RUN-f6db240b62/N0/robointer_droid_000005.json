@@ -1,0 +1,21 @@
+{
+ "episode_id": "robointer_droid_000005",
+ "version_id": "N0",
+ "segments": [
+  {
+   "start_sec": 0.0,
+   "end_sec": 5.0,
+   "subtask": "robot arm approaches and grasps pen from mug"
+  },
+  {
+   "start_sec": 5.0,
+   "end_sec": 8.5,
+   "subtask": "robot arm lifts pen from mug and moves to table"
+  },
+  {
+   "start_sec": 8.5,
+   "end_sec": 10.0,
+   "subtask": "robot arm places pen on table"
+  }
+ ]
+}

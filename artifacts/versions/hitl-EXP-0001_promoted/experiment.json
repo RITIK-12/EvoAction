@@ -1,0 +1,487 @@
+{
+ "hypothesis": "By adding deterministic telemetry\u2011based hint detection, inspecting transition windows around low\u2011confidence or hint\u2011disagreement boundaries, refining those windows with a second multimodal pass, and then applying a longer minimum\u2011duration filter, we will suppress spurious short splits, extend predictions to cover the full video, and shift boundaries toward actual state changes, thereby raising segment F1 at IoU\u22650.75.",
+ "candidate_patch": {
+  "insert_nodes": [
+   {
+    "node": {
+     "id": "hints",
+     "operator": "state_hint_detection",
+     "depends_on": [
+      "sample"
+     ],
+     "params": {
+      "signals": [
+       "gripper",
+       "eef_pause"
+      ],
+      "min_gap_sec": 0.8,
+      "pause_speed_quantile": 0.15,
+      "min_pause_sec": 0.3
+     },
+     "when": "always"
+    },
+    "rewire_dependents_of": null
+   },
+   {
+    "node": {
+     "id": "inspect",
+     "operator": "inspect_transition_windows",
+     "depends_on": [
+      "annotate",
+      "hints"
+     ],
+     "params": {
+      "select": "low_confidence",
+      "window_sec": 2.0,
+      "local_hz": 4.0,
+      "max_windows": 8,
+      "include_unmatched_hints": true,
+      "tile_px": 224,
+      "confidence_threshold": 0.7
+     },
+     "when": "always"
+    },
+    "rewire_dependents_of": null
+   },
+   {
+    "node": {
+     "id": "refine",
+     "operator": "refine_intervals",
+     "depends_on": [
+      "inspect"
+     ],
+     "params": {
+      "prompt": "refine.md",
+      "thinking": true,
+      "max_tokens": 8192,
+      "temperature": 0.2,
+      "allow_insert": true,
+      "allow_delete": true
+     },
+     "when": "always"
+    },
+    "rewire_dependents_of": null
+   },
+   {
+    "node": {
+     "id": "merge",
+     "operator": "merge_filter_segments",
+     "depends_on": [
+      "refine"
+     ],
+     "params": {
+      "min_duration_sec": 2.0,
+      "max_gap_sec": 1.0,
+      "tile_full_episode": true,
+      "merge_same_label": false
+     },
+     "when": "always"
+    },
+    "rewire_dependents_of": null
+   }
+  ],
+  "remove_nodes": [],
+  "set_params": {},
+  "set_when": {},
+  "set_depends_on": {
+   "export": [
+    "merge"
+   ]
+  },
+  "prompt_updates": {}
+ },
+ "root_causes": [
+  {
+   "cause": "Over-segmentation into excessively short segments",
+   "evidence": "Predicted segments exactly 1s fraction 0.575, median predicted segment 1.0\u202fs vs reference median 8.73\u202fs, predicted_segments_le_2s_fraction \u22480.58 (vs 0.0 for references)."
+  },
+  {
+   "cause": "Incomplete temporal coverage of videos",
+   "evidence": "Median coverage last predicted end over video duration 0.49; 27/50 episodes end before halfway; median coverage over reference end 0.88."
+  },
+  {
+   "cause": "Boundary predictions drift toward evenly spaced intervals rather than true manipulation state changes",
+   "evidence": "Mean best IoU per reference 0.582; 4/10 references have best IoU <0.5; only 4/10 references matched at IoU\u22650.75."
+  }
+ ],
+ "expected_outcome": "Segment F1 at IoU\u22650.75 should rise from the current raw ~0.06 to at least 0.20\u20130.25 on the labeled sample, with median predicted segment length increasing toward the reference range (~8\u201310\u202fs) and coverage approaching 1.0, indicating better alignment with true manipulation state changes and full\u2011episode coverage.",
+ "selected_round": 2,
+ "evidence_ids": [],
+ "incumbent_labeled_scores": {
+  "snapped_f1_075": 0.2222222222222222,
+  "raw_f1_075": 0.05555555555555555,
+  "snapped_f1_05": 0.33333333333333337,
+  "tp_snapped": 4,
+  "n_pred": 26,
+  "n_ref": 10
+ },
+ "trials": [
+  {
+   "round": 1,
+   "hypothesis": "Inserting a deterministic merge/filter step that enforces a minimum segment duration, closes gaps, and tiles the full episode will remove spurious short segments, extend predictions to cover the whole video, and encourage boundaries to align with actual manipulation state changes, thereby raising segment F1 at IoU\u22650.75.",
+   "root_causes": [
+    {
+     "cause": "Over-segmentation into excessively short segments",
+     "evidence": "Predicted segments exactly 1s fraction 0.192, \u22642s fraction 0.538, median predicted segment 1.0\u202fs vs reference median 8.73\u202fs."
+    },
+    {
+     "cause": "Incomplete temporal coverage of videos",
+     "evidence": "Median coverage of last predicted end over reference end 0.88, median coverage over video duration 0.49, 27/50 episodes end before halfway."
+    },
+    {
+     "cause": "Boundary predictions drift toward evenly spaced intervals rather than true state changes",
+     "evidence": "Mean best IoU per reference 0.582, 4/10 references have best IoU <0.5, only 4/10 matched at IoU\u22650.75."
+    }
+   ],
+   "patch": {
+    "insert_nodes": [
+     {
+      "node": {
+       "id": "merge",
+       "operator": "merge_filter_segments",
+       "depends_on": [
+        "annotate"
+       ],
+       "params": {
+        "min_duration_sec": 1.5,
+        "max_gap_sec": 0.5,
+        "tile_full_episode": true,
+        "merge_same_label": false
+       },
+       "when": "always"
+      },
+      "rewire_dependents_of": "export"
+     }
+    ],
+    "remove_nodes": [],
+    "set_params": {},
+    "set_when": {},
+    "set_depends_on": {
+     "export": [
+      "merge"
+     ]
+    },
+    "prompt_updates": {}
+   },
+   "labeled_scores": {
+    "snapped_f1_075": 0.25806451612903225,
+    "raw_f1_075": 0.19354838709677416,
+    "snapped_f1_05": 0.3870967741935483,
+    "tp_snapped": 4,
+    "n_pred": 21,
+    "n_ref": 10
+   },
+   "root_cause_stats_labeled": {
+    "predicted_vs_reference_segments": [
+     21,
+     10
+    ],
+    "median_predicted_segment_sec": 5.0,
+    "median_reference_segment_sec": 8.73,
+    "predicted_segments_le_2s_fraction": 0.238,
+    "reference_segments_le_2s_fraction": 0.0,
+    "predicted_segments_exactly_1s_fraction": 0.0,
+    "median_coverage_last_predicted_end_over_reference_end": 1.09,
+    "episodes_with_coverage_below_50pct": 0,
+    "references_matched_at_iou075": 4,
+    "mean_best_iou_per_reference": 0.607,
+    "references_with_best_iou_below_0.5": 4,
+    "pooled_scores": {
+     "snapped_f1_075": 0.25806451612903225,
+     "raw_f1_075": 0.19354838709677416,
+     "snapped_f1_05": 0.3870967741935483,
+     "tp_snapped": 4,
+     "n_pred": 21,
+     "n_ref": 10
+    }
+   }
+  },
+  {
+   "round": 2,
+   "hypothesis": "By adding deterministic telemetry\u2011based hint detection, inspecting transition windows around low\u2011confidence or hint\u2011disagreement boundaries, refining those windows with a second multimodal pass, and then applying a longer minimum\u2011duration filter, we will suppress spurious short splits, extend predictions to cover the full video, and shift boundaries toward actual state changes, thereby raising segment F1 at IoU\u22650.75.",
+   "root_causes": [
+    {
+     "cause": "Over-segmentation into excessively short segments",
+     "evidence": "Predicted segments exactly 1s fraction 0.575, median predicted segment 1.0\u202fs vs reference median 8.73\u202fs, predicted_segments_le_2s_fraction \u22480.58 (vs 0.0 for references)."
+    },
+    {
+     "cause": "Incomplete temporal coverage of videos",
+     "evidence": "Median coverage last predicted end over video duration 0.49; 27/50 episodes end before halfway; median coverage over reference end 0.88."
+    },
+    {
+     "cause": "Boundary predictions drift toward evenly spaced intervals rather than true manipulation state changes",
+     "evidence": "Mean best IoU per reference 0.582; 4/10 references have best IoU <0.5; only 4/10 references matched at IoU\u22650.75."
+    }
+   ],
+   "patch": {
+    "insert_nodes": [
+     {
+      "node": {
+       "id": "hints",
+       "operator": "state_hint_detection",
+       "depends_on": [
+        "sample"
+       ],
+       "params": {
+        "signals": [
+         "gripper",
+         "eef_pause"
+        ],
+        "min_gap_sec": 0.8,
+        "pause_speed_quantile": 0.15,
+        "min_pause_sec": 0.3
+       },
+       "when": "always"
+      },
+      "rewire_dependents_of": null
+     },
+     {
+      "node": {
+       "id": "inspect",
+       "operator": "inspect_transition_windows",
+       "depends_on": [
+        "annotate",
+        "hints"
+       ],
+       "params": {
+        "select": "low_confidence",
+        "window_sec": 2.0,
+        "local_hz": 4.0,
+        "max_windows": 8,
+        "include_unmatched_hints": true,
+        "tile_px": 224,
+        "confidence_threshold": 0.7
+       },
+       "when": "always"
+      },
+      "rewire_dependents_of": null
+     },
+     {
+      "node": {
+       "id": "refine",
+       "operator": "refine_intervals",
+       "depends_on": [
+        "inspect"
+       ],
+       "params": {
+        "prompt": "refine.md",
+        "thinking": true,
+        "max_tokens": 8192,
+        "temperature": 0.2,
+        "allow_insert": true,
+        "allow_delete": true
+       },
+       "when": "always"
+      },
+      "rewire_dependents_of": null
+     },
+     {
+      "node": {
+       "id": "merge",
+       "operator": "merge_filter_segments",
+       "depends_on": [
+        "refine"
+       ],
+       "params": {
+        "min_duration_sec": 2.0,
+        "max_gap_sec": 1.0,
+        "tile_full_episode": true,
+        "merge_same_label": false
+       },
+       "when": "always"
+      },
+      "rewire_dependents_of": null
+     }
+    ],
+    "remove_nodes": [],
+    "set_params": {},
+    "set_when": {},
+    "set_depends_on": {
+     "export": [
+      "merge"
+     ]
+    },
+    "prompt_updates": {}
+   },
+   "labeled_scores": {
+    "snapped_f1_075": 0.27586206896551724,
+    "raw_f1_075": 0.2,
+    "snapped_f1_05": 0.41379310344827586,
+    "tp_snapped": 4,
+    "n_pred": 20,
+    "n_ref": 10
+   },
+   "root_cause_stats_labeled": {
+    "predicted_vs_reference_segments": [
+     20,
+     10
+    ],
+    "median_predicted_segment_sec": 4.9,
+    "median_reference_segment_sec": 8.73,
+    "predicted_segments_le_2s_fraction": 0.15,
+    "reference_segments_le_2s_fraction": 0.0,
+    "predicted_segments_exactly_1s_fraction": 0.0,
+    "median_coverage_last_predicted_end_over_reference_end": 1.09,
+    "episodes_with_coverage_below_50pct": 0,
+    "references_matched_at_iou075": 4,
+    "mean_best_iou_per_reference": 0.618,
+    "references_with_best_iou_below_0.5": 4,
+    "pooled_scores": {
+     "snapped_f1_075": 0.27586206896551724,
+     "raw_f1_075": 0.2,
+     "snapped_f1_05": 0.41379310344827586,
+     "tp_snapped": 4,
+     "n_pred": 20,
+     "n_ref": 10
+    }
+   }
+  },
+  {
+   "round": 3,
+   "hypothesis": "By lowering the sampling frequency to increase temporal context per contact sheet, adding telemetry\u2011based hint detection, inspecting low\u2011confidence or hint\u2011disagreement windows, refining those windows with a second deliberate pass, and applying a stricter minimum\u2011duration filter that tiles the full episode, we will suppress spurious short splits, align boundaries with true manipulation state changes, and achieve full\u2011video coverage, thereby raising segment F1 at IoU\u22650.75.",
+   "root_causes": [
+    {
+     "cause": "Over-segmentation into excessively short segments",
+     "evidence": "Predicted segments exactly 1s fraction 0.575, median predicted segment 1.0s vs reference median 8.73s; predicted_segments_le_2s fraction \u22480.58 while reference fraction is 0.0."
+    },
+    {
+     "cause": "Incomplete temporal coverage of videos",
+     "evidence": "Median coverage of last predicted end over video duration 0.49; 27/50 episodes end before halfway; median coverage over reference end 0.88."
+    },
+    {
+     "cause": "Boundary predictions drift toward evenly spaced intervals rather than true manipulation state changes",
+     "evidence": "Mean best IoU per reference 0.582; 4/10 references have best IoU <0.5; only 4/10 references matched at IoU\u22650.75."
+    }
+   ],
+   "patch": {
+    "insert_nodes": [
+     {
+      "node": {
+       "id": "hints",
+       "operator": "state_hint_detection",
+       "depends_on": [
+        "sample"
+       ],
+       "params": {
+        "signals": [
+         "gripper",
+         "eef_pause"
+        ],
+        "min_gap_sec": 0.8,
+        "pause_speed_quantile": 0.15,
+        "min_pause_sec": 0.3
+       },
+       "when": "always"
+      },
+      "rewire_dependents_of": null
+     },
+     {
+      "node": {
+       "id": "inspect",
+       "operator": "inspect_transition_windows",
+       "depends_on": [
+        "annotate",
+        "hints"
+       ],
+       "params": {
+        "select": "low_confidence",
+        "window_sec": 2.0,
+        "local_hz": 4.0,
+        "max_windows": 8,
+        "include_unmatched_hints": true,
+        "tile_px": 224,
+        "confidence_threshold": 0.7
+       },
+       "when": "always"
+      },
+      "rewire_dependents_of": null
+     },
+     {
+      "node": {
+       "id": "refine",
+       "operator": "refine_intervals",
+       "depends_on": [
+        "inspect"
+       ],
+       "params": {
+        "prompt": "refine.md",
+        "thinking": true,
+        "max_tokens": 8192,
+        "temperature": 0.2,
+        "allow_insert": true,
+        "allow_delete": true
+       },
+       "when": "always"
+      },
+      "rewire_dependents_of": null
+     },
+     {
+      "node": {
+       "id": "merge",
+       "operator": "merge_filter_segments",
+       "depends_on": [
+        "refine"
+       ],
+       "params": {
+        "min_duration_sec": 3.0,
+        "max_gap_sec": 0.5,
+        "tile_full_episode": true,
+        "merge_same_label": false
+       },
+       "when": "always"
+      },
+      "rewire_dependents_of": null
+     }
+    ],
+    "remove_nodes": [],
+    "set_params": {
+     "sample": {
+      "sampling_hz": 1.0
+     }
+    },
+    "set_when": {},
+    "set_depends_on": {
+     "export": [
+      "merge"
+     ]
+    },
+    "prompt_updates": {}
+   },
+   "labeled_scores": {
+    "snapped_f1_075": 0.24,
+    "raw_f1_075": 0.16,
+    "snapped_f1_05": 0.56,
+    "tp_snapped": 3,
+    "n_pred": 15,
+    "n_ref": 10
+   },
+   "root_cause_stats_labeled": {
+    "predicted_vs_reference_segments": [
+     15,
+     10
+    ],
+    "median_predicted_segment_sec": 5.0,
+    "median_reference_segment_sec": 8.73,
+    "predicted_segments_le_2s_fraction": 0.0,
+    "reference_segments_le_2s_fraction": 0.0,
+    "predicted_segments_exactly_1s_fraction": 0.0,
+    "median_coverage_last_predicted_end_over_reference_end": 1.09,
+    "episodes_with_coverage_below_50pct": 0,
+    "references_matched_at_iou075": 3,
+    "mean_best_iou_per_reference": 0.583,
+    "references_with_best_iou_below_0.5": 3,
+    "pooled_scores": {
+     "snapped_f1_075": 0.24,
+     "raw_f1_075": 0.16,
+     "snapped_f1_05": 0.56,
+     "tp_snapped": 3,
+     "n_pred": 15,
+     "n_ref": 10
+    }
+   }
+  }
+ ],
+ "task_ids": [],
+ "protocol": "v3-macrodata",
+ "task_tree": []
+}

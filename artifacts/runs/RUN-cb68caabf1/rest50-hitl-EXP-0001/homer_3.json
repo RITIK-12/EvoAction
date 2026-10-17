@@ -1,0 +1,26 @@
+{
+ "episode_id": "homer_3",
+ "version_id": "rest50-hitl-EXP-0001",
+ "segments": [
+  {
+   "start_sec": 0.0,
+   "end_sec": 3.0,
+   "subtask": "adjusting the pot"
+  },
+  {
+   "start_sec": 3.0,
+   "end_sec": 10.0,
+   "subtask": "pouring powder into the pot"
+  },
+  {
+   "start_sec": 10.0,
+   "end_sec": 16.0,
+   "subtask": "pouring water into the pot"
+  },
+  {
+   "start_sec": 16.0,
+   "end_sec": 137.485,
+   "subtask": "stirring the mixture with a spoon"
+  }
+ ]
+}

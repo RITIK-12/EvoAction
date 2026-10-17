@@ -1,0 +1,41 @@
+{
+ "episode_id": "galaxea_039",
+ "version_id": "rest50-hitl-EXP-0001",
+ "segments": [
+  {
+   "start_sec": 0.0,
+   "end_sec": 6.0,
+   "subtask": "static scene"
+  },
+  {
+   "start_sec": 6.0,
+   "end_sec": 8.0,
+   "subtask": "pick up the test tube with yellow pigment"
+  },
+  {
+   "start_sec": 8.0,
+   "end_sec": 14.0,
+   "subtask": "pour the yellow pigment into the beaker"
+  },
+  {
+   "start_sec": 14.0,
+   "end_sec": 16.0,
+   "subtask": "pick up the test tube with red pigment"
+  },
+  {
+   "start_sec": 16.0,
+   "end_sec": 24.0,
+   "subtask": "pour the red pigment into the beaker"
+  },
+  {
+   "start_sec": 24.0,
+   "end_sec": 26.0,
+   "subtask": "pick up the test tube with blue pigment"
+  },
+  {
+   "start_sec": 26.0,
+   "end_sec": 51.467,
+   "subtask": "pour the blue pigment into the beaker"
+  }
+ ]
+}

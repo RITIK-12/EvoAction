@@ -1,0 +1,36 @@
+{
+ "episode_id": "robointer_droid_000043",
+ "version_id": "hitl-EXP-0002",
+ "segments": [
+  {
+   "start_sec": 0.0,
+   "end_sec": 5.0,
+   "subtask": "grasp pot"
+  },
+  {
+   "start_sec": 5.0,
+   "end_sec": 10.0,
+   "subtask": "move pot to cover"
+  },
+  {
+   "start_sec": 10.0,
+   "end_sec": 15.0,
+   "subtask": "position pot over container"
+  },
+  {
+   "start_sec": 15.0,
+   "end_sec": 20.0,
+   "subtask": "lower pot to cover"
+  },
+  {
+   "start_sec": 20.0,
+   "end_sec": 25.0,
+   "subtask": "adjust pot position"
+  },
+  {
+   "start_sec": 25.0,
+   "end_sec": 32.2,
+   "subtask": "release pot"
+  }
+ ]
+}
