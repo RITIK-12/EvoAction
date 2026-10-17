@@ -1,0 +1,96 @@
+{
+ "episode_video_sha256": {
+  "galaxea_002": "2bd07b0f7fdbeb8b6ecc909bb554edf0b281c3af67a0a7446b4a57ff021af117",
+  "galaxea_007": "3c4557725f6980da726b5f493c0acce739c52d04c1c48a2213ebb4ceb0230496",
+  "galaxea_011": "2c9d3a113ceaa4951f879b212a0680f1f1e3eab7d9d3b30e19bad1dc3a493956",
+  "galaxea_013": "ea02b25baba5e7f57fa504518e24b0c511ab90c13524a5658b03942fa0cf5570",
+  "galaxea_033": "3e950c7c8bc869d6cb97cbeb1b684f4dad20c992301b9c9b7162c5e703ad7692",
+  "galaxea_037": "2f4b1b20a4f7393e3cdf224f7aa968cd759afb2fe2247f36c48ddb8994bc9859",
+  "galaxea_039": "0fd21d217fc107faacfa20839587fa9b27d9aa1fdb1eee4bdc6ec9fe8d7628d6",
+  "galaxea_049": "771a004b42304b0a8ab3a7caba1fcbb12756bbe6517a122a8bfdd99611f0f89c",
+  "galaxea_052": "8963a5eed6b08946d41054013a25a607dd997abec682856f90ab74813d917bec",
+  "robointer_droid_000010": "150e1b0a38b3a2363d3cc19daf778d3410a9b186db37436d0fdeac52b6fa0426",
+  "robointer_droid_000012": "446b9b83779fbb32e5dd76b0d252548801a878a145c3206183667a4973a62275",
+  "robointer_droid_000036": "bab4141ea21678e9403f9e40367055350e8e71a7aa3e65e0c002e37e7390d4bf",
+  "robointer_droid_000038": "2963b79112e83e14e09d017ec6d8a657bf539ce9a552f616a77a6987abe4b611",
+  "robointer_droid_000045": "b4c40e56f4ace5402c1b380d8f8a674f5e28f77bfb71224142283c9b0530a8d4",
+  "robointer_droid_000046": "bba45c1b650e790c4654018b532f0959334edfa7e716164eef83c54b5a5794a2"
+ },
+ "protocol": "wgo-temporal-f1@0.75-v1",
+ "seed": 7,
+ "selection": {
+  "max_bytes": 30000000,
+  "max_duration_sec": 60.0,
+  "max_episodes_per_group": 3,
+  "min_reference_segments": 3,
+  "seed_rule": "first seed in 1..199 where every split and every pilot subset contains both DROID and Galaxea episodes and every pilot subset contains >=1 reference event shorter than 2s; chosen from episode composition only, before any model inference on these splits",
+  "sources": [
+   "droid",
+   "galaxea"
+  ]
+ },
+ "splits": {
+  "dev": {
+   "episode_ids": [
+    "galaxea_011",
+    "robointer_droid_000010",
+    "galaxea_013",
+    "robointer_droid_000012",
+    "galaxea_007"
+   ],
+   "groups": {
+    "galaxea_007": "G05-galaxea",
+    "galaxea_011": "G05-galaxea",
+    "galaxea_013": "G05-galaxea",
+    "robointer_droid_000010": "G00-droid",
+    "robointer_droid_000012": "G00-droid"
+   },
+   "pilot_episode_ids": [
+    "galaxea_011",
+    "robointer_droid_000010"
+   ]
+  },
+  "test": {
+   "episode_ids": [
+    "galaxea_037",
+    "robointer_droid_000036",
+    "galaxea_049",
+    "robointer_droid_000038",
+    "galaxea_033",
+    "galaxea_039"
+   ],
+   "groups": {
+    "galaxea_033": "G06-galaxea",
+    "galaxea_037": "G06-galaxea",
+    "galaxea_039": "G06-galaxea",
+    "galaxea_049": "G07-galaxea",
+    "robointer_droid_000036": "G01-droid",
+    "robointer_droid_000038": "G01-droid"
+   },
+   "pilot_episode_ids": [
+    "galaxea_037",
+    "robointer_droid_000036",
+    "galaxea_049"
+   ]
+  },
+  "validation": {
+   "episode_ids": [
+    "galaxea_002",
+    "robointer_droid_000045",
+    "galaxea_052",
+    "robointer_droid_000046"
+   ],
+   "groups": {
+    "galaxea_002": "G04-galaxea",
+    "galaxea_052": "G08-galaxea",
+    "robointer_droid_000045": "G02-droid",
+    "robointer_droid_000046": "G02-droid"
+   },
+   "pilot_episode_ids": [
+    "galaxea_002",
+    "robointer_droid_000045"
+   ]
+  }
+ },
+ "splits_sha256": "f32ee7d80870a8b0ef66f733cac55c5cdcca308bcf74f45b2a8ee223cc055166"
+}

@@ -179,7 +179,7 @@ def make_splits(
     max_duration: float = 60.0,
     max_bytes: int = 30_000_000,
     min_segments: int = 3,
-    per_group: int = 2,
+    per_group: int = 3,
 ) -> dict[str, Any]:
     """Experimenter-side split design (uses gold segment counts; never agent-visible).
 
@@ -203,13 +203,18 @@ def make_splits(
     for e in pool:
         by_group.setdefault(groups[e["id"]], []).append(e["id"])
     rng = random.Random(seed)
+    n_short = {e["id"]: sum(1 for g in gold_counts[e["id"]] if g["end_sec"] - g["start_sec"] < 2.0) for e in pool}
+    source_of = {e["id"]: e["source"] for e in pool}
+    short_groups = sorted(g for g, ids in by_group.items() if any(n_short[i] for i in ids))
+    rng.shuffle(short_groups)
     per_source: dict[str, list[str]] = {}
     for g in sorted(by_group):
-        per_source.setdefault(g.split("-")[1], []).append(g)
+        if g not in short_groups:
+            per_source.setdefault(g.split("-")[1], []).append(g)
     for src in per_source.values():
         rng.shuffle(src)
-    # Interleave sources so each split mixes DROID and Galaxea.
-    ordered: list[str] = []
+    # Short-event groups first (one per split, stratified), then interleave sources.
+    ordered: list[str] = list(short_groups)
     srcs = sorted(per_source)
     while any(per_source[x] for x in srcs):
         for x in srcs:
@@ -234,10 +239,17 @@ def make_splits(
         "sources": ["droid", "galaxea"], "max_duration_sec": max_duration, "max_bytes": max_bytes,
         "min_reference_segments": min_segments, "max_episodes_per_group": per_group}, "splits": {}}
     for k, ids in assignment.items():
+        # Pilot: most short events first, then prefer a new group and the other source.
+        remaining, picked = list(ids), []
+        while remaining:
+            used_groups = {groups[i] for i in picked}
+            last_src = source_of[picked[-1]] if picked else None
+            remaining.sort(key=lambda i: (groups[i] in used_groups, source_of[i] == last_src, -n_short[i], i))
+            picked.append(remaining.pop(0))
         splits["splits"][k] = {
-            "episode_ids": ids,
-            "pilot_episode_ids": ids[: pilot.get(k, len(ids))],
-            "groups": {i: groups[i] for i in ids},
+            "episode_ids": picked,
+            "pilot_episode_ids": picked[: pilot.get(k, len(picked))],
+            "groups": {i: groups[i] for i in picked},
         }
     return splits
 
