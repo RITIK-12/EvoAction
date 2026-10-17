@@ -148,6 +148,7 @@ class CrusoeClient:
         if not self.settings.api_key:
             raise ModelCallError("CRUSOE_API_KEY is not set")
         self.store = store or get_store()
+        self.read_cache = True  # the live demo sets False so every call really hits Crusoe
         self.client = OpenAI(
             base_url=self.settings.api_base,
             api_key=self.settings.api_key,
@@ -230,7 +231,7 @@ class CrusoeClient:
         key = hashlib.sha256(json.dumps([model, messages, params, cache_scope], sort_keys=True, default=str).encode()).hexdigest()
         n_images = sum(1 for m in messages if isinstance(m.get("content"), list) for p in m["content"] if p.get("type") == "image_url")
 
-        if use_cache:
+        if use_cache and self.read_cache:
             cached = self.store.cache_get(key)
             if cached is not None:
                 res = ChatResult(**{**cached, "cache_hit": True, "call_id": new_id("CALL")})

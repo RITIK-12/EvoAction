@@ -2,9 +2,9 @@
 
   python -m evoaction demo [--port 8765]
 
-Each version (N0, then every recursion's candidate in a lineage) is executed through the real workflow engine on the
-chosen episode, so a bar appears when that version's labeling is done (cached calls return instantly; uncached
-ones call Nemotron live). Reference labels are read here only for display and scoring in this human-facing viewer;
+Each version (N0, then the version each human-in-the-loop recursion produced) is executed through the real workflow
+engine on the chosen episode with live Crusoe calls (cache reads off), so a bar appears when that version's labeling
+is done. Reference labels are read here only for display and scoring in this human-facing viewer;
 no agent code path is involved.
 """
 
@@ -70,14 +70,13 @@ def episode_detail(episode_id: str) -> dict[str, Any]:
             "reference": [{"start_sec": g["start_sec"], "end_sec": g["end_sec"], "subtask": g.get("subtask", "")} for g in gold]}
 
 
-def versions_for(set_name: str, kind: str) -> list[dict[str, Any]]:
+def versions_for(set_name: str, kind: str = "hitl") -> list[dict[str, Any]]:
+    """N0, then the version each recursion produced (N1, N2, ...) in the human-in-the-loop lineage."""
     lin = _lineage(set_name, kind)
-    out = [{"version_id": "N0", "label": "Recursion 0 · N0 (Macrodata protocol on Nemotron Omni)", "decision": "baseline"}]
+    out = [{"version_id": "N0", "label": "N0", "decision": "baseline"}]
     for k, e in enumerate(lin.get("experiments", []), start=1):
-        if not e.get("version_dir"):
-            continue
-        out.append({"version_id": e["version_dir"], "label": f"Recursion {k} · {e['id']}", "decision": e.get("decision"),
-                    "hypothesis": e.get("hypothesis")})
+        if e.get("version_dir"):
+            out.append({"version_id": e["version_dir"], "label": f"N{k}", "decision": e.get("decision"), "hypothesis": e.get("hypothesis")})
     return out
 
 
@@ -132,12 +131,11 @@ class Handler(BaseHTTPRequestHandler):
                 self._json(episodes())
             elif u.path == "/api/episode":
                 eid = q["id"]
-                self._json({**episode_detail(eid), "versions": {k: versions_for(_set_of(eid), k) for k in LINEAGES},
-                            "lineages": {k: v[1] for k, v in LINEAGES.items()}})
+                self._json({**episode_detail(eid), "versions": versions_for(_set_of(eid))})
             elif u.path.startswith("/video/"):
                 self._video(u.path.split("/video/", 1)[1])
             elif u.path == "/api/run":
-                self._run(q["id"], q.get("lineage", "hitl"))
+                self._run(q["id"])
             else:
                 self.send_error(HTTPStatus.NOT_FOUND)
         except (BrokenPipeError, ConnectionResetError):
@@ -182,7 +180,7 @@ class Handler(BaseHTTPRequestHandler):
         self.wfile.write(f"data: {json.dumps(obj, default=str)}\n\n".encode())
         self.wfile.flush()
 
-    def _run(self, episode_id: str, kind: str) -> None:
+    def _run(self, episode_id: str, kind: str = "hitl") -> None:
         from evoaction.clients.crusoe import CrusoeClient
         from evoaction.persistence import get_store
 
@@ -193,7 +191,8 @@ class Handler(BaseHTTPRequestHandler):
         detail = episode_detail(episode_id)
         store = get_store()
         client = CrusoeClient(_settings(), store)
-        run_id = store.start_run("demo", {"episode": episode_id, "lineage": kind})
+        client.read_cache = False  # live: every model call goes to Crusoe, exactly as the harness runs the version
+        run_id = store.start_run("demo", {"episode": episode_id, "lineage": kind, "live": True})
         client.run_id = run_id
         vs = versions_for(_set_of(episode_id), kind)
         self._event({"type": "plan", "versions": vs})
