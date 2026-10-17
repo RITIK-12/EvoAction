@@ -1,0 +1,681 @@
+{
+ "run_id": "RUN-b219c77e3c",
+ "protocol": "evoaction-temporal-v1",
+ "pilot": true,
+ "test_episode_ids": [
+  "galaxea_037",
+  "robointer_droid_000036",
+  "galaxea_049"
+ ],
+ "C_label": "unchanged incumbent (no candidate promoted)",
+ "freeze_manifest": {
+  "protocol": "evoaction-temporal-v1",
+  "frozen_at": 1792271033.195991,
+  "pilot": true,
+  "splits_sha256": "f32ee7d80870a8b0ef66f733cac55c5cdcca308bcf74f45b2a8ee223cc055166",
+  "C_label": "unchanged incumbent (no candidate promoted)",
+  "A": {
+   "version_id": "N000",
+   "workflow_sha256": "f6d53464c3711baeea9ffde68f2e19187ee61984b4a005be9b7d594bf5c56611",
+   "files_sha256": {
+    "config.json": "53e574e73406ebc1eca87fbcf0b8e8a6ca099986a8f08b3dcead2bf810f60cd5",
+    "prompt.md": "04c3c82356498849910193e07b3ca59674ba3715f02b6f9fc9ad9805e6f98c32",
+    "workflow.json": "9d80d50ba2f7e3d0a16b720448b0c4d2a4a74518e3af812b6944d69989d1a67c"
+   },
+   "models": {
+    "vision": "nvidia/Nemotron-3-Nano-Omni-Reasoning-30B-A3B",
+    "nemotron": "nvidia/NVIDIA-Nemotron-3-Super-120B-A12B"
+   },
+   "nodes": [
+    "sample_contact_sheets",
+    "initial_annotate",
+    "validate_export"
+   ]
+  },
+  "B": {
+   "version_id": "strong_fixed",
+   "workflow_sha256": "ce7f49e65e45b2b2a0b3f12f99de8c9f0f27bfb5a3db64325a8a1cd3441290e4",
+   "files_sha256": {
+    "config.json": "53e574e73406ebc1eca87fbcf0b8e8a6ca099986a8f08b3dcead2bf810f60cd5",
+    "prompt.md": "d201ce040f2b87d81a238c60f258f61ac3b6ff1acacfec024648c8d5f1190114",
+    "workflow.json": "603d155a6a7d1169763a8e28640cde05dacaa5bd6eee1932c01a4b54276f173f"
+   },
+   "models": {
+    "vision": "nvidia/Nemotron-3-Nano-Omni-Reasoning-30B-A3B",
+    "nemotron": "nvidia/NVIDIA-Nemotron-3-Super-120B-A12B"
+   },
+   "nodes": [
+    "sample_contact_sheets",
+    "initial_annotate",
+    "merge_filter_segments",
+    "validate_export"
+   ]
+  },
+  "C": {
+   "version_id": "N000",
+   "workflow_sha256": "f6d53464c3711baeea9ffde68f2e19187ee61984b4a005be9b7d594bf5c56611",
+   "files_sha256": {
+    "config.json": "53e574e73406ebc1eca87fbcf0b8e8a6ca099986a8f08b3dcead2bf810f60cd5",
+    "prompt.md": "04c3c82356498849910193e07b3ca59674ba3715f02b6f9fc9ad9805e6f98c32",
+    "workflow.json": "9d80d50ba2f7e3d0a16b720448b0c4d2a4a74518e3af812b6944d69989d1a67c"
+   },
+   "models": {
+    "vision": "nvidia/Nemotron-3-Nano-Omni-Reasoning-30B-A3B",
+    "nemotron": "nvidia/NVIDIA-Nemotron-3-Super-120B-A12B"
+   },
+   "nodes": [
+    "sample_contact_sheets",
+    "initial_annotate",
+    "validate_export"
+   ]
+  }
+ },
+ "summary": {
+  "A": {
+   "version_id": "N000",
+   "micro_f1": 0.07692307692307691,
+   "micro_f1_iou05": 0.5384615384615384,
+   "outer_snapped_micro_f1": 0.15384615384615383,
+   "short_event_recall": 0.0,
+   "invalid_items": 0,
+   "empty_output_episodes": 0,
+   "mean_boundary_mae_sec": 1.2816999999999998,
+   "per_episode_f1": {
+    "galaxea_037": 0.0,
+    "galaxea_049": 0.28571428571428575,
+    "robointer_droid_000036": 0.0
+   },
+   "vision_calls": 3,
+   "annotation_cost_usd": 0.001723,
+   "annotation_tokens": {
+    "prompt": 2266,
+    "completion": 570
+   },
+   "wall_s": 2.4,
+   "statuses": {
+    "galaxea_037": "ok",
+    "robointer_droid_000036": "ok",
+    "galaxea_049": "ok"
+   }
+  },
+  "B": {
+   "version_id": "strong_fixed",
+   "micro_f1": 0.2105263157894737,
+   "micro_f1_iou05": 0.4210526315789474,
+   "outer_snapped_micro_f1": 0.2105263157894737,
+   "short_event_recall": 0.0,
+   "invalid_items": 0,
+   "empty_output_episodes": 0,
+   "mean_boundary_mae_sec": 3.7177666666666673,
+   "per_episode_f1": {
+    "galaxea_037": 0.2222222222222222,
+    "galaxea_049": 0.3333333333333333,
+    "robointer_droid_000036": 0.0
+   },
+   "vision_calls": 3,
+   "annotation_cost_usd": 0.002156,
+   "annotation_tokens": {
+    "prompt": 5014,
+    "completion": 356
+   },
+   "wall_s": 1.5,
+   "statuses": {
+    "galaxea_037": "ok",
+    "robointer_droid_000036": "ok",
+    "galaxea_049": "ok"
+   }
+  },
+  "C": {
+   "version_id": "N000",
+   "micro_f1": 0.07692307692307691,
+   "micro_f1_iou05": 0.5384615384615384,
+   "outer_snapped_micro_f1": 0.15384615384615383,
+   "short_event_recall": 0.0,
+   "invalid_items": 0,
+   "empty_output_episodes": 0,
+   "mean_boundary_mae_sec": 1.2816999999999998,
+   "per_episode_f1": {
+    "galaxea_037": 0.0,
+    "galaxea_049": 0.28571428571428575,
+    "robointer_droid_000036": 0.0
+   },
+   "vision_calls": 3,
+   "annotation_cost_usd": 0.001723,
+   "annotation_tokens": {
+    "prompt": 2266,
+    "completion": 570
+   },
+   "wall_s": 2.4,
+   "statuses": {
+    "galaxea_037": "ok",
+    "robointer_droid_000036": "ok",
+    "galaxea_049": "ok"
+   }
+  }
+ },
+ "paired": {
+  "C_vs_A": {
+   "episodes": [
+    "galaxea_037",
+    "galaxea_049",
+    "robointer_droid_000036"
+   ],
+   "per_episode_delta": {
+    "galaxea_037": 0.0,
+    "galaxea_049": 0.0,
+    "robointer_droid_000036": 0.0
+   },
+   "non_regressing_fraction": 1.0,
+   "improved": 0,
+   "regressed": 0,
+   "mean_delta": 0.0
+  },
+  "C_vs_B": {
+   "episodes": [
+    "galaxea_037",
+    "galaxea_049",
+    "robointer_droid_000036"
+   ],
+   "per_episode_delta": {
+    "galaxea_037": -0.2222222222222222,
+    "galaxea_049": -0.04761904761904756,
+    "robointer_droid_000036": 0.0
+   },
+   "non_regressing_fraction": 0.3333333333333333,
+   "improved": 0,
+   "regressed": 2,
+   "mean_delta": -0.08994708994708993
+  },
+  "B_vs_A": {
+   "episodes": [
+    "galaxea_037",
+    "galaxea_049",
+    "robointer_droid_000036"
+   ],
+   "per_episode_delta": {
+    "galaxea_037": 0.2222222222222222,
+    "galaxea_049": 0.04761904761904756,
+    "robointer_droid_000036": 0.0
+   },
+   "non_regressing_fraction": 1.0,
+   "improved": 2,
+   "regressed": 0,
+   "mean_delta": 0.08994708994708993
+  }
+ },
+ "per_episode": {
+  "A": {
+   "galaxea_037": {
+    "episode_id": "galaxea_037",
+    "n_pred": 4,
+    "n_ref": 6,
+    "n_invalid": 0,
+    "tp": 0,
+    "fp": 4,
+    "fn": 6,
+    "precision": 0.0,
+    "recall": 0.0,
+    "f1": 0.0,
+    "tp_05": 2,
+    "f1_05": 0.4,
+    "short_ref": 1,
+    "short_tp": 0,
+    "boundary_mae_sec": 1.4316
+   },
+   "galaxea_049": {
+    "episode_id": "galaxea_049",
+    "n_pred": 4,
+    "n_ref": 3,
+    "n_invalid": 0,
+    "tp": 1,
+    "fp": 3,
+    "fn": 2,
+    "precision": 0.25,
+    "recall": 0.3333333333333333,
+    "f1": 0.28571428571428575,
+    "tp_05": 3,
+    "f1_05": 0.8571428571428571,
+    "short_ref": 0,
+    "short_tp": 0,
+    "boundary_mae_sec": 0.7550000000000001
+   },
+   "robointer_droid_000036": {
+    "episode_id": "robointer_droid_000036",
+    "n_pred": 6,
+    "n_ref": 3,
+    "n_invalid": 0,
+    "tp": 0,
+    "fp": 6,
+    "fn": 3,
+    "precision": 0.0,
+    "recall": 0.0,
+    "f1": 0.0,
+    "tp_05": 2,
+    "f1_05": 0.4444444444444444,
+    "short_ref": 0,
+    "short_tp": 0,
+    "boundary_mae_sec": 1.6584999999999992
+   }
+  },
+  "B": {
+   "galaxea_037": {
+    "episode_id": "galaxea_037",
+    "n_pred": 3,
+    "n_ref": 6,
+    "n_invalid": 0,
+    "tp": 1,
+    "fp": 2,
+    "fn": 5,
+    "precision": 0.3333333333333333,
+    "recall": 0.16666666666666666,
+    "f1": 0.2222222222222222,
+    "tp_05": 2,
+    "f1_05": 0.4444444444444444,
+    "short_ref": 1,
+    "short_tp": 0,
+    "boundary_mae_sec": 2.9568000000000003
+   },
+   "galaxea_049": {
+    "episode_id": "galaxea_049",
+    "n_pred": 3,
+    "n_ref": 3,
+    "n_invalid": 0,
+    "tp": 1,
+    "fp": 2,
+    "fn": 2,
+    "precision": 0.3333333333333333,
+    "recall": 0.3333333333333333,
+    "f1": 0.3333333333333333,
+    "tp_05": 2,
+    "f1_05": 0.6666666666666666,
+    "short_ref": 0,
+    "short_tp": 0,
+    "boundary_mae_sec": 1.0050000000000001
+   },
+   "robointer_droid_000036": {
+    "episode_id": "robointer_droid_000036",
+    "n_pred": 1,
+    "n_ref": 3,
+    "n_invalid": 0,
+    "tp": 0,
+    "fp": 1,
+    "fn": 3,
+    "precision": 0.0,
+    "recall": 0.0,
+    "f1": 0.0,
+    "tp_05": 0,
+    "f1_05": 0.0,
+    "short_ref": 0,
+    "short_tp": 0,
+    "boundary_mae_sec": 7.1915000000000004
+   }
+  },
+  "C": {
+   "galaxea_037": {
+    "episode_id": "galaxea_037",
+    "n_pred": 4,
+    "n_ref": 6,
+    "n_invalid": 0,
+    "tp": 0,
+    "fp": 4,
+    "fn": 6,
+    "precision": 0.0,
+    "recall": 0.0,
+    "f1": 0.0,
+    "tp_05": 2,
+    "f1_05": 0.4,
+    "short_ref": 1,
+    "short_tp": 0,
+    "boundary_mae_sec": 1.4316
+   },
+   "galaxea_049": {
+    "episode_id": "galaxea_049",
+    "n_pred": 4,
+    "n_ref": 3,
+    "n_invalid": 0,
+    "tp": 1,
+    "fp": 3,
+    "fn": 2,
+    "precision": 0.25,
+    "recall": 0.3333333333333333,
+    "f1": 0.28571428571428575,
+    "tp_05": 3,
+    "f1_05": 0.8571428571428571,
+    "short_ref": 0,
+    "short_tp": 0,
+    "boundary_mae_sec": 0.7550000000000001
+   },
+   "robointer_droid_000036": {
+    "episode_id": "robointer_droid_000036",
+    "n_pred": 6,
+    "n_ref": 3,
+    "n_invalid": 0,
+    "tp": 0,
+    "fp": 6,
+    "fn": 3,
+    "precision": 0.0,
+    "recall": 0.0,
+    "f1": 0.0,
+    "tp_05": 2,
+    "f1_05": 0.4444444444444444,
+    "short_ref": 0,
+    "short_tp": 0,
+    "boundary_mae_sec": 1.6584999999999992
+   }
+  }
+ },
+ "timelines": {
+  "galaxea_037": {
+   "reference": [
+    {
+     "start_sec": 0.0,
+     "end_sec": 2.369,
+     "subtask": "pick up the test tube with yellow pigment"
+    },
+    {
+     "start_sec": 2.369,
+     "end_sec": 5.558,
+     "subtask": "pour the yellow pigment from the test tube into the beaker"
+    },
+    {
+     "start_sec": 5.558,
+     "end_sec": 7.418,
+     "subtask": "place the empty test tube into the blue cup on the right"
+    },
+    {
+     "start_sec": 7.418,
+     "end_sec": 11.668,
+     "subtask": "pick up the test tube with red pigment on the left side"
+    },
+    {
+     "start_sec": 11.668,
+     "end_sec": 14.855,
+     "subtask": "pour the red pigment from the test tube into the beaker"
+    },
+    {
+     "start_sec": 14.855,
+     "end_sec": 16.98,
+     "subtask": "place the empty test tube into the blue cup on the left"
+    }
+   ],
+   "duration_sec": 18.6,
+   "A": [
+    {
+     "start_sec": 0.0,
+     "end_sec": 5.0,
+     "subtask": "Approach the test tube with yellow pigment"
+    },
+    {
+     "start_sec": 5.0,
+     "end_sec": 10.0,
+     "subtask": "Grip and lift the test tube with yellow pigment"
+    },
+    {
+     "start_sec": 10.0,
+     "end_sec": 15.0,
+     "subtask": "Move the test tube with yellow pigment to the beaker"
+    },
+    {
+     "start_sec": 15.0,
+     "end_sec": 18.6,
+     "subtask": "Pour the yellow pigment into the beaker and release the test tube"
+    }
+   ],
+   "B": [
+    {
+     "start_sec": 0.0,
+     "end_sec": 2.5,
+     "subtask": "pick up the test tube with yellow pigment"
+    },
+    {
+     "start_sec": 2.5,
+     "end_sec": 4.5,
+     "subtask": "pick up the test tube with red pigment"
+    },
+    {
+     "start_sec": 4.5,
+     "end_sec": 18.6,
+     "subtask": "pour the test tubes into the beaker"
+    }
+   ],
+   "C": [
+    {
+     "start_sec": 0.0,
+     "end_sec": 5.0,
+     "subtask": "Approach the test tube with yellow pigment"
+    },
+    {
+     "start_sec": 5.0,
+     "end_sec": 10.0,
+     "subtask": "Grip and lift the test tube with yellow pigment"
+    },
+    {
+     "start_sec": 10.0,
+     "end_sec": 15.0,
+     "subtask": "Move the test tube with yellow pigment to the beaker"
+    },
+    {
+     "start_sec": 15.0,
+     "end_sec": 18.6,
+     "subtask": "Pour the yellow pigment into the beaker and release the test tube"
+    }
+   ]
+  },
+  "galaxea_049": {
+   "reference": [
+    {
+     "start_sec": 0.0,
+     "end_sec": 3.461,
+     "subtask": "pick up the glass with beans"
+    },
+    {
+     "start_sec": 3.461,
+     "end_sec": 7.971,
+     "subtask": "pour the dark solids from the transparent cup into the pink bowl"
+    },
+    {
+     "start_sec": 7.971,
+     "end_sec": 10.812,
+     "subtask": "place the clear cup on the table right next to the pink bowl"
+    }
+   ],
+   "duration_sec": 13.166667,
+   "A": [
+    {
+     "start_sec": 0.0,
+     "end_sec": 4.0,
+     "subtask": "Approach the cup with the gripper."
+    },
+    {
+     "start_sec": 4.0,
+     "end_sec": 7.0,
+     "subtask": "Grasp the cup with the gripper."
+    },
+    {
+     "start_sec": 7.0,
+     "end_sec": 10.0,
+     "subtask": "Lift the cup and move it over the bowl."
+    },
+    {
+     "start_sec": 10.0,
+     "end_sec": 13.0,
+     "subtask": "Pour the solid from the cup into the bowl and place the cup back down."
+    }
+   ],
+   "B": [
+    {
+     "start_sec": 0.0,
+     "end_sec": 4.5,
+     "subtask": "pick up the cup from the table"
+    },
+    {
+     "start_sec": 4.5,
+     "end_sec": 7.0,
+     "subtask": "pour the solid into the bowl"
+    },
+    {
+     "start_sec": 7.0,
+     "end_sec": 13.166667,
+     "subtask": "place the cup on the table"
+    }
+   ],
+   "C": [
+    {
+     "start_sec": 0.0,
+     "end_sec": 4.0,
+     "subtask": "Approach the cup with the gripper."
+    },
+    {
+     "start_sec": 4.0,
+     "end_sec": 7.0,
+     "subtask": "Grasp the cup with the gripper."
+    },
+    {
+     "start_sec": 7.0,
+     "end_sec": 10.0,
+     "subtask": "Lift the cup and move it over the bowl."
+    },
+    {
+     "start_sec": 10.0,
+     "end_sec": 13.0,
+     "subtask": "Pour the solid from the cup into the bowl and place the cup back down."
+    }
+   ]
+  },
+  "robointer_droid_000036": {
+   "reference": [
+    {
+     "start_sec": 0.0,
+     "end_sec": 7.583,
+     "subtask": "pick up the white cloth from the table"
+    },
+    {
+     "start_sec": 7.611,
+     "end_sec": 20.9,
+     "subtask": "wipe the white lid with the cleaning cloth"
+    },
+    {
+     "start_sec": 20.902,
+     "end_sec": 26.701,
+     "subtask": "place the cleaning cloth next purple spray"
+    }
+   ],
+   "duration_sec": 27.7,
+   "A": [
+    {
+     "start_sec": 0.0,
+     "end_sec": 5.0,
+     "subtask": "Position the gripper above the white lid."
+    },
+    {
+     "start_sec": 5.0,
+     "end_sec": 10.0,
+     "subtask": "Lower the gripper to make contact with the white lid."
+    },
+    {
+     "start_sec": 10.0,
+     "end_sec": 15.0,
+     "subtask": "Grip the white lid."
+    },
+    {
+     "start_sec": 15.0,
+     "end_sec": 20.0,
+     "subtask": "Lift the white lid."
+    },
+    {
+     "start_sec": 20.0,
+     "end_sec": 25.0,
+     "subtask": "Move the white lid to the right side of the table."
+    },
+    {
+     "start_sec": 25.0,
+     "end_sec": 27.7,
+     "subtask": "Place the white lid down."
+    }
+   ],
+   "B": [
+    {
+     "start_sec": 0.0,
+     "end_sec": 27.7,
+     "subtask": "Clean the white lid"
+    }
+   ],
+   "C": [
+    {
+     "start_sec": 0.0,
+     "end_sec": 5.0,
+     "subtask": "Position the gripper above the white lid."
+    },
+    {
+     "start_sec": 5.0,
+     "end_sec": 10.0,
+     "subtask": "Lower the gripper to make contact with the white lid."
+    },
+    {
+     "start_sec": 10.0,
+     "end_sec": 15.0,
+     "subtask": "Grip the white lid."
+    },
+    {
+     "start_sec": 15.0,
+     "end_sec": 20.0,
+     "subtask": "Lift the white lid."
+    },
+    {
+     "start_sec": 20.0,
+     "end_sec": 25.0,
+     "subtask": "Move the white lid to the right side of the table."
+    },
+    {
+     "start_sec": 25.0,
+     "end_sec": 27.7,
+     "subtask": "Place the white lid down."
+    }
+   ]
+  }
+ },
+ "optimization_overhead": {
+  "evolve_runs": {
+   "nemotron:nvidia/NVIDIA-Nemotron-3-Super-120B-A12B": {
+    "calls": 20,
+    "cache_hits": 0,
+    "prompt_tokens": 51532,
+    "completion_tokens": 26020,
+    "cost_usd": 0.077908,
+    "model_latency_s": 866.7
+   },
+   "vision:nvidia/Nemotron-3-Nano-Omni-Reasoning-30B-A3B": {
+    "calls": 18,
+    "cache_hits": 14,
+    "prompt_tokens": 6970,
+    "completion_tokens": 477,
+    "cost_usd": 0.002964,
+    "model_latency_s": 33.6
+   }
+  },
+  "baseline_runs": {
+   "vision:nvidia/Nemotron-3-Nano-Omni-Reasoning-30B-A3B": {
+    "calls": 36,
+    "cache_hits": 0,
+    "prompt_tokens": 62122,
+    "completion_tokens": 299589,
+    "cost_usd": 0.566884,
+    "model_latency_s": 1266.5
+   }
+  },
+  "final_test_run": {
+   "calls": 6,
+   "cache_hits": 0,
+   "prompt_tokens": 7280,
+   "completion_tokens": 926,
+   "cost_usd": 0.003879,
+   "model_latency_s": 7.81
+  }
+ },
+ "limitations": [
+  "3 held-out episodes: a feasibility result, not statistically established generalization.",
+  "Temporal Segment F1 evaluates boundaries only; it does not assess the semantic correctness of subtask labels.",
+  "The outer-boundary-snapped score is an evaluator-only variant; WGO-Bench's official scorer was not available to verify.",
+  "Costs are provider-reported tokens x listed per-token prices from /v1/models; billing was not reconciled."
+ ]
+}

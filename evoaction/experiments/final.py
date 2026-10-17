@@ -53,12 +53,23 @@ def cmd_final(args: argparse.Namespace) -> int:
         files = {name: hashlib.sha256((v.path / name).read_bytes()).hexdigest() for name in sorted(v.manifest["files"])}
         manifest[k] = {"version_id": v.id, "workflow_sha256": v.workflow_sha256, "files_sha256": files,
                        "models": v.config.get("models"), "nodes": [n.operator for n in v.workflow.nodes]}
+    test_ids = split_ids("test", pilot)
+    if getattr(args, "dry_run", False):
+        from evoaction.data.wgo import load_episode
+
+        need = {k: v.workflow.max_calls * len(test_ids) for k, v in systems.items() if not (k == "C" and v.id == systems["A"].id)}
+        check = {"systems": {k: (manifest[k]["version_id"], manifest[k]["workflow_sha256"][:12], manifest[k]["nodes"]) for k in "ABC"},
+                 "C_label": c_label, "test_ids": test_ids, "test_media_ingested": all(load_episode(e)["video_path"] for e in test_ids),
+                 "max_vision_calls_needed": sum(need.values()), "vision_limit_in_test_phase": client.budget.limit_for("vision"),
+                 "test_sealed_before_unseal": not ProtectedEvaluator(s)._test_unsealed}
+        store.finish_run(run_id, "dry_run")
+        print(json.dumps(check, indent=1))
+        return 0 if check["max_vision_calls_needed"] <= check["vision_limit_in_test_phase"] else 1
     (s.artifacts_dir / "freeze.json").write_text(json.dumps(manifest, indent=1))
     store.event(run_id, "systems_frozen", {k: manifest[k]["version_id"] for k in "ABC"})
 
     evaluator = ProtectedEvaluator(s)
     evaluator.unseal_test(manifest)
-    test_ids = split_ids("test", pilot)
     results: dict[str, Any] = {}
     preds: dict[str, dict[str, list]] = {}
     durations: dict[str, float] = {}

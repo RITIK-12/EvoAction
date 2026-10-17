@@ -1,0 +1,26 @@
+{
+ "episode_id": "galaxea_049",
+ "version_id": "N000",
+ "segments": [
+  {
+   "start_sec": 0.0,
+   "end_sec": 4.0,
+   "subtask": "Approach the cup with the gripper."
+  },
+  {
+   "start_sec": 4.0,
+   "end_sec": 7.0,
+   "subtask": "Grasp the cup with the gripper."
+  },
+  {
+   "start_sec": 7.0,
+   "end_sec": 10.0,
+   "subtask": "Lift the cup and move it over the bowl."
+  },
+  {
+   "start_sec": 10.0,
+   "end_sec": 13.0,
+   "subtask": "Pour the solid from the cup into the bowl and place the cup back down."
+  }
+ ]
+}
