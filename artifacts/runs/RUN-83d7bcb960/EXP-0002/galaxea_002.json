@@ -1,0 +1,31 @@
+{
+ "episode_id": "galaxea_002",
+ "version_id": "EXP-0002",
+ "segments": [
+  {
+   "start_sec": 0.0,
+   "end_sec": 10.0,
+   "subtask": "Pick up the letter B."
+  },
+  {
+   "start_sec": 10.0,
+   "end_sec": 20.0,
+   "subtask": "Pick up the letter R."
+  },
+  {
+   "start_sec": 20.0,
+   "end_sec": 30.0,
+   "subtask": "Pick up the letter A."
+  },
+  {
+   "start_sec": 30.0,
+   "end_sec": 40.0,
+   "subtask": "Pick up the letter I."
+  },
+  {
+   "start_sec": 40.0,
+   "end_sec": 43.833,
+   "subtask": "Place the letters to form the word BRAIN."
+  }
+ ]
+}

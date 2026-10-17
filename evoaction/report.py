@@ -76,6 +76,18 @@ def _refine_decisions(store, version_dir: str) -> str:
     return ("<p class=muted><b>Refine decisions on validation:</b> " + esc("; ".join(out)) + "</p>") if out else ""
 
 
+def _n_baseline(evo) -> str:
+    rows = ""
+    for it in (evo or {}).get("iterations", []):
+        lf, gt = it.get("incumbent_label_free") or {}, it.get("incumbent_shadow_gt") or {}
+        rows += (f"<tr><td>{esc(it['iteration'])}</td><td>{esc(it['incumbent'])}</td><td class=num>{fmt(lf.get('dev'))}</td><td class=num>{fmt(lf.get('val'))}</td>"
+                 f"<td class=num>{fmt(gt.get('dev'))}</td><td class=num>{fmt(gt.get('val'))}</td></tr>")
+    if not rows:
+        return ""
+    return ("<div class=card><h3>Version N (incumbent) at the start of each iteration</h3><table><tr><th>iter</th><th>incumbent</th>"
+            "<th>label-free dev</th><th>label-free val</th><th>shadow GT F1@0.75 dev</th><th>shadow GT F1@0.75 val</th></tr>" + rows + "</table></div>")
+
+
 def section_lineage(lin, evo, store=None) -> str:
     if not lin:
         return "<h2>2. Version lineage</h2><div class=card class=muted>No evolution run yet.</div>"
@@ -83,13 +95,16 @@ def section_lineage(lin, evo, store=None) -> str:
     for e in lin.get("experiments", []):
         dec = e.get("decision")
         cls = "ok" if dec == "PROMOTED" else "bad"
-        cv, iv = e.get("candidate_val") or {}, e.get("incumbent_val") or {}
+        lf = e.get("label_free") or {}
+        sg = e.get("shadow_gt") or {}
+        cg, ig = sg.get("candidate") or {}, sg.get("incumbent") or {}
         items.append(f"""<div class=card><h3>{esc(e['id'])} <span class="pill {cls}">{esc(dec)}</span> <span class=muted>parent {esc(e.get('parent_version'))}
 {' · topology change' if e.get('topology_change') else ''}</span></h3>
 <p><b>Hypothesis.</b> {esc(e.get('hypothesis'))}</p>
-<table><tr><th></th><th>val F1@0.75</th><th>val F1@0.5</th><th>short recall</th><th>boundary MAE s</th></tr>
-<tr><td>incumbent</td><td class=num>{fmt(iv.get('micro_f1'))}</td><td class=num>{fmt(iv.get('micro_f1_iou05'))}</td><td class=num>{fmt(iv.get('short_event_recall'))}</td><td class=num>{fmt(iv.get('mean_boundary_mae_sec'),2)}</td></tr>
-<tr><td>candidate</td><td class=num>{fmt(cv.get('micro_f1'))}</td><td class=num>{fmt(cv.get('micro_f1_iou05'))}</td><td class=num>{fmt(cv.get('short_event_recall'))}</td><td class=num>{fmt(cv.get('mean_boundary_mae_sec'),2)}</td></tr></table>
+<table><tr><th></th><th>label-free self-score (gate signal)</th><th>shadow GT F1@0.75</th><th>shadow GT F1@0.5</th><th>shadow boundary MAE s</th></tr>
+<tr><td>incumbent</td><td class=num><b>{fmt(lf.get('incumbent_self_score'))}</b></td><td class=num>{fmt(ig.get('micro_f1'))}</td><td class=num>{fmt(ig.get('micro_f1_iou05'))}</td><td class=num>{fmt(ig.get('mean_boundary_mae_sec'),2)}</td></tr>
+<tr><td>candidate</td><td class=num><b>{fmt(lf.get('candidate_self_score'))}</b></td><td class=num>{fmt(cg.get('micro_f1'))}</td><td class=num>{fmt(cg.get('micro_f1_iou05'))}</td><td class=num>{fmt(cg.get('mean_boundary_mae_sec'),2)}</td></tr></table>
+<p class=muted>Label-free components (candidate vs incumbent): {esc(json.dumps(lf.get('candidate_components')))} vs {esc(json.dumps(lf.get('incumbent_components')))}</p>
 {_refine_decisions(store, e['version_dir']) if store is not None and e.get('version_dir') else ''}
 {('<p class=muted>Errors: ' + esc(e.get('errors')) + '</p>') if e.get('errors') else ''}</div>""")
     gate_rows = ""
@@ -103,7 +118,8 @@ def section_lineage(lin, evo, store=None) -> str:
         if it.get("stopped"):
             gate_rows += f"<tr><td>{esc(it['iteration'])}</td><td colspan=4 class=muted>stopped: {esc(it['stopped'])}</td></tr>"
     return f"""<h2>2. Version N → N+1 lineage</h2>
-<p class=muted>Incumbent now: <b>{esc(lin.get('incumbent'))}</b>. The controller applies a predeclared gate; agents never decide promotion. Rejected candidates are frozen, not deleted.</p>
+<p class=muted>Protocol <b>{esc(lin.get('protocol'))}</b>. Incumbent now: <b>{esc(lin.get('incumbent'))}</b>. Agents and the promotion gate see <b>no ground truth</b>: they work from the system's own predictions, video frames, robot telemetry and a predeclared label-free self-score. "Shadow GT" columns are measured by the protected evaluator <i>after</i> each decision and are never shown to agents or the gate. Rejected candidates are frozen, not deleted.</p>
+{_n_baseline(evo)}
 {''.join(items) or '<div class=card>No experiments recorded.</div>'}
 <div class=card><h3>Promotion gate checks</h3><table><tr><th>iter</th><th>check</th><th>value</th><th>threshold</th><th>result</th></tr>{gate_rows}</table></div>"""
 
@@ -201,6 +217,17 @@ def _overhead_rows(store) -> str:
                    f"<td class=num>{r['ct']:,}</td><td class=num>${r['cost']:.4f}</td></tr>" for r in rows)
 
 
+def _continuity(fin) -> str:
+    c = fin.get("continuity") or {}
+    if not c:
+        return ""
+    rows = "".join(f"<tr><td>{k}</td><td><code>{esc(c[k].get('version_id'))}</code></td><td class=num>{fmt(c[k].get('micro_f1'))}</td>"
+                   f"<td class=num>{fmt(c[k].get('micro_f1_iou05'))}</td></tr>" for k in "ABC" if k in c)
+    return (f"<div class=card><h3>Continuity: v1 pilot test episodes ({esc(', '.join(fin.get('continuity_episode_ids', [])))})</h3>"
+            f"<p class=muted>Already scored once in the superseded v1 run; shown only for comparison.</p><table><tr><th>system</th><th>version</th>"
+            f"<th>F1@0.75</th><th>F1@0.5</th></tr>{rows}</table></div>")
+
+
 def section_final(fin, base, store=None) -> str:
     if not fin:
         btab = ""
@@ -218,7 +245,8 @@ def section_final(fin, base, store=None) -> str:
                  f"<td class=num><b>{fmt(x['micro_f1'])}</b></td><td class=num>{fmt(x['micro_f1_iou05'])}</td><td class=num>{fmt(x['outer_snapped_micro_f1'])}</td>"
                  f"<td class=num>{fmt(x['short_event_recall'])}</td><td class=num>{fmt(x['mean_boundary_mae_sec'], 2)}</td>"
                  f"<td class=num>{x['invalid_items']}/{x['empty_output_episodes']}</td><td class=num>{x['vision_calls']}</td>"
-                 f"<td class=num>{x['annotation_tokens']['completion']:,}</td><td class=num>${x['annotation_cost_usd']:.4f}</td><td class=num>{x['wall_s']:.0f}s</td></tr>")
+                 f"<td class=num>{x['annotation_tokens']['completion']:,}</td><td class=num>${x['annotation_cost_usd']:.4f}</td><td class=num>{x['wall_s']:.0f}s</td>"
+                 f"<td class=num>{fmt(x.get('label_free_self_score'))}</td></tr>")
     eps = fin["test_episode_ids"]
     per = "".join(f"<tr><td><code>{esc(e)}</code></td>" + "".join(f"<td class=num>{fmt(sm[k]['per_episode_f1'].get(e))}</td>" for k in "ABC")
                   + f"<td class=num>{fmt(sm['C']['per_episode_f1'].get(e, 0) - sm['B']['per_episode_f1'].get(e, 0))}</td></tr>" for e in eps)
@@ -228,7 +256,9 @@ def section_final(fin, base, store=None) -> str:
     lim = "".join(f"<li>{esc(x)}</li>" for x in fin.get("limitations", []))
     return f"""<h2>5. Sealed held-out scoreboard (run once after freezing)</h2>
 <div class=card><p class=muted>{len(eps)} test episodes never seen by any agent tool. Systems frozen with checksums before the test evaluator was unsealed. Timelines below are produced only by the final evaluator.</p>
-<table><tr><th>system</th><th>F1@0.75</th><th>F1@0.5</th><th>F1@0.75 outer-snapped</th><th>short recall</th><th>boundary MAE s</th><th>invalid/empty</th><th>vision calls</th><th>completion tok</th><th>annotation cost</th><th>wall</th></tr>{rows}</table></div>
+<table><tr><th>system</th><th>F1@0.75</th><th>F1@0.5</th><th>F1@0.75 outer-snapped</th><th>short recall</th><th>boundary MAE s</th><th>invalid/empty</th><th>vision calls</th><th>completion tok</th><th>annotation cost</th><th>wall</th><th>label-free self-score</th></tr>{rows}</table>
+<p class=muted>Test set: <b>{esc(fin.get('test_set'))}</b> (episodes never evaluated before this run). The label-free self-score column shows whether the proxy the agents optimized tracks ground truth on unseen episodes.</p></div>
+{_continuity(fin)}
 <div class=card><h3>Paired per-episode F1@0.75</h3><table><tr><th>episode</th><th>A</th><th>B</th><th>C</th><th>C−B</th></tr>{per}</table>
 <p class=muted>C vs A: {p['C_vs_A']['improved']} improved / {p['C_vs_A']['regressed']} regressed · C vs B: {p['C_vs_B']['improved']} improved / {p['C_vs_B']['regressed']} regressed · B vs A: {p['B_vs_A']['improved']} improved / {p['B_vs_A']['regressed']} regressed</p></div>
 <div class=card><h3>Optimization overhead (every non-test call, by run and run status, including superseded/aborted runs)</h3><table><tr><th>phase (status)</th><th>model</th><th>calls</th><th>completion tok</th><th>cost</th></tr>{ovh_rows}</table></div>
@@ -247,7 +277,7 @@ def build_report() -> Path:
         split_line = " · ".join(f"{k}: {len(v['episode_ids'])} (pilot {len(v['pilot_episode_ids'])})" for k, v in splits["splits"].items())
     body = f"""<main><h1>EvoAction evidence report</h1>
 <p class=muted>A self-evolving, recursively delegated annotation harness for robot manipulation video (WGO-Bench temporal subtask segmentation).
-Every number and agent message on this page comes from persisted real runs in <code>artifacts/</code>. Splits: {esc(split_line)}; splits sha256 <code>{esc((splits or {}).get('splits_sha256', '')[:16])}</code>.</p>
+Every number and agent message on this page comes from persisted real runs in <code>artifacts/</code>. An earlier run in which agents saw ground-truth-derived feedback is superseded and archived in <code>artifacts/superseded/v1_gt_feedback/</code>. Splits: {esc(split_line)}; splits sha256 <code>{esc((splits or {}).get('splits_sha256', '')[:16])}</code>.</p>
 {section_sponsor(store, pre)}{section_lineage(lin, evo, store)}{section_tree(evo)}{section_diff(s, lin)}{section_final(fin, base, store)}</main>"""
     doc = f"<!doctype html><html lang=en><head><meta charset=utf-8><meta name=viewport content='width=device-width,initial-scale=1'><title>EvoAction Evidence Report</title><style>{CSS}</style></head><body>{body}</body></html>"
     out = a / "report.html"

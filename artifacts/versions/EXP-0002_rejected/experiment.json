@@ -1,0 +1,197 @@
+{
+ "id": "EXP-0002",
+ "parent_version": "N000",
+ "hypothesis": "Increasing the sampling rate to 2\u202fHz provides finer temporal detail, and adding a deterministic telemetry\u2011hint detection step followed by visual inspection of hint\u2011aligned windows and a lightweight refinement pass will shift predicted boundaries toward true manipulation state changes, thereby improving telemetry agreement and visual verification without exceeding 1.5\u00d7 the incumbent\u2019s inference cost.",
+ "failure_slice": "Episodes where the incumbent shows low telemetry agreement (<0.2) or low visual verification (<0.3) due to uniformly spaced 1\u2011second boundaries that miss gripper/EEF transitions and visual change points (e.g., galaxea_011, galaxea_007, robointer_droid_000012).",
+ "evidence_ids": [
+  "SELF-0ce68ee9fe",
+  "EV-fd5d685402",
+  "EV-a8a57be878",
+  "EV-a89faebf8c",
+  "EV-8003cb5f5f",
+  "EV-92f796e446",
+  "SELF-4e3d54401c",
+  "EV-9b5b91ca09",
+  "EV-b0fc9c361d",
+  "EV-dc7b55db92",
+  "EV-6f36b2f5a4"
+ ],
+ "objective": "Raise the label\u2011free self\u2011score (weighted mean of telemetry_agreement, visual_verification, duration_variability, temporal_resolution) by at least 0.03 on validation episodes while keeping annotation inference cost \u22641.5\u00d7 the incumbent and ensuring \u226550% of episodes do not regress.",
+ "candidate_patch": {
+  "insert_nodes": [
+   {
+    "node": {
+     "id": "hints",
+     "operator": "state_hint_detection",
+     "depends_on": [
+      "sample"
+     ],
+     "params": {
+      "signals": [
+       "gripper",
+       "eef_pause"
+      ],
+      "min_gap_sec": 0.8,
+      "pause_speed_quantile": 0.15,
+      "min_pause_sec": 0.3
+     },
+     "when": "has_telemetry"
+    },
+    "rewire_dependents_of": null
+   },
+   {
+    "node": {
+     "id": "inspect",
+     "operator": "inspect_transition_windows",
+     "depends_on": [
+      "annotate",
+      "hints"
+     ],
+     "params": {
+      "select": "near_hints",
+      "window_sec": 2.0,
+      "local_hz": 2.0,
+      "max_windows": 4,
+      "include_unmatched_hints": false,
+      "tile_px": 224,
+      "confidence_threshold": 0.7
+     },
+     "when": "has_hints"
+    },
+    "rewire_dependents_of": null
+   },
+   {
+    "node": {
+     "id": "refine",
+     "operator": "refine_intervals",
+     "depends_on": [
+      "annotate",
+      "inspect"
+     ],
+     "params": {
+      "prompt": "refine.md",
+      "thinking": false,
+      "max_tokens": 2048,
+      "temperature": 0.2,
+      "allow_insert": true,
+      "allow_delete": true
+     },
+     "when": "always"
+    },
+    "rewire_dependents_of": null
+   },
+   {
+    "node": {
+     "id": "merge",
+     "operator": "merge_filter_segments",
+     "depends_on": [
+      "refine"
+     ],
+     "params": {
+      "min_duration_sec": 0.4,
+      "max_gap_sec": 1.0,
+      "tile_full_episode": true,
+      "merge_same_label": false
+     },
+     "when": "always"
+    },
+    "rewire_dependents_of": null
+   }
+  ],
+  "remove_nodes": [],
+  "set_params": {
+   "sample": {
+    "sampling_hz": 2.0
+   }
+  },
+  "set_when": {},
+  "set_depends_on": {
+   "export": [
+    "merge"
+   ]
+  },
+  "prompt_updates": {}
+ },
+ "expected_outcome": "{'label_free_self_score_delta': '\u22650.03', 'non_regressing_episodes': '\u226550%', 'annotation_inference_cost': '\u22641.5\u00d7 incumbent (\u22480.00079 USD/episode)'}",
+ "verification_plan": {
+  "metric": "label_free_self_score",
+  "split": "validation",
+  "compare_to": "incumbent"
+ },
+ "stop_conditions": [
+  "Validation cost >1.5\u00d7 incumbent cost",
+  "Mean label\u2011free self\u2011score delta <0.03",
+  "Less than 50% of validation episodes show non\u2011regressing scores"
+ ],
+ "authored_by": "nvidia/NVIDIA-Nemotron-3-Super-120B-A12B",
+ "task_ids": [
+  "TASK-a8abb4010d",
+  "TASK-a1c5c9898c",
+  "TASK-c41c1862e1",
+  "TASK-05816ba4ce"
+ ],
+ "protocol": "v2-label-free",
+ "task_tree": [
+  {
+   "task_id": "TASK-a8abb4010d",
+   "parent": null,
+   "depth": 1,
+   "question": "Why does galaxea_011 produce boundaries at 1\u2011second intervals with zero visual confirmation?",
+   "status": "done",
+   "finding": "Galaxea_011\u2019s 1\u2011second boundaries result from the workflow\u2019s uniform 1\u202fHz sampling (one frame per second) combined with the model predicting a subtask for each sampled frame; because each predicted segment is shorter than two frames, the model cannot rely on visual change between frames, yielding zero visual verification.",
+   "implication": "Increase the sampling rate (e.g., to 2\u202fHz or higher) or modify the annotation prompt to encourage longer segments, so that boundaries can be anchored to visually detectable changes and visual verification improves.",
+   "evidence_ids": [
+    "SELF-0ce68ee9fe",
+    "EV-fd5d685402",
+    "EV-a8a57be878",
+    "EV-a89faebf8c"
+   ],
+   "dispatch_decision": null
+  },
+  {
+   "task_id": "TASK-a1c5c9898c",
+   "parent": null,
+   "depth": 1,
+   "question": "Why do galaxea_007 and robointer_droid_000012 have low telemetry agreement despite moderate visual verification?",
+   "status": "done",
+   "finding": "Galaxea_007 and robointer_droid_000012 show zero telemetry agreement because their gripper events (telemetry hints) occur far from the predicted segment boundaries, yielding zero precision/recall, while visual verification remains moderate because some visual confirmation exists but is not perfectly aligned.",
+   "implication": "Refine segment boundaries using telemetry hints (e.g., align predicted boundaries to gripper open/close events) or increase sampling rate to better capture telemetry changes, thereby improving telemetry agreement.",
+   "evidence_ids": [
+    "SELF-0ce68ee9fe",
+    "EV-8003cb5f5f",
+    "EV-92f796e446"
+   ],
+   "dispatch_decision": null
+  },
+  {
+   "task_id": "TASK-c41c1862e1",
+   "parent": null,
+   "depth": 1,
+   "question": "Why does the incumbent predict a boundary every second in galaxea_011, and do those boundaries correspond to actual manipulation state changes?",
+   "status": "done",
+   "finding": "The incumbent predicts a boundary every second because the workflow samples at 1\u202fHz and the annotation model treats each sampled second as a distinct segment (see EV-9b5b91ca09\u2019s 1\u2011second predicted segments). These boundaries do not precisely align with actual manipulation state changes; telemetry hints show gripper events occurring near but not exactly at integer seconds (EV-b0fc9c361d), and visual inspection confirms a change at ~5\u202fs (EV-dc7b55db92) while many second\u2011marked boundaries lack any telemetry or visual evidence of change (SELF-4e3d54401c shows visual_verification\u202f=\u202f0.0 and only 10 gripper events across 30 predicted boundaries).",
+   "implication": "Lower the fixed 1\u202fHz sampling or enable adaptive segmentation based on telemetry/visual change detection, and adjust the prompt to allow variable-length segments rather than forcing a new subtask each second.",
+   "evidence_ids": [
+    "SELF-4e3d54401c",
+    "EV-9b5b91ca09",
+    "EV-b0fc9c361d",
+    "EV-dc7b55db92"
+   ],
+   "dispatch_decision": null
+  },
+  {
+   "task_id": "TASK-05816ba4ce",
+   "parent": null,
+   "depth": 1,
+   "question": "In robointer_droid_000012, why does the predicted boundary at 10.0 sec have high visual verification but zero telemetry agreement?",
+   "status": "done",
+   "finding": "In robointer_droid_000012 the predicted boundary at 10.0\u202fsec is visually verified (visual_verification\u202f=\u202f1.0) because the vision model detects a clear manipulation state change around that time, but there is no telemetry signal (gripper state change) near 10.0\u202fsec; the nearest gripper hints are at 5.0\u202fsec (distance\u202f5.0) and 8.1\u202fsec (distance\u202f1.9), yielding zero telemetry agreement.",
+   "implication": "Consider relaxing the telemetry\u2011agreement criterion (e.g., increase distance tolerance or incorporate additional signals like end\u2011effector pause) so that boundaries supported strongly by visual evidence but lacking proximate gripper events are not penalized.",
+   "evidence_ids": [
+    "SELF-4e3d54401c",
+    "EV-6f36b2f5a4"
+   ],
+   "dispatch_decision": null
+  }
+ ]
+}

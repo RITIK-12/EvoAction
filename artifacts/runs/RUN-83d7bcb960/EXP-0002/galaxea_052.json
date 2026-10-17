@@ -1,0 +1,21 @@
+{
+ "episode_id": "galaxea_052",
+ "version_id": "EXP-0002",
+ "segments": [
+  {
+   "start_sec": 0.0,
+   "end_sec": 3.0,
+   "subtask": "Move the gripper to the cup."
+  },
+  {
+   "start_sec": 3.0,
+   "end_sec": 7.0,
+   "subtask": "Grab the cup and pour the water into the other two cups."
+  },
+  {
+   "start_sec": 7.0,
+   "end_sec": 13.5,
+   "subtask": "Put the cup back on the table."
+  }
+ ]
+}

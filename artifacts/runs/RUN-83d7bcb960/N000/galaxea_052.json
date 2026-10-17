@@ -1,0 +1,26 @@
+{
+ "episode_id": "galaxea_052",
+ "version_id": "N000",
+ "segments": [
+  {
+   "start_sec": 0.0,
+   "end_sec": 5.0,
+   "subtask": "Approach the cup with water"
+  },
+  {
+   "start_sec": 5.0,
+   "end_sec": 8.0,
+   "subtask": "Grasp the cup with water"
+  },
+  {
+   "start_sec": 8.0,
+   "end_sec": 11.0,
+   "subtask": "Lift and move the cup with water to the other cups"
+  },
+  {
+   "start_sec": 11.0,
+   "end_sec": 13.5,
+   "subtask": "Pour the water into the other two cups"
+  }
+ ]
+}

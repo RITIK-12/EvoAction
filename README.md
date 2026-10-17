@@ -5,38 +5,31 @@
 Robot manipulation subtask annotation is the working environment, because it is hard and can be scored objectively. Given a robot demonstration video, the task is to output timestamped segments, one per completed world-state change, in the style of WGO-Bench. Starting from a one-line goal and an incumbent annotation workflow, EvoAction:
 
 1. Runs the incumbent on real robot episodes using a Crusoe-hosted NVIDIA Nemotron vision model.
-2. Has a **Nemotron supervisor** read the incumbent's independently computed development errors and launch focused **investigation agents**. An investigator that finds a distinct, unresolved sub-problem can request a child investigation. The dispatcher spawns it only if it passes novelty, cycle, depth, fan-out, budget and evidence-citation checks.
+2. Has a **Nemotron supervisor** read the incumbent's **label-free self-assessment** and launch focused **investigation agents**. Agents **never see ground truth**. An investigator that finds a distinct, unresolved sub-problem can request a child investigation. The dispatcher spawns it only if it passes novelty, cycle, depth, fan-out, budget and evidence-citation checks.
 3. Turns findings into a falsifiable **`ExperimentProposal`** with a typed **workflow patch** that can change topology, parameters or prompts. A Nemotron critic reviews it, and invalid patches get one bounded repair.
-4. Runs the candidate on validation episodes the agents never saw in detail. The **controller** then applies a predeclared promotion rule and **promotes or rejects** the candidate. Rejected versions are frozen and kept; the incumbent is reloaded from its immutable artifacts.
+4. Runs the candidate on held-out validation episodes. The **controller** then applies a predeclared **label-free** promotion rule and **promotes or rejects** the candidate. Ground truth is used only for a shadow measurement recorded after the decision. Rejected versions are frozen and kept; the incumbent is reloaded from its immutable artifacts.
 5. Freezes **A** (incumbent `N000`), **B** (a strong fixed pipeline with no agents) and **C** (the best evolved harness, or the unchanged incumbent if nothing was promoted). All three run **once** on a sealed held-out split, and the run reports quality, inference cost and optimization overhead.
 
 Nothing is preordained. Promotion, rejection, grandchild spawning and benchmark wins are empirical outcomes, and `artifacts/report.html` shows only what actually happened.
 
-## Results from the live pilot run (all numbers come from `artifacts/`)
+<!-- RESULTS_V2 -->
 
-**Fixed baselines on the pilot dev and validation episodes:**
+## No-ground-truth protocol (v2)
 
-| System | dev F1@0.75 | validation F1@0.75 | validation F1@0.5 |
-|---|---|---|---|
-| A (`N000`) | 0.083 | 0.077 | 0.077 |
-| B (`strong_fixed`) | 0.042 | 0.000 | 0.500 |
+N+1 must improve the workflow **without ever looking at ground truth**. Version N's annotations are scored against the WGO-Bench labels, but those metrics are for the experimenters only.
 
-**Version N → N+1** (run `RUN-e9cd34b042`):
-- The Nemotron supervisor diagnosed that the incumbent produces evenly spaced, roughly 1-second segments. It launched 4 depth-1 investigations backed by real tool evidence: telemetry hints, sampling coverage and predictions.
-- No investigator raised an evidence-backed new question, so the **maximum depth reached was 1**. Child and grandchild spawning is covered by unit tests but did not occur in this live run, and is not shown as if it did.
-- **EXP-0001** was a topology change (`state_hint_detection → inspect_transition_windows → refine_intervals → merge_filter_segments`, at 2 Hz). It was **REJECTED**: validation F1@0.75 changed by −0.008 and cost rose 2.64×. Its refine pass answered "move" to the boundaries' existing times, so it changed nothing.
-- **EXP-0002** (2 Hz plus merge) was **REJECTED**: −0.008, cost 1.71×.
-- The incumbent remains `N000`. Both candidates are frozen as `EXP-000x_rejected`.
-
-**Sealed held-out test** (3 episodes, frozen A/B/C, run once):
-
-| System | F1@0.75 | F1@0.5 | short-event recall | annotation cost |
-|---|---|---|---|---|
-| A · N000 | 0.077 | 0.538 | 0.0 | $0.0017 |
-| B · strong fixed | **0.211** | 0.421 | 0.0 | $0.0022 |
-| C · unchanged incumbent | 0.077 | 0.538 | 0.0 | $0.0017 |
-
-EvoAction discovered and evaluated workflow changes, including a topology change, and correctly rejected both. The strong fixed baseline is still better on this held-out slice at IoU 0.75. With 3 test episodes this is a feasibility result. The full evidence is in `artifacts/report.html`, which includes model usage, the task tree, workflow diffs, per-episode scores and timelines.
+- **What agents see:** their own predictions, video frames (through the Crusoe vision model), robot telemetry, sampling metadata, and a predeclared **label-free self-score** (`evoaction/selfcheck/label_free.py`). The score combines:
+  - agreement between predicted boundaries and gripper open/close events (0.35)
+  - Crusoe vision-model confirmation that a state change completes at each boundary (0.35)
+  - variability of segment durations, since evenly spaced segments are an artifact of tiled sampling (0.15)
+  - temporal resolution: no segments shorter than two sampled frames (0.15)
+- **Promotion rule:** label-free self-score improves by at least 0.03, at least 50% of validation episodes do not regress on that score, outputs are valid, and annotation cost is at most 1.5×.
+- **Ground truth** is read only by `evoaction/evaluation/protected.py`. It produces a **shadow measurement** after each decision, which goes to the report only, and the sealed final test. That answers the real question: did the label-free self-improvement actually improve accuracy?
+- **Guards:**
+  - A test plants sentinel ground-truth values and checks they never appear in any agent prompt.
+  - A static test checks that `agents/` and `selfcheck/` never reference the protected store.
+  - The history agents see excludes shadow measurements.
+- **Superseded run:** an earlier run in which agents saw ground-truth-derived development summaries (`v1`) is archived in `artifacts/superseded/v1_gt_feedback/`, with an explanation.
 
 ## Quick start
 
@@ -71,10 +64,7 @@ Near-miss IDs in `.env` are resolved to the live ID; for example, `nvidia/Nemotr
 - Primary metric: **micro Segment F1@0.75**, plus paired per-episode F1, short-event recall (reference subtasks under 2 s), and invalid/empty output rates.
 - Report-only metrics: F1@0.5, mean boundary error in seconds, and an evaluator-only **outer-boundary-snapped** variant. The raw score is always reported separately. Snapped predictions are never written back.
 - Temporal F1 measures boundaries only. **It does not assess whether subtask labels are semantically correct.**
-- **Access policy:**
-  - Dev: agents get binned error diagnostics, never reference times or labels.
-  - Validation: agents get aggregate and paired F1 only.
-  - Test: sealed until A/B/C are frozen with checksums, then evaluated exactly once.
+- **Access policy (v2):** agents receive nothing derived from labels on any split. The evaluator scores dev and validation only for shadow measurement. The test split stays sealed until A/B/C are frozen with checksums, then is evaluated exactly once, on the 3 test episodes never evaluated before.
 
 ## Workflow graph (the thing that evolves)
 
@@ -94,13 +84,7 @@ The validator enforces: at most 8 nodes, no cycles, exactly one annotate node, a
 
 ## Promotion rule (applied by the controller, never by an agent)
 
-A candidate is promoted only if all of these hold:
-- validation micro F1@0.75 improves by at least 0.02
-- at least 50% of validation episodes do not regress
-- outputs are valid
-- annotation inference cost is at most 1.5× the incumbent's
-
-These are operational heuristics on a tiny validation set, not statistical significance.
+The rule is label-free (see the protocol above) and predeclared before the v2 run. It is an operational heuristic, not statistical significance.
 
 ## Budgets and safety
 

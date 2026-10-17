@@ -1,0 +1,2735 @@
+{
+ "run_id": "RUN-83d7bcb960",
+ "protocol": "v2-label-free",
+ "pilot": false,
+ "gate": {
+  "signal": "label-free-v1",
+  "min_self_score_delta": 0.03,
+  "min_nonregressing_fraction": 0.5,
+  "max_annotation_cost_ratio": 1.5,
+  "require_valid_outputs": true,
+  "note": "label-free gate predeclared before the v2 run; ground truth is never consulted for promotion"
+ },
+ "label_free_score": {
+  "version": "label-free-v1",
+  "components": {
+   "telemetry_agreement": "F1 between predicted interior boundaries and gripper open/close transitions from robot telemetry (tolerance 0.75 s)",
+   "visual_verification": "fraction of predicted interior boundaries where the Crusoe vision model, shown a close-up 2 s frame strip, confirms a manipulation state change completes",
+   "duration_variability": "min(1, CV(segment durations) / 0.5); evenly spaced segments (an artifact of tiled sampling) score low",
+   "temporal_resolution": "1 - fraction of segments shorter than two sampled frames of the workflow's own sampling rate"
+  },
+  "weights": {
+   "telemetry_agreement": 0.35,
+   "visual_verification": 0.35,
+   "duration_variability": 0.15,
+   "temporal_resolution": 0.15
+  },
+  "aggregation": "weighted mean over the components available for an episode (weights renormalized), then mean over episodes",
+  "gt_access": "none"
+ },
+ "dev_ids": [
+  "galaxea_011",
+  "robointer_droid_000010",
+  "galaxea_013",
+  "robointer_droid_000012",
+  "galaxea_007"
+ ],
+ "val_ids": [
+  "galaxea_002",
+  "robointer_droid_000045",
+  "galaxea_052",
+  "robointer_droid_000046"
+ ],
+ "iterations": [
+  {
+   "iteration": 1,
+   "incumbent": "N000",
+   "incumbent_label_free": {
+    "dev": 0.5434,
+    "val": 0.5115
+   },
+   "incumbent_shadow_gt": {
+    "dev": 0.08108108108108107,
+    "val": 0.0975609756097561
+   },
+   "plan": {
+    "failure_summary": "The incumbent workflow frequently over-segments videos, producing boundaries at uniform intervals (e.g., 1\u2011second steps in galaxea_011) that lack visual confirmation and show poor alignment with gripper telemetry. This leads to low visual_verification and temporal_resolution scores, while telemetry_agreement varies across episodes, indicating that the model struggles to detect true manipulation completion points and instead defaults to a regular segmentation heuristic.",
+    "investigations": [
+     {
+      "question": "Why does galaxea_011 produce boundaries at 1\u2011second intervals with zero visual confirmation?",
+      "tools_allowed": [
+       "episode_predictions",
+       "sampling_coverage",
+       "inspect_frames"
+      ],
+      "tool_requests": [
+       {
+        "tool": "episode_predictions",
+        "args": {
+         "episode_id": "galaxea_011"
+        }
+       },
+       {
+        "tool": "sampling_coverage",
+        "args": {
+         "episode_id": "galaxea_011",
+         "sampling_hz": 1.0
+        }
+       },
+       {
+        "tool": "inspect_frames",
+        "args": {
+         "episode_id": "galaxea_011",
+         "center_sec": 5.0,
+         "window_sec": 2.0,
+         "local_hz": 2.0,
+         "question": "Does the frame strip around 5\u202fs show a manipulation state change?"
+        }
+       },
+       {
+        "tool": "inspect_frames",
+        "args": {
+         "episode_id": "galaxea_011",
+         "center_sec": 12.0,
+         "window_sec": 2.0,
+         "local_hz": 2.0,
+         "question": "Does the frame strip around 12\u202fs show a manipulation state change?"
+        }
+       }
+      ]
+     },
+     {
+      "question": "Why do galaxea_007 and robointer_droid_000012 have low telemetry agreement despite moderate visual verification?",
+      "tools_allowed": [
+       "episode_predictions",
+       "telemetry_hints"
+      ],
+      "tool_requests": [
+       {
+        "tool": "episode_predictions",
+        "args": {
+         "episode_id": "galaxea_007"
+        }
+       },
+       {
+        "tool": "episode_predictions",
+        "args": {
+         "episode_id": "robointer_droid_000012"
+        }
+       },
+       {
+        "tool": "telemetry_hints",
+        "args": {
+         "episode_id": "galaxea_007",
+         "signals": [
+          "gripper"
+         ]
+        }
+       },
+       {
+        "tool": "telemetry_hints",
+        "args": {
+         "episode_id": "robointer_droid_000012",
+         "signals": [
+          "gripper"
+         ]
+        }
+       }
+      ]
+     }
+    ],
+    "call_id": "CALL-5d89598868",
+    "model": "nvidia/NVIDIA-Nemotron-3-Super-120B-A12B"
+   },
+   "proposal_record": {
+    "exp_id": "EXP-0001",
+    "attempts": [
+     {
+      "call_id": "CALL-a158dc8862",
+      "errors": [],
+      "raw": {
+       "hypothesis": "The incumbent workflow produces overly short segments (often one frame apart) because the prompt does not discourage fine-grained predictions, leading to poor temporal resolution, low telemetry agreement, and low visual verification. By updating the annotation prompt to explicitly require longer subtasks (minimum ~1.5 seconds) and to avoid predicting a subtask for every sampled frame, the model will produce boundaries that better align with detectable manipulation state changes, improving telemetry agreement and visual verification while keeping inference cost unchanged.",
+       "failure_slice": "Episodes where the incumbent's mean segment duration is less than 1.5 seconds (indicating many short segments) or where visual_verification is below 0.5, as evidenced by the 1\u2011second boundary pattern in galaxea_011 and low telemetry agreement in galaxea_007/robointer_droid_000012.",
+       "evidence_ids": [
+        "SELF-0ce68ee9fe",
+        "EV-fd5d685402",
+        "EV-a8a57be878",
+        "EV-a89faebf8c",
+        "EV-8003cb5f5f",
+        "EV-92f796e446"
+       ],
+       "objective": "Raise the label\u2011free self\u2011score (weighted mean of telemetry_agreement, visual_verification, duration_variability, temporal_resolution) by at least 0.03 on held\u2011out validation episodes without exceeding 1.5\u00d7 the incumbent's annotation inference cost.",
+       "candidate_patch": {
+        "prompt_updates": {
+         "prompt.md": "You are annotating a robot manipulation video.\nThe images are contact sheets of frames sampled uniformly at $sampling_hz Hz from a $duration_sec-second video, in time order (left to right, top to bottom). Each tile shows its timestamp in seconds in yellow.\n\nTask instruction: \"$instruction\"\n\nSplit the video into the sequence of completed manipulation subtasks the robot performs.\nReturn only JSON: {\"segments\": [{\"start_sec\": <float>, \"end_sec\": <float>, \"subtask\": \"<short description>\"}]}\n\nAdditional guidelines:\n- Each subtask must span at least 1.5 seconds (or at least two sampled frames) to ensure a meaningful manipulation state change.\n- Avoid predicting a subtask for every sampled frame; instead, group consecutive frames that belong to the same manipulation phase.\n- If uncertain about exact boundaries, prefer longer segments that capture a clear start and end of a manipulation state change."
+        }
+       },
+       "expected_outcome": "The updated prompt will yield longer, more plausible segments, increasing telemetry_agreement (better alignment with gripper/open\u2011close events), visual_verification (more visual change per segment), duration_variability (less uniform spacing), and temporal_resolution (fewer segments shorter than two frames). Overall label\u2011free score should rise by \u22650.03. Annotation inference cost remains unchanged (one multimodal call per episode), staying well under the 1.5\u00d7 limit.",
+       "verification_plan": {
+        "metric": "label_free_self_score",
+        "split": "validation",
+        "compare_to": "incumbent"
+       },
+       "stop_conditions": [
+        "Annotation inference cost > 1.5 \u00d7 incumbent mean cost per episode",
+        "Fewer than 50% of validation episodes show non\u2011regressing label\u2011free score",
+        "Any episode produces invalid JSON or fails schema/monotonic validation"
+       ]
+      }
+     }
+    ],
+    "critique": {
+     "call_id": "CALL-fe16328a95",
+     "verdict": "approve",
+     "issues": [],
+     "required_changes": ""
+    },
+    "status": "valid",
+    "proposal": {
+     "id": "EXP-0001",
+     "parent_version": "N000",
+     "hypothesis": "The incumbent workflow produces overly short segments (often one frame apart) because the prompt does not discourage fine-grained predictions, leading to poor temporal resolution, low telemetry agreement, and low visual verification. By updating the annotation prompt to explicitly require longer subtasks (minimum ~1.5 seconds) and to avoid predicting a subtask for every sampled frame, the model will produce boundaries that better align with detectable manipulation state changes, improving telemetry agreement and visual verification while keeping inference cost unchanged.",
+     "failure_slice": "Episodes where the incumbent's mean segment duration is less than 1.5 seconds (indicating many short segments) or where visual_verification is below 0.5, as evidenced by the 1\u2011second boundary pattern in galaxea_011 and low telemetry agreement in galaxea_007/robointer_droid_000012.",
+     "evidence_ids": [
+      "SELF-0ce68ee9fe",
+      "EV-fd5d685402",
+      "EV-a8a57be878",
+      "EV-a89faebf8c",
+      "EV-8003cb5f5f",
+      "EV-92f796e446"
+     ],
+     "objective": "Raise the label\u2011free self\u2011score (weighted mean of telemetry_agreement, visual_verification, duration_variability, temporal_resolution) by at least 0.03 on held\u2011out validation episodes without exceeding 1.5\u00d7 the incumbent's annotation inference cost.",
+     "candidate_patch": {
+      "insert_nodes": [],
+      "remove_nodes": [],
+      "set_params": {},
+      "set_when": {},
+      "set_depends_on": {},
+      "prompt_updates": {
+       "prompt.md": "You are annotating a robot manipulation video.\nThe images are contact sheets of frames sampled uniformly at $sampling_hz Hz from a $duration_sec-second video, in time order (left to right, top to bottom). Each tile shows its timestamp in seconds in yellow.\n\nTask instruction: \"$instruction\"\n\nSplit the video into the sequence of completed manipulation subtasks the robot performs.\nReturn only JSON: {\"segments\": [{\"start_sec\": <float>, \"end_sec\": <float>, \"subtask\": \"<short description>\"}]}\n\nAdditional guidelines:\n- Each subtask must span at least 1.5 seconds (or at least two sampled frames) to ensure a meaningful manipulation state change.\n- Avoid predicting a subtask for every sampled frame; instead, group consecutive frames that belong to the same manipulation phase.\n- If uncertain about exact boundaries, prefer longer segments that capture a clear start and end of a manipulation state change."
+      }
+     },
+     "expected_outcome": "The updated prompt will yield longer, more plausible segments, increasing telemetry_agreement (better alignment with gripper/open\u2011close events), visual_verification (more visual change per segment), duration_variability (less uniform spacing), and temporal_resolution (fewer segments shorter than two frames). Overall label\u2011free score should rise by \u22650.03. Annotation inference cost remains unchanged (one multimodal call per episode), staying well under the 1.5\u00d7 limit.",
+     "verification_plan": {
+      "metric": "label_free_self_score",
+      "split": "validation",
+      "compare_to": "incumbent"
+     },
+     "stop_conditions": [
+      "Annotation inference cost > 1.5 \u00d7 incumbent mean cost per episode",
+      "Fewer than 50% of validation episodes show non\u2011regressing label\u2011free score",
+      "Any episode produces invalid JSON or fails schema/monotonic validation"
+     ],
+     "authored_by": "nvidia/NVIDIA-Nemotron-3-Super-120B-A12B",
+     "task_ids": [
+      "TASK-a8abb4010d",
+      "TASK-a1c5c9898c"
+     ]
+    }
+   },
+   "decision": {
+    "decision": "REJECTED",
+    "gate": {
+     "signal": "label-free-v1",
+     "min_self_score_delta": 0.03,
+     "min_nonregressing_fraction": 0.5,
+     "max_annotation_cost_ratio": 1.5,
+     "require_valid_outputs": true,
+     "note": "label-free gate predeclared before the v2 run; ground truth is never consulted for promotion"
+    },
+    "checks": {
+     "self_score_delta": {
+      "value": -0.1451,
+      "threshold": 0.03,
+      "pass": false
+     },
+     "non_regressing_fraction": {
+      "value": 0.5,
+      "threshold": 0.5,
+      "pass": true
+     },
+     "valid_outputs": {
+      "value": {
+       "bad_status": {},
+       "empty_output_episodes": []
+      },
+      "pass": true
+     },
+     "annotation_cost_ratio": {
+      "value": 1.038,
+      "threshold": 1.5,
+      "candidate_usd_per_episode": 0.000548,
+      "incumbent_usd_per_episode": 0.000528,
+      "pass": true
+     }
+    },
+    "paired_self_score": {
+     "episodes": [
+      "galaxea_002",
+      "galaxea_052",
+      "robointer_droid_000045",
+      "robointer_droid_000046"
+     ],
+     "per_episode_delta": {
+      "galaxea_002": 0.0039000000000000146,
+      "galaxea_052": -0.15240000000000004,
+      "robointer_droid_000045": 0.0,
+      "robointer_droid_000046": -0.43220000000000003
+     },
+     "non_regressing_fraction": 0.5,
+     "improved": 1,
+     "regressed": 2,
+     "mean_delta": -0.145175
+    },
+    "label_free": {
+     "candidate_self_score": 0.3664,
+     "incumbent_self_score": 0.5115,
+     "candidate_components": {
+      "telemetry_agreement": 0.1723,
+      "visual_verification": 0.25,
+      "duration_variability": 0.4573,
+      "temporal_resolution": 1.0
+     },
+     "incumbent_components": {
+      "telemetry_agreement": 0.2722,
+      "visual_verification": 0.5,
+      "duration_variability": 0.6085,
+      "temporal_resolution": 1.0
+     }
+    },
+    "uncertainty": "n=4 validation episodes; label-free proxy, not ground truth",
+    "candidate_usage": {
+     "calls": 8,
+     "cache_hits": 2,
+     "prompt_tokens": 6491,
+     "completion_tokens": 483,
+     "cost_usd": 0.002831,
+     "model_latency_s": 9.04
+    },
+    "topology_change": false,
+    "rollback": "incumbent remains N000; candidate preserved as EXP-0001_rejected"
+   },
+   "shadow_gt": {
+    "candidate": {
+     "micro_f1": 0.0975609756097561,
+     "micro_f1_iou05": 0.3414634146341463,
+     "short_event_recall": 0.0,
+     "mean_boundary_mae_sec": 4.754541666666666,
+     "outer_snapped_micro_f1": 0.14634146341463414,
+     "per_episode_f1": {
+      "galaxea_002": 0.0,
+      "galaxea_052": 0.0,
+      "robointer_droid_000045": 0.28571428571428575,
+      "robointer_droid_000046": 0.28571428571428575
+     }
+    },
+    "incumbent": {
+     "micro_f1": 0.0975609756097561,
+     "micro_f1_iou05": 0.0975609756097561,
+     "short_event_recall": 0.0,
+     "mean_boundary_mae_sec": 5.4688125,
+     "outer_snapped_micro_f1": 0.0975609756097561,
+     "per_episode_f1": {
+      "galaxea_002": 0.0,
+      "galaxea_052": 0.0,
+      "robointer_droid_000045": 0.28571428571428575,
+      "robointer_droid_000046": 0.28571428571428575
+     }
+    }
+   }
+  },
+  {
+   "iteration": 2,
+   "incumbent": "N000",
+   "incumbent_label_free": {
+    "dev": 0.5434,
+    "val": 0.5115
+   },
+   "incumbent_shadow_gt": {
+    "dev": 0.08108108108108107,
+    "val": 0.0975609756097561
+   },
+   "plan": {
+    "failure_summary": "The incumbent workflow produces overly frequent, uniformly spaced segment boundaries (often one per sampled frame). This leads to low visual verification (many boundaries lack a clear manipulation state change) and poor telemetry agreement (many predicted boundaries do not align with gripper open/close events), while duration variability is low due to uniform spacing and temporal resolution suffers because most segments are shorter than two sampled frames.",
+    "investigations": [
+     {
+      "question": "Why does the incumbent predict a boundary every second in galaxea_011, and do those boundaries correspond to actual manipulation state changes?",
+      "tools_allowed": [
+       "episode_predictions",
+       "telemetry_hints",
+       "inspect_frames"
+      ],
+      "tool_requests": [
+       {
+        "tool": "episode_predictions",
+        "args": {
+         "episode_id": "galaxea_011"
+        }
+       },
+       {
+        "tool": "telemetry_hints",
+        "args": {
+         "episode_id": "galaxea_011",
+         "signals": [
+          "gripper"
+         ]
+        }
+       },
+       {
+        "tool": "inspect_frames",
+        "args": {
+         "episode_id": "galaxea_011",
+         "center_sec": 5.0,
+         "window_sec": 2.0,
+         "local_hz": 2,
+         "question": "Does the frame strip around 5.0 seconds show a clear manipulation state change?"
+        }
+       },
+       {
+        "tool": "inspect_frames",
+        "args": {
+         "episode_id": "galaxea_011",
+         "center_sec": 15.0,
+         "window_sec": 2.0,
+         "local_hz": 2,
+         "question": "Does the frame strip around 15.0 seconds show a clear manipulation state change?"
+        }
+       }
+      ]
+     },
+     {
+      "question": "In robointer_droid_000012, why does the predicted boundary at 10.0 sec have high visual verification but zero telemetry agreement?",
+      "tools_allowed": [
+       "episode_predictions",
+       "telemetry_hints",
+       "inspect_frames"
+      ],
+      "tool_requests": [
+       {
+        "tool": "episode_predictions",
+        "args": {
+         "episode_id": "robointer_droid_000010"
+        }
+       },
+       {
+        "tool": "telemetry_hints",
+        "args": {
+         "episode_id": "robointer_droid_000010",
+         "signals": [
+          "gripper"
+         ]
+        }
+       },
+       {
+        "tool": "inspect_frames",
+        "args": {
+         "episode_id": "robointer_droid_000010",
+         "center_sec": 10.0,
+         "window_sec": 2.0,
+         "local_hz": 2,
+         "question": "Does the frame strip around 10.0 seconds show a clear manipulation state change?"
+        }
+       }
+      ]
+     }
+    ],
+    "call_id": "CALL-20d5448b5c",
+    "model": "nvidia/NVIDIA-Nemotron-3-Super-120B-A12B"
+   },
+   "proposal_record": {
+    "exp_id": "EXP-0002",
+    "attempts": [
+     {
+      "call_id": "CALL-cd48e3a7d1",
+      "errors": [],
+      "raw": {
+       "hypothesis": "Increasing the sampling rate to 2\u202fHz provides finer temporal detail, and adding a deterministic telemetry\u2011hint detection step followed by visual inspection of hint\u2011aligned windows and a lightweight refinement pass will shift predicted boundaries toward true manipulation state changes, thereby improving telemetry agreement and visual verification without exceeding 1.5\u00d7 the incumbent\u2019s inference cost.",
+       "failure_slice": "Episodes where the incumbent shows low telemetry agreement (<0.2) or low visual verification (<0.3) due to uniformly spaced 1\u2011second boundaries that miss gripper/EEF transitions and visual change points (e.g., galaxea_011, galaxea_007, robointer_droid_000012).",
+       "evidence_ids": [
+        "SELF-0ce68ee9fe",
+        "EV-fd5d685402",
+        "EV-a8a57be878",
+        "EV-a89faebf8c",
+        "EV-8003cb5f5f",
+        "EV-92f796e446",
+        "SELF-4e3d54401c",
+        "EV-9b5b91ca09",
+        "EV-b0fc9c361d",
+        "EV-dc7b55db92",
+        "EV-6f36b2f5a4"
+       ],
+       "objective": "Raise the label\u2011free self\u2011score (weighted mean of telemetry_agreement, visual_verification, duration_variability, temporal_resolution) by at least 0.03 on validation episodes while keeping annotation inference cost \u22641.5\u00d7 the incumbent and ensuring \u226550% of episodes do not regress.",
+       "candidate_patch": {
+        "insert_nodes": [
+         {
+          "node": {
+           "id": "hints",
+           "operator": "state_hint_detection",
+           "depends_on": [
+            "sample"
+           ],
+           "params": {
+            "signals": [
+             "gripper",
+             "eef_pause"
+            ],
+            "min_gap_sec": 0.8,
+            "pause_speed_quantile": 0.15,
+            "min_pause_sec": 0.3
+           },
+           "when": "has_telemetry"
+          },
+          "rewire_dependents_of": null
+         },
+         {
+          "node": {
+           "id": "inspect",
+           "operator": "inspect_transition_windows",
+           "depends_on": [
+            "annotate",
+            "hints"
+           ],
+           "params": {
+            "select": "near_hints",
+            "window_sec": 2.0,
+            "local_hz": 4.0,
+            "max_windows": 8,
+            "include_unmatched_hints": false,
+            "tile_px": 224,
+            "confidence_threshold": 0.7
+           },
+           "when": "has_hints"
+          },
+          "rewire_dependents_of": null
+         },
+         {
+          "node": {
+           "id": "refine",
+           "operator": "refine_intervals",
+           "depends_on": [
+            "annotate",
+            "inspect"
+           ],
+           "params": {
+            "prompt": "refine.md",
+            "thinking": false,
+            "max_tokens": 16384,
+            "temperature": 0.2,
+            "allow_insert": true,
+            "allow_delete": true
+           },
+           "when": "always"
+          },
+          "rewire_dependents_of": null
+         },
+         {
+          "node": {
+           "id": "merge",
+           "operator": "merge_filter_segments",
+           "depends_on": [
+            "refine"
+           ],
+           "params": {
+            "min_duration_sec": 0.4,
+            "max_gap_sec": 1.0,
+            "tile_full_episode": true,
+            "merge_same_label": false
+           },
+           "when": "always"
+          },
+          "rewire_dependents_of": null
+         }
+        ],
+        "set_depends_on": {
+         "export": [
+          "merge"
+         ]
+        },
+        "remove_nodes": []
+       },
+       "expected_outcome": {
+        "label_free_self_score_delta": "\u22650.03",
+        "non_regressing_episodes": "\u226550%",
+        "annotation_inference_cost": "\u22641.5\u00d7 incumbent (\u22480.00079\u202fUSD/episode)"
+       },
+       "verification_plan": {
+        "metric": "label_free_self_score",
+        "split": "validation",
+        "compare_to": "incumbent"
+       },
+       "stop_conditions": [
+        "Validation cost >1.5\u00d7 incumbent cost",
+        "Mean label\u2011free self\u2011score delta <0.03",
+        "Less than 50% of validation episodes show non\u2011regressing scores"
+       ]
+      }
+     },
+     {
+      "call_id": "CALL-8c978af3f1",
+      "errors": [],
+      "raw": {
+       "hypothesis": "Increasing the sampling rate to 2\u202fHz provides finer temporal detail, and adding a deterministic telemetry\u2011hint detection step followed by visual inspection of hint\u2011aligned windows and a lightweight refinement pass will shift predicted boundaries toward true manipulation state changes, thereby improving telemetry agreement and visual verification without exceeding 1.5\u00d7 the incumbent\u2019s inference cost.",
+       "failure_slice": "Episodes where the incumbent shows low telemetry agreement (<0.2) or low visual verification (<0.3) due to uniformly spaced 1\u2011second boundaries that miss gripper/EEF transitions and visual change points (e.g., galaxea_011, galaxea_007, robointer_droid_000012).",
+       "evidence_ids": [
+        "SELF-0ce68ee9fe",
+        "EV-fd5d685402",
+        "EV-a8a57be878",
+        "EV-a89faebf8c",
+        "EV-8003cb5f5f",
+        "EV-92f796e446",
+        "SELF-4e3d54401c",
+        "EV-9b5b91ca09",
+        "EV-b0fc9c361d",
+        "EV-dc7b55db92",
+        "EV-6f36b2f5a4"
+       ],
+       "objective": "Raise the label\u2011free self\u2011score (weighted mean of telemetry_agreement, visual_verification, duration_variability, temporal_resolution) by at least 0.03 on validation episodes while keeping annotation inference cost \u22641.5\u00d7 the incumbent and ensuring \u226550% of episodes do not regress.",
+       "candidate_patch": {
+        "insert_nodes": [
+         {
+          "node": {
+           "id": "hints",
+           "operator": "state_hint_detection",
+           "depends_on": [
+            "sample"
+           ],
+           "params": {
+            "signals": [
+             "gripper",
+             "eef_pause"
+            ],
+            "min_gap_sec": 0.8,
+            "pause_speed_quantile": 0.15,
+            "min_pause_sec": 0.3
+           },
+           "when": "has_telemetry"
+          },
+          "rewire_dependents_of": null
+         },
+         {
+          "node": {
+           "id": "inspect",
+           "operator": "inspect_transition_windows",
+           "depends_on": [
+            "annotate",
+            "hints"
+           ],
+           "params": {
+            "select": "near_hints",
+            "window_sec": 2.0,
+            "local_hz": 2.0,
+            "max_windows": 4,
+            "include_unmatched_hints": false,
+            "tile_px": 224,
+            "confidence_threshold": 0.7
+           },
+           "when": "has_hints"
+          },
+          "rewire_dependents_of": null
+         },
+         {
+          "node": {
+           "id": "refine",
+           "operator": "refine_intervals",
+           "depends_on": [
+            "annotate",
+            "inspect"
+           ],
+           "params": {
+            "prompt": "refine.md",
+            "thinking": false,
+            "max_tokens": 2048,
+            "temperature": 0.2,
+            "allow_insert": true,
+            "allow_delete": true
+           },
+           "when": "always"
+          },
+          "rewire_dependents_of": null
+         },
+         {
+          "node": {
+           "id": "merge",
+           "operator": "merge_filter_segments",
+           "depends_on": [
+            "refine"
+           ],
+           "params": {
+            "min_duration_sec": 0.4,
+            "max_gap_sec": 1.0,
+            "tile_full_episode": true,
+            "merge_same_label": false
+           },
+           "when": "always"
+          },
+          "rewire_dependents_of": null
+         }
+        ],
+        "remove_nodes": [],
+        "set_params": {
+         "sample": {
+          "sampling_hz": 2.0
+         }
+        },
+        "set_depends_on": {
+         "export": [
+          "merge"
+         ]
+        },
+        "set_when": {},
+        "prompt_updates": {}
+       },
+       "expected_outcome": {
+        "label_free_self_score_delta": "\u22650.03",
+        "non_regressing_episodes": "\u226550%",
+        "annotation_inference_cost": "\u22641.5\u00d7 incumbent (\u22480.00079 USD/episode)"
+       },
+       "verification_plan": {
+        "metric": "label_free_self_score",
+        "split": "validation",
+        "compare_to": "incumbent"
+       },
+       "stop_conditions": [
+        "Validation cost >1.5\u00d7 incumbent cost",
+        "Mean label\u2011free self\u2011score delta <0.03",
+        "Less than 50% of validation episodes show non\u2011regressing scores"
+       ]
+      },
+      "after_critique": true
+     }
+    ],
+    "critique": {
+     "call_id": "CALL-3f4276f81b",
+     "verdict": "revise",
+     "issues": [
+      "The hypothesis requires increasing the sampling rate to 2\u202fHz, but the candidate patch does not modify the sample node's sampling_hz; it remains at the incumbent 1\u202fHz, so the core manipulation of temporal detail is not tested.",
+      "The added refine_intervals node uses a large token budget (max_tokens=16384) and will likely increase annotation inference cost well beyond 1.5\u00d7 the incumbent (\u22480.00079\u202fUSD/episode), risking violation of the cost constraint.",
+      "The inspection step (inspect_transition_windows) may generate multiple vision calls per episode (up to max_windows=8 at local_hz=4.0), further adding cost without clear evidence that this stays within the budget.",
+      "There is no explicit cost analysis or mitigation (e.g., token reduction, cheaper model) to show the proposal can meet the \u22641.5\u00d7 incumbent cost requirement.",
+      "While the hypothesis mentions telemetry\u2011hint detection and visual inspection improving alignment, the patch does not include any mechanism to validate that the hint\u2011aligned windows actually correspond to true manipulation state changes beyond the label\u2011free score, leaving open the possibility of gaming the score without genuine annotation improvement."
+     ],
+     "required_changes": "Modify the sample node to use sampling_hz=2.0 (or higher) to fulfill the hypothesis. Reduce the computational expense of the refinement step\u2014either lower max_tokens (e.g., to 2048), use a cheaper/thinking=false setting, or replace refine_intervals with a lighter post\u2011processing rule. Adjust inspect_transition_windows parameters to limit vision calls (e.g., max_windows=4, local_hz=2.0) and/or add a cost estimate showing total expected cost \u22641.5\u00d7 incumbent. Finally, add a verification step that checks that the added nodes actually shift boundaries toward telemetry hints (e.g., compute hint\u2011boundary distance) to ensure the improvement is not merely score\u2011gaming."
+    },
+    "status": "valid",
+    "proposal": {
+     "id": "EXP-0002",
+     "parent_version": "N000",
+     "hypothesis": "Increasing the sampling rate to 2\u202fHz provides finer temporal detail, and adding a deterministic telemetry\u2011hint detection step followed by visual inspection of hint\u2011aligned windows and a lightweight refinement pass will shift predicted boundaries toward true manipulation state changes, thereby improving telemetry agreement and visual verification without exceeding 1.5\u00d7 the incumbent\u2019s inference cost.",
+     "failure_slice": "Episodes where the incumbent shows low telemetry agreement (<0.2) or low visual verification (<0.3) due to uniformly spaced 1\u2011second boundaries that miss gripper/EEF transitions and visual change points (e.g., galaxea_011, galaxea_007, robointer_droid_000012).",
+     "evidence_ids": [
+      "SELF-0ce68ee9fe",
+      "EV-fd5d685402",
+      "EV-a8a57be878",
+      "EV-a89faebf8c",
+      "EV-8003cb5f5f",
+      "EV-92f796e446",
+      "SELF-4e3d54401c",
+      "EV-9b5b91ca09",
+      "EV-b0fc9c361d",
+      "EV-dc7b55db92",
+      "EV-6f36b2f5a4"
+     ],
+     "objective": "Raise the label\u2011free self\u2011score (weighted mean of telemetry_agreement, visual_verification, duration_variability, temporal_resolution) by at least 0.03 on validation episodes while keeping annotation inference cost \u22641.5\u00d7 the incumbent and ensuring \u226550% of episodes do not regress.",
+     "candidate_patch": {
+      "insert_nodes": [
+       {
+        "node": {
+         "id": "hints",
+         "operator": "state_hint_detection",
+         "depends_on": [
+          "sample"
+         ],
+         "params": {
+          "signals": [
+           "gripper",
+           "eef_pause"
+          ],
+          "min_gap_sec": 0.8,
+          "pause_speed_quantile": 0.15,
+          "min_pause_sec": 0.3
+         },
+         "when": "has_telemetry"
+        },
+        "rewire_dependents_of": null
+       },
+       {
+        "node": {
+         "id": "inspect",
+         "operator": "inspect_transition_windows",
+         "depends_on": [
+          "annotate",
+          "hints"
+         ],
+         "params": {
+          "select": "near_hints",
+          "window_sec": 2.0,
+          "local_hz": 2.0,
+          "max_windows": 4,
+          "include_unmatched_hints": false,
+          "tile_px": 224,
+          "confidence_threshold": 0.7
+         },
+         "when": "has_hints"
+        },
+        "rewire_dependents_of": null
+       },
+       {
+        "node": {
+         "id": "refine",
+         "operator": "refine_intervals",
+         "depends_on": [
+          "annotate",
+          "inspect"
+         ],
+         "params": {
+          "prompt": "refine.md",
+          "thinking": false,
+          "max_tokens": 2048,
+          "temperature": 0.2,
+          "allow_insert": true,
+          "allow_delete": true
+         },
+         "when": "always"
+        },
+        "rewire_dependents_of": null
+       },
+       {
+        "node": {
+         "id": "merge",
+         "operator": "merge_filter_segments",
+         "depends_on": [
+          "refine"
+         ],
+         "params": {
+          "min_duration_sec": 0.4,
+          "max_gap_sec": 1.0,
+          "tile_full_episode": true,
+          "merge_same_label": false
+         },
+         "when": "always"
+        },
+        "rewire_dependents_of": null
+       }
+      ],
+      "remove_nodes": [],
+      "set_params": {
+       "sample": {
+        "sampling_hz": 2.0
+       }
+      },
+      "set_when": {},
+      "set_depends_on": {
+       "export": [
+        "merge"
+       ]
+      },
+      "prompt_updates": {}
+     },
+     "expected_outcome": "{'label_free_self_score_delta': '\u22650.03', 'non_regressing_episodes': '\u226550%', 'annotation_inference_cost': '\u22641.5\u00d7 incumbent (\u22480.00079 USD/episode)'}",
+     "verification_plan": {
+      "metric": "label_free_self_score",
+      "split": "validation",
+      "compare_to": "incumbent"
+     },
+     "stop_conditions": [
+      "Validation cost >1.5\u00d7 incumbent cost",
+      "Mean label\u2011free self\u2011score delta <0.03",
+      "Less than 50% of validation episodes show non\u2011regressing scores"
+     ],
+     "authored_by": "nvidia/NVIDIA-Nemotron-3-Super-120B-A12B",
+     "task_ids": [
+      "TASK-a8abb4010d",
+      "TASK-a1c5c9898c",
+      "TASK-c41c1862e1",
+      "TASK-05816ba4ce"
+     ]
+    }
+   },
+   "decision": {
+    "decision": "REJECTED",
+    "gate": {
+     "signal": "label-free-v1",
+     "min_self_score_delta": 0.03,
+     "min_nonregressing_fraction": 0.5,
+     "max_annotation_cost_ratio": 1.5,
+     "require_valid_outputs": true,
+     "note": "label-free gate predeclared before the v2 run; ground truth is never consulted for promotion"
+    },
+    "checks": {
+     "self_score_delta": {
+      "value": 0.0907,
+      "threshold": 0.03,
+      "pass": true
+     },
+     "non_regressing_fraction": {
+      "value": 1.0,
+      "threshold": 0.5,
+      "pass": true
+     },
+     "valid_outputs": {
+      "value": {
+       "bad_status": {},
+       "empty_output_episodes": []
+      },
+      "pass": true
+     },
+     "annotation_cost_ratio": {
+      "value": 2.555,
+      "threshold": 1.5,
+      "candidate_usd_per_episode": 0.001349,
+      "incumbent_usd_per_episode": 0.000528,
+      "pass": false
+     }
+    },
+    "paired_self_score": {
+     "episodes": [
+      "galaxea_002",
+      "galaxea_052",
+      "robointer_droid_000045",
+      "robointer_droid_000046"
+     ],
+     "per_episode_delta": {
+      "galaxea_002": 0.057499999999999996,
+      "galaxea_052": 0.22279999999999994,
+      "robointer_droid_000045": 0.08220000000000005,
+      "robointer_droid_000046": 0.0
+     },
+     "non_regressing_fraction": 1.0,
+     "improved": 3,
+     "regressed": 0,
+     "mean_delta": 0.090625
+    },
+    "label_free": {
+     "candidate_self_score": 0.6022,
+     "incumbent_self_score": 0.5115,
+     "candidate_components": {
+      "telemetry_agreement": 0.2178,
+      "visual_verification": 0.75,
+      "duration_variability": 0.7563,
+      "temporal_resolution": 1.0
+     },
+     "incumbent_components": {
+      "telemetry_agreement": 0.2722,
+      "visual_verification": 0.5,
+      "duration_variability": 0.6085,
+      "temporal_resolution": 1.0
+     }
+    },
+    "uncertainty": "n=4 validation episodes; label-free proxy, not ground truth",
+    "candidate_usage": {
+     "calls": 12,
+     "cache_hits": 3,
+     "prompt_tokens": 9843,
+     "completion_tokens": 893,
+     "cost_usd": 0.004587,
+     "model_latency_s": 12.58
+    },
+    "topology_change": true,
+    "rollback": "incumbent remains N000; candidate preserved as EXP-0002_rejected"
+   },
+   "shadow_gt": {
+    "candidate": {
+     "micro_f1": 0.13953488372093023,
+     "micro_f1_iou05": 0.27906976744186046,
+     "short_event_recall": 0.0,
+     "mean_boundary_mae_sec": 5.049427083333333,
+     "outer_snapped_micro_f1": 0.13953488372093023,
+     "per_episode_f1": {
+      "galaxea_002": 0.0,
+      "galaxea_052": 0.28571428571428575,
+      "robointer_droid_000045": 0.28571428571428575,
+      "robointer_droid_000046": 0.28571428571428575
+     }
+    },
+    "incumbent": {
+     "micro_f1": 0.0975609756097561,
+     "micro_f1_iou05": 0.0975609756097561,
+     "short_event_recall": 0.0,
+     "mean_boundary_mae_sec": 5.4688125,
+     "outer_snapped_micro_f1": 0.0975609756097561,
+     "per_episode_f1": {
+      "galaxea_002": 0.0,
+      "galaxea_052": 0.0,
+      "robointer_droid_000045": 0.28571428571428575,
+      "robointer_droid_000046": 0.28571428571428575
+     }
+    }
+   }
+  }
+ ],
+ "task_tree": [
+  {
+   "id": "TASK-a8abb4010d",
+   "parent_task_id": null,
+   "depth": 1,
+   "question": "Why does galaxea_011 produce boundaries at 1\u2011second intervals with zero visual confirmation?",
+   "evidence_ids": [
+    "SELF-0ce68ee9fe",
+    "EV-fd5d685402",
+    "EV-a8a57be878",
+    "EV-a89faebf8c"
+   ],
+   "tools_allowed": [
+    "episode_predictions",
+    "sampling_coverage",
+    "inspect_frames"
+   ],
+   "budget": {
+    "tool_requests": [
+     {
+      "tool": "episode_predictions",
+      "args": {
+       "episode_id": "galaxea_011"
+      }
+     },
+     {
+      "tool": "sampling_coverage",
+      "args": {
+       "episode_id": "galaxea_011",
+       "sampling_hz": 1.0
+      }
+     },
+     {
+      "tool": "inspect_frames",
+      "args": {
+       "episode_id": "galaxea_011",
+       "center_sec": 5.0,
+       "window_sec": 2.0,
+       "local_hz": 2.0,
+       "question": "Does the frame strip around 5\u202fs show a manipulation state change?"
+      }
+     }
+    ],
+    "max_tool_rounds": 2,
+    "why": ""
+   },
+   "status": "done",
+   "result": {
+    "finding": "Galaxea_011\u2019s 1\u2011second boundaries result from the workflow\u2019s uniform 1\u202fHz sampling (one frame per second) combined with the model predicting a subtask for each sampled frame; because each predicted segment is shorter than two frames, the model cannot rely on visual change between frames, yielding zero visual verification.",
+    "evidence_ids": [
+     "SELF-0ce68ee9fe",
+     "EV-fd5d685402",
+     "EV-a8a57be878",
+     "EV-a89faebf8c"
+    ],
+    "confidence": 0.9,
+    "implication_for_workflow": "Increase the sampling rate (e.g., to 2\u202fHz or higher) or modify the annotation prompt to encourage longer segments, so that boundaries can be anchored to visually detectable changes and visual verification improves.",
+    "call_id": "CALL-b525d56446",
+    "uncited_ids_dropped": [],
+    "new_question_requests": []
+   },
+   "new_questions": [],
+   "model_used": "nvidia/NVIDIA-Nemotron-3-Super-120B-A12B",
+   "run_id": "RUN-83d7bcb960"
+  },
+  {
+   "id": "TASK-a1c5c9898c",
+   "parent_task_id": null,
+   "depth": 1,
+   "question": "Why do galaxea_007 and robointer_droid_000012 have low telemetry agreement despite moderate visual verification?",
+   "evidence_ids": [
+    "SELF-0ce68ee9fe",
+    "EV-a1c8fb1039",
+    "EV-69c481e5dd",
+    "EV-8003cb5f5f",
+    "EV-92f796e446"
+   ],
+   "tools_allowed": [
+    "episode_predictions",
+    "telemetry_hints"
+   ],
+   "budget": {
+    "tool_requests": [
+     {
+      "tool": "episode_predictions",
+      "args": {
+       "episode_id": "galaxea_007"
+      }
+     },
+     {
+      "tool": "episode_predictions",
+      "args": {
+       "episode_id": "robointer_droid_000012"
+      }
+     },
+     {
+      "tool": "telemetry_hints",
+      "args": {
+       "episode_id": "galaxea_007",
+       "signals": [
+        "gripper"
+       ]
+      }
+     }
+    ],
+    "max_tool_rounds": 2,
+    "why": ""
+   },
+   "status": "done",
+   "result": {
+    "finding": "Galaxea_007 and robointer_droid_000012 show zero telemetry agreement because their gripper events (telemetry hints) occur far from the predicted segment boundaries, yielding zero precision/recall, while visual verification remains moderate because some visual confirmation exists but is not perfectly aligned.",
+    "evidence_ids": [
+     "SELF-0ce68ee9fe",
+     "EV-8003cb5f5f",
+     "EV-92f796e446"
+    ],
+    "confidence": 0.9,
+    "implication_for_workflow": "Refine segment boundaries using telemetry hints (e.g., align predicted boundaries to gripper open/close events) or increase sampling rate to better capture telemetry changes, thereby improving telemetry agreement.",
+    "call_id": "CALL-82f8309ec8",
+    "uncited_ids_dropped": [],
+    "new_question_requests": []
+   },
+   "new_questions": [],
+   "model_used": "nvidia/NVIDIA-Nemotron-3-Super-120B-A12B",
+   "run_id": "RUN-83d7bcb960"
+  },
+  {
+   "id": "TASK-c41c1862e1",
+   "parent_task_id": null,
+   "depth": 1,
+   "question": "Why does the incumbent predict a boundary every second in galaxea_011, and do those boundaries correspond to actual manipulation state changes?",
+   "evidence_ids": [
+    "SELF-4e3d54401c",
+    "EV-9b5b91ca09",
+    "EV-b0fc9c361d",
+    "EV-dc7b55db92"
+   ],
+   "tools_allowed": [
+    "episode_predictions",
+    "telemetry_hints",
+    "inspect_frames"
+   ],
+   "budget": {
+    "tool_requests": [
+     {
+      "tool": "episode_predictions",
+      "args": {
+       "episode_id": "galaxea_011"
+      }
+     },
+     {
+      "tool": "telemetry_hints",
+      "args": {
+       "episode_id": "galaxea_011",
+       "signals": [
+        "gripper"
+       ]
+      }
+     },
+     {
+      "tool": "inspect_frames",
+      "args": {
+       "episode_id": "galaxea_011",
+       "center_sec": 5.0,
+       "window_sec": 2.0,
+       "local_hz": 2,
+       "question": "Does the frame strip around 5.0 seconds show a clear manipulation state change?"
+      }
+     }
+    ],
+    "max_tool_rounds": 2,
+    "why": ""
+   },
+   "status": "done",
+   "result": {
+    "finding": "The incumbent predicts a boundary every second because the workflow samples at 1\u202fHz and the annotation model treats each sampled second as a distinct segment (see EV-9b5b91ca09\u2019s 1\u2011second predicted segments). These boundaries do not precisely align with actual manipulation state changes; telemetry hints show gripper events occurring near but not exactly at integer seconds (EV-b0fc9c361d), and visual inspection confirms a change at ~5\u202fs (EV-dc7b55db92) while many second\u2011marked boundaries lack any telemetry or visual evidence of change (SELF-4e3d54401c shows visual_verification\u202f=\u202f0.0 and only 10 gripper events across 30 predicted boundaries).",
+    "evidence_ids": [
+     "SELF-4e3d54401c",
+     "EV-9b5b91ca09",
+     "EV-b0fc9c361d",
+     "EV-dc7b55db92"
+    ],
+    "confidence": 0.9,
+    "implication_for_workflow": "Lower the fixed 1\u202fHz sampling or enable adaptive segmentation based on telemetry/visual change detection, and adjust the prompt to allow variable-length segments rather than forcing a new subtask each second.",
+    "call_id": "CALL-d2086fd91c",
+    "uncited_ids_dropped": [],
+    "new_question_requests": []
+   },
+   "new_questions": [],
+   "model_used": "nvidia/NVIDIA-Nemotron-3-Super-120B-A12B",
+   "run_id": "RUN-83d7bcb960"
+  },
+  {
+   "id": "TASK-05816ba4ce",
+   "parent_task_id": null,
+   "depth": 1,
+   "question": "In robointer_droid_000012, why does the predicted boundary at 10.0 sec have high visual verification but zero telemetry agreement?",
+   "evidence_ids": [
+    "SELF-4e3d54401c",
+    "EV-7121464de9",
+    "EV-296b2b8574",
+    "EV-9083d5e1c3",
+    "EV-6f36b2f5a4"
+   ],
+   "tools_allowed": [
+    "episode_predictions",
+    "telemetry_hints",
+    "inspect_frames"
+   ],
+   "budget": {
+    "tool_requests": [
+     {
+      "tool": "episode_predictions",
+      "args": {
+       "episode_id": "robointer_droid_000010"
+      }
+     },
+     {
+      "tool": "telemetry_hints",
+      "args": {
+       "episode_id": "robointer_droid_000010",
+       "signals": [
+        "gripper"
+       ]
+      }
+     },
+     {
+      "tool": "inspect_frames",
+      "args": {
+       "episode_id": "robointer_droid_000010",
+       "center_sec": 10.0,
+       "window_sec": 2.0,
+       "local_hz": 2,
+       "question": "Does the frame strip around 10.0 seconds show a clear manipulation state change?"
+      }
+     }
+    ],
+    "max_tool_rounds": 2,
+    "why": ""
+   },
+   "status": "done",
+   "result": {
+    "finding": "In robointer_droid_000012 the predicted boundary at 10.0\u202fsec is visually verified (visual_verification\u202f=\u202f1.0) because the vision model detects a clear manipulation state change around that time, but there is no telemetry signal (gripper state change) near 10.0\u202fsec; the nearest gripper hints are at 5.0\u202fsec (distance\u202f5.0) and 8.1\u202fsec (distance\u202f1.9), yielding zero telemetry agreement.",
+    "evidence_ids": [
+     "SELF-4e3d54401c",
+     "EV-6f36b2f5a4"
+    ],
+    "confidence": 0.9,
+    "implication_for_workflow": "Consider relaxing the telemetry\u2011agreement criterion (e.g., increase distance tolerance or incorporate additional signals like end\u2011effector pause) so that boundaries supported strongly by visual evidence but lacking proximate gripper events are not penalized.",
+    "call_id": "CALL-6ac031e07e",
+    "uncited_ids_dropped": [],
+    "new_question_requests": []
+   },
+   "new_questions": [],
+   "model_used": "nvidia/NVIDIA-Nemotron-3-Super-120B-A12B",
+   "run_id": "RUN-83d7bcb960"
+  }
+ ],
+ "dispatch_decisions": [
+  {
+   "task_id": "TASK-a8abb4010d",
+   "parent_task_id": null,
+   "depth": 1,
+   "question": "Why does galaxea_011 produce boundaries at 1\u2011second intervals with zero visual confirmation?",
+   "decision": "accepted"
+  },
+  {
+   "task_id": "TASK-a1c5c9898c",
+   "parent_task_id": null,
+   "depth": 1,
+   "question": "Why do galaxea_007 and robointer_droid_000012 have low telemetry agreement despite moderate visual verification?",
+   "decision": "accepted"
+  },
+  {
+   "task_id": "TASK-c41c1862e1",
+   "parent_task_id": null,
+   "depth": 1,
+   "question": "Why does the incumbent predict a boundary every second in galaxea_011, and do those boundaries correspond to actual manipulation state changes?",
+   "decision": "accepted"
+  },
+  {
+   "task_id": "TASK-05816ba4ce",
+   "parent_task_id": null,
+   "depth": 1,
+   "question": "In robointer_droid_000012, why does the predicted boundary at 10.0 sec have high visual verification but zero telemetry agreement?",
+   "decision": "accepted"
+  }
+ ],
+ "max_depth_reached": 1,
+ "task_status": {
+  "finished": [
+   "TASK-a8abb4010d",
+   "TASK-a1c5c9898c",
+   "TASK-c41c1862e1",
+   "TASK-05816ba4ce"
+  ],
+  "unfinished": [],
+  "not_dispatched": []
+ },
+ "evidence": {
+  "SELF-0ce68ee9fe": {
+   "id": "SELF-0ce68ee9fe",
+   "tool": "self_assessment",
+   "args": {
+    "version": "N000"
+   },
+   "result": {
+    "definition": "label-free-v1",
+    "mean_self_score": 0.5434,
+    "per_episode_self_score": {
+     "galaxea_011": 0.2848,
+     "robointer_droid_000010": 0.6806,
+     "galaxea_013": 0.7083,
+     "robointer_droid_000012": 0.5947,
+     "galaxea_007": 0.4487
+    },
+    "component_means": {
+     "telemetry_agreement": 0.3697,
+     "visual_verification": 0.6333,
+     "duration_variability": 0.4824,
+     "temporal_resolution": 0.8
+    },
+    "episodes": {
+     "galaxea_011": {
+      "episode_id": "galaxea_011",
+      "self_score": 0.2848,
+      "component_values": {
+       "telemetry_agreement": 0.6818,
+       "visual_verification": 0.0,
+       "duration_variability": 0.3076,
+       "temporal_resolution": 0.0
+      },
+      "components": {
+       "telemetry_agreement": {
+        "f1": 0.6818,
+        "precision": 0.5172,
+        "recall": 1.0,
+        "gripper_events": 10,
+        "boundaries": 29
+       },
+       "visual_verification": {
+        "rate": 0.0,
+        "confirmed": 0,
+        "checked": 8,
+        "mean_offset_to_confirmed_change_sec": null
+       },
+       "duration_variability": {
+        "score": 0.3076,
+        "cv": 0.1538,
+        "n_segments": 30
+       },
+       "temporal_resolution": {
+        "score": 0.0,
+        "sub_resolution_segments": 30,
+        "min_resolvable_sec": 2.0
+       }
+      },
+      "n_segments": 30,
+      "predicted_boundaries": [
+       1.0,
+       2.0,
+       3.0,
+       4.0,
+       5.0,
+       6.0,
+       7.0,
+       8.0,
+       9.0,
+       10.0,
+       11.0,
+       12.0,
+       13.0,
+       14.0,
+       15.0,
+       16.0,
+       17.0,
+       18.0,
+       19.0,
+       20.0,
+       21.0,
+       22.0,
+       23.0,
+       24.0,
+       25.0,
+       26.0,
+       27.0,
+       28.0,
+       29.0
+      ],
+      "gripper_events": [
+       2.57,
+       5.3,
+       7.1,
+       9.1,
+       15.9,
+       17.67,
+       20.17,
+       22.27,
+       24.43,
+       26.0
+      ]
+     },
+     "robointer_droid_000010": {
+      "episode_id": "robointer_droid_000010",
+      "self_score": 0.6806,
+      "component_values": {
+       "telemetry_agreement": 0.5,
+       "visual_verification": 1.0,
+       "duration_variability": 0.0372,
+       "temporal_resolution": 1.0
+      },
+      "components": {
+       "telemetry_agreement": {
+        "f1": 0.5,
+        "precision": 0.5,
+        "recall": 0.5,
+        "gripper_events": 2,
+        "boundaries": 2
+       },
+       "visual_verification": {
+        "rate": 1.0,
+        "confirmed": 2,
+        "checked": 2,
+        "mean_offset_to_confirmed_change_sec": 0.0
+       },
+       "duration_variability": {
+        "score": 0.0372,
+        "cv": 0.0186,
+        "n_segments": 3
+       },
+       "temporal_resolution": {
+        "score": 1.0,
+        "sub_resolution_segments": 0,
+        "min_resolvable_sec": 2.0
+       }
+      },
+      "n_segments": 3,
+      "predicted_boundaries": [
+       5.0,
+       10.0
+      ],
+      "gripper_events": [
+       5.0,
+       8.1
+      ]
+     },
+     "galaxea_013": {
+      "episode_id": "galaxea_013",
+      "self_score": 0.7083,
+      "component_values": {
+       "telemetry_agreement": 0.6667,
+       "visual_verification": 0.5,
+       "duration_variability": 1.0,
+       "temporal_resolution": 1.0
+      },
+      "components": {
+       "telemetry_agreement": {
+        "f1": 0.6667,
+        "precision": 1.0,
+        "recall": 0.5,
+        "gripper_events": 4,
+        "boundaries": 2
+       },
+       "visual_verification": {
+        "rate": 0.5,
+        "confirmed": 1,
+        "checked": 2,
+        "mean_offset_to_confirmed_change_sec": 0.0
+       },
+       "duration_variability": {
+        "score": 1.0,
+        "cv": 0.5055,
+        "n_segments": 3
+       },
+       "temporal_resolution": {
+        "score": 1.0,
+        "sub_resolution_segments": 0,
+        "min_resolvable_sec": 2.0
+       }
+      },
+      "n_segments": 3,
+      "predicted_boundaries": [
+       10.0,
+       20.0
+      ],
+      "gripper_events": [
+       10.57,
+       12.97,
+       18.2,
+       20.03
+      ]
+     },
+     "robointer_droid_000012": {
+      "episode_id": "robointer_droid_000012",
+      "self_score": 0.5947,
+      "component_values": {
+       "telemetry_agreement": 0.0,
+       "visual_verification": 1.0,
+       "duration_variability": 0.6316,
+       "temporal_resolution": 1.0
+      },
+      "components": {
+       "telemetry_agreement": {
+        "f1": 0.0,
+        "precision": 0.0,
+        "recall": 0.0,
+        "gripper_events": 2,
+        "boundaries": 1
+       },
+       "visual_verification": {
+        "rate": 1.0,
+        "confirmed": 1,
+        "checked": 1,
+        "mean_offset_to_confirmed_change_sec": 0.0
+       },
+       "duration_variability": {
+        "score": 0.6316,
+        "cv": 0.3158,
+        "n_segments": 2
+       },
+       "temporal_resolution": {
+        "score": 1.0,
+        "sub_resolution_segments": 0,
+        "min_resolvable_sec": 2.0
+       }
+      },
+      "n_segments": 2,
+      "predicted_boundaries": [
+       10.0
+      ],
+      "gripper_events": [
+       5.0,
+       8.1
+      ]
+     },
+     "galaxea_007": {
+      "episode_id": "galaxea_007",
+      "self_score": 0.4487,
+      "component_values": {
+       "telemetry_agreement": 0.0,
+       "visual_verification": 0.6667,
+       "duration_variability": 0.4358,
+       "temporal_resolution": 1.0
+      },
+      "components": {
+       "telemetry_agreement": {
+        "f1": 0.0,
+        "precision": 0.0,
+        "recall": 0.0,
+        "gripper_events": 6,
+        "boundaries": 3
+       },
+       "visual_verification": {
+        "rate": 0.6667,
+        "confirmed": 2,
+        "checked": 3,
+        "mean_offset_to_confirmed_change_sec": 0.0
+       },
+       "duration_variability": {
+        "score": 0.4358,
+        "cv": 0.2179,
+        "n_segments": 4
+       },
+       "temporal_resolution": {
+        "score": 1.0,
+        "sub_resolution_segments": 0,
+        "min_resolvable_sec": 2.0
+       }
+      },
+      "n_segments": 4,
+      "predicted_boundaries": [
+       10.0,
+       20.0,
+       30.0
+      ],
+      "gripper_events": [
+       3.53,
+       6.07,
+       17.43,
+       21.07,
+       26.7,
+       31.27
+      ]
+     }
+    }
+   },
+   "task_id": null
+  },
+  "EV-fd5d685402": {
+   "id": "EV-fd5d685402",
+   "tool": "episode_predictions",
+   "args": {
+    "episode_id": "galaxea_011"
+   },
+   "result": {
+    "episode_id": "galaxea_011",
+    "instruction": "place the food in the right basket with the right gripper, and place the non food items in the left basket with the left gripper.",
+    "duration_sec": 29.166667,
+    "has_telemetry": true,
+    "sampling": {
+     "sampling_hz": 1.0,
+     "tile_px": 224,
+     "frames_per_sheet": 20,
+     "cols": 5
+    },
+    "predicted_segments": [
+     {
+      "start_sec": 0.0,
+      "end_sec": 1.0,
+      "subtask": "Move left gripper to pick up non-food item."
+     },
+     {
+      "start_sec": 1.0,
+      "end_sec": 2.0,
+      "subtask": "Move left gripper to place non-food item in left basket."
+     },
+     {
+      "start_sec": 2.0,
+      "end_sec": 3.0,
+      "subtask": "Move right gripper to pick up food item."
+     },
+     {
+      "start_sec": 3.0,
+      "end_sec": 4.0,
+      "subtask": "Move right gripper to place food item in right basket."
+     },
+     {
+      "start_sec": 4.0,
+      "end_sec": 5.0,
+      "subtask": "Move left gripper to pick up non-food item."
+     },
+     {
+      "start_sec": 5.0,
+      "end_sec": 6.0,
+      "subtask": "Move left gripper to place non-food item in left basket."
+     },
+     {
+      "start_sec": 6.0,
+      "end_sec": 7.0,
+      "subtask": "Move right gripper to pick up food item."
+     },
+     {
+      "start_sec": 7.0,
+      "end_sec": 8.0,
+      "subtask": "Move right gripper to place food item in right basket."
+     },
+     {
+      "start_sec": 8.0,
+      "end_sec": 9.0,
+      "subtask": "Move left gripper to pick up non-food item."
+     },
+     {
+      "start_sec": 9.0,
+      "end_sec": 10.0,
+      "subtask": "Move left gripper to place non-food item in left basket."
+     },
+     {
+      "start_sec": 10.0,
+      "end_sec": 11.0,
+      "subtask": "Move right gripper to pick up food item."
+     },
+     {
+      "start_sec": 11.0,
+      "end_sec": 12.0,
+      "subtask": "Move right gripper to place food item in right basket."
+     },
+     {
+      "start_sec": 12.0,
+      "end_sec": 13.0,
+      "subtask": "Move left gripper to pick up non-food item."
+     },
+     {
+      "start_sec": 13.0,
+      "end_sec": 14.0,
+      "subtask": "Move left gripper to place non-food item in left basket."
+     },
+     {
+      "start_sec": 14.0,
+      "end_sec": 15.0,
+      "subtask": "Move right gripper to pick up food item."
+     },
+     {
+      "start_sec": 15.0,
+      "end_sec": 16.0,
+      "subtask": "Move right gripper to place food item in right basket."
+     },
+     {
+      "start_sec": 16.0,
+      "end_sec": 17.0,
+      "subtask": "Move left gripper to pick up non-food item."
+     },
+     {
+      "start_sec": 17.0,
+      "end_sec": 18.0,
+      "subtask": "Move left gripper to place non-food item in left basket."
+     },
+     {
+      "start_sec": 18.0,
+      "end_sec": 19.0,
+      "subtask": "Move right gripper to pick up food item."
+     },
+     {
+      "start_sec": 19.0,
+      "end_sec": 20.0,
+      "subtask": "Move right gripper to place food item in right basket."
+     },
+     {
+      "start_sec": 20.0,
+      "end_sec": 21.0,
+      "subtask": "Move left gripper to pick up non-food item."
+     },
+     {
+      "start_sec": 21.0,
+      "end_sec": 22.0,
+      "subtask": "Move left gripper to place non-food item in left basket."
+     },
+     {
+      "start_sec": 22.0,
+      "end_sec": 23.0,
+      "subtask": "Move right gripper to pick up food item."
+     },
+     {
+      "start_sec": 23.0,
+      "end_sec": 24.0,
+      "subtask": "Move right gripper to place food item in right basket."
+     },
+     {
+      "start_sec": 24.0,
+      "end_sec": 25.0,
+      "subtask": "Move left gripper to pick up non-food item."
+     },
+     {
+      "start_sec": 25.0,
+      "end_sec": 26.0,
+      "subtask": "Move left gripper to place non-food item in left basket."
+     },
+     {
+      "start_sec": 26.0,
+      "end_sec": 27.0,
+      "subtask": "Move right gripper to pick up food item."
+     },
+     {
+      "start_sec": 27.0,
+      "end_sec": 28.0,
+      "subtask": "Move right gripper to place food item in right basket."
+     },
+     {
+      "start_sec": 28.0,
+      "end_sec": 29.0,
+      "subtask": "Move left gripper to pick up non-food item."
+     },
+     {
+      "start_sec": 29.0,
+      "end_sec": 29.167,
+      "subtask": "Move left gripper to place non-food item in left basket."
+     }
+    ]
+   },
+   "task_id": "TASK-a8abb4010d",
+   "created_at": 1792272026.001905
+  },
+  "EV-a8a57be878": {
+   "id": "EV-a8a57be878",
+   "tool": "sampling_coverage",
+   "args": {
+    "episode_id": "galaxea_011",
+    "sampling_hz": 1.0
+   },
+   "result": {
+    "episode_id": "galaxea_011",
+    "sampling_hz": 1.0,
+    "n_frames": 30,
+    "frame_spacing_sec": 1.0,
+    "duration_sec": 29.166667,
+    "predicted_segments_shorter_than_2_frames": 30,
+    "n_predicted_segments": 30
+   },
+   "task_id": "TASK-a8abb4010d",
+   "created_at": 1792272026.003367
+  },
+  "EV-a89faebf8c": {
+   "id": "EV-a89faebf8c",
+   "tool": "inspect_frames",
+   "args": {
+    "episode_id": "galaxea_011",
+    "center_sec": 5.0,
+    "window_sec": 2.0,
+    "local_hz": 2.0,
+    "question": "Does the frame strip around 5\u202fs show a manipulation state change?"
+   },
+   "result": {
+    "episode_id": "galaxea_011",
+    "window": [
+     4.0,
+     6.0
+    ],
+    "frame_timestamps": [
+     4.0,
+     4.5,
+     5.0,
+     5.5,
+     6.0
+    ],
+    "vision_model": "nvidia/Nemotron-3-Nano-Omni-Reasoning-30B-A3B",
+    "observation": {
+     "observed_state_changes": [
+      {
+       "completed_at_sec": 5.0,
+       "description": "The left gripper releases the black object onto the green mat."
+      }
+     ],
+     "answer": "Yes",
+     "visual_confidence": 0.95
+    }
+   },
+   "task_id": "TASK-a8abb4010d",
+   "created_at": 1792272026.966434
+  },
+  "EV-a1c8fb1039": {
+   "id": "EV-a1c8fb1039",
+   "tool": "episode_predictions",
+   "args": {
+    "episode_id": "galaxea_007"
+   },
+   "result": {
+    "episode_id": "galaxea_007",
+    "instruction": "place the food in the right basket with the right gripper, and place the non food items in the left basket with the left gripper.",
+    "duration_sec": 35.533333,
+    "has_telemetry": true,
+    "sampling": {
+     "sampling_hz": 1.0,
+     "tile_px": 224,
+     "frames_per_sheet": 20,
+     "cols": 5
+    },
+    "predicted_segments": [
+     {
+      "start_sec": 0.0,
+      "end_sec": 10.0,
+      "subtask": "Move the food item to the right basket with the right gripper."
+     },
+     {
+      "start_sec": 10.0,
+      "end_sec": 20.0,
+      "subtask": "Move the non-food item to the left basket with the left gripper."
+     },
+     {
+      "start_sec": 20.0,
+      "end_sec": 30.0,
+      "subtask": "Move the food item to the right basket with the right gripper."
+     },
+     {
+      "start_sec": 30.0,
+      "end_sec": 35.53,
+      "subtask": "Move the non-food item to the left basket with the left gripper."
+     }
+    ]
+   },
+   "task_id": "TASK-a1c5c9898c",
+   "created_at": 1792272050.718654
+  },
+  "EV-69c481e5dd": {
+   "id": "EV-69c481e5dd",
+   "tool": "episode_predictions",
+   "args": {
+    "episode_id": "robointer_droid_000012"
+   },
+   "result": {
+    "episode_id": "robointer_droid_000012",
+    "instruction": "Put the blue object inside the drawer.",
+    "duration_sec": 15.2,
+    "has_telemetry": true,
+    "sampling": {
+     "sampling_hz": 1.0,
+     "tile_px": 224,
+     "frames_per_sheet": 20,
+     "cols": 5
+    },
+    "predicted_segments": [
+     {
+      "start_sec": 0.0,
+      "end_sec": 10.0,
+      "subtask": "Pick up the blue object from the table"
+     },
+     {
+      "start_sec": 10.0,
+      "end_sec": 15.2,
+      "subtask": "Put the blue object inside the drawer"
+     }
+    ]
+   },
+   "task_id": "TASK-a1c5c9898c",
+   "created_at": 1792272050.720413
+  },
+  "EV-8003cb5f5f": {
+   "id": "EV-8003cb5f5f",
+   "tool": "telemetry_hints",
+   "args": {
+    "episode_id": "galaxea_007",
+    "signals": [
+     "gripper"
+    ]
+   },
+   "result": {
+    "episode_id": "galaxea_007",
+    "signals": [
+     "gripper"
+    ],
+    "n_hints": 6,
+    "n_predicted_boundaries": 3,
+    "hints": [
+     {
+      "t": 3.53,
+      "kind": "gripper_closed",
+      "channel": "gripper_open_scale_state:right_gripper_open_scale",
+      "strength": 1.0,
+      "nearest_predicted_boundary_sec": 10.0,
+      "distance_to_predicted_boundary_sec": 6.47
+     },
+     {
+      "t": 6.07,
+      "kind": "gripper_opened",
+      "channel": "gripper_open_scale_state:right_gripper_open_scale",
+      "strength": 1.0,
+      "nearest_predicted_boundary_sec": 10.0,
+      "distance_to_predicted_boundary_sec": 3.93
+     },
+     {
+      "t": 17.43,
+      "kind": "gripper_closed",
+      "channel": "gripper_open_scale_state:left_gripper_open_scale",
+      "strength": 1.0,
+      "nearest_predicted_boundary_sec": 20.0,
+      "distance_to_predicted_boundary_sec": 2.57
+     },
+     {
+      "t": 21.07,
+      "kind": "gripper_opened",
+      "channel": "gripper_open_scale_state:left_gripper_open_scale",
+      "strength": 1.0,
+      "nearest_predicted_boundary_sec": 20.0,
+      "distance_to_predicted_boundary_sec": 1.07
+     },
+     {
+      "t": 26.7,
+      "kind": "gripper_closed",
+      "channel": "gripper_open_scale_state:left_gripper_open_scale",
+      "strength": 1.0,
+      "nearest_predicted_boundary_sec": 30.0,
+      "distance_to_predicted_boundary_sec": 3.3
+     },
+     {
+      "t": 31.27,
+      "kind": "gripper_opened",
+      "channel": "gripper_open_scale_state:left_gripper_open_scale",
+      "strength": 1.0,
+      "nearest_predicted_boundary_sec": 30.0,
+      "distance_to_predicted_boundary_sec": 1.27
+     }
+    ]
+   },
+   "task_id": "TASK-a1c5c9898c",
+   "created_at": 1792272050.7395031
+  },
+  "EV-92f796e446": {
+   "id": "EV-92f796e446",
+   "tool": "telemetry_hints",
+   "args": {
+    "episode_id": "robointer_droid_000012",
+    "signals": [
+     "gripper"
+    ]
+   },
+   "result": {
+    "episode_id": "robointer_droid_000012",
+    "signals": [
+     "gripper"
+    ],
+    "n_hints": 2,
+    "n_predicted_boundaries": 1,
+    "hints": [
+     {
+      "t": 5.0,
+      "kind": "gripper_released",
+      "channel": "state:gripper_state",
+      "strength": 1.0,
+      "nearest_predicted_boundary_sec": 10.0,
+      "distance_to_predicted_boundary_sec": 5.0
+     },
+     {
+      "t": 8.1,
+      "kind": "gripper_engaged",
+      "channel": "state:gripper_state",
+      "strength": 1.0,
+      "nearest_predicted_boundary_sec": 10.0,
+      "distance_to_predicted_boundary_sec": 1.9
+     }
+    ]
+   },
+   "task_id": "TASK-a1c5c9898c",
+   "created_at": 1792272075.808343
+  },
+  "SELF-4e3d54401c": {
+   "id": "SELF-4e3d54401c",
+   "tool": "self_assessment",
+   "args": {
+    "version": "N000"
+   },
+   "result": {
+    "definition": "label-free-v1",
+    "mean_self_score": 0.5434,
+    "per_episode_self_score": {
+     "galaxea_011": 0.2848,
+     "robointer_droid_000010": 0.6806,
+     "galaxea_013": 0.7083,
+     "robointer_droid_000012": 0.5947,
+     "galaxea_007": 0.4487
+    },
+    "component_means": {
+     "telemetry_agreement": 0.3697,
+     "visual_verification": 0.6333,
+     "duration_variability": 0.4824,
+     "temporal_resolution": 0.8
+    },
+    "episodes": {
+     "galaxea_011": {
+      "episode_id": "galaxea_011",
+      "self_score": 0.2848,
+      "component_values": {
+       "telemetry_agreement": 0.6818,
+       "visual_verification": 0.0,
+       "duration_variability": 0.3076,
+       "temporal_resolution": 0.0
+      },
+      "components": {
+       "telemetry_agreement": {
+        "f1": 0.6818,
+        "precision": 0.5172,
+        "recall": 1.0,
+        "gripper_events": 10,
+        "boundaries": 29
+       },
+       "visual_verification": {
+        "rate": 0.0,
+        "confirmed": 0,
+        "checked": 8,
+        "mean_offset_to_confirmed_change_sec": null
+       },
+       "duration_variability": {
+        "score": 0.3076,
+        "cv": 0.1538,
+        "n_segments": 30
+       },
+       "temporal_resolution": {
+        "score": 0.0,
+        "sub_resolution_segments": 30,
+        "min_resolvable_sec": 2.0
+       }
+      },
+      "n_segments": 30,
+      "predicted_boundaries": [
+       1.0,
+       2.0,
+       3.0,
+       4.0,
+       5.0,
+       6.0,
+       7.0,
+       8.0,
+       9.0,
+       10.0,
+       11.0,
+       12.0,
+       13.0,
+       14.0,
+       15.0,
+       16.0,
+       17.0,
+       18.0,
+       19.0,
+       20.0,
+       21.0,
+       22.0,
+       23.0,
+       24.0,
+       25.0,
+       26.0,
+       27.0,
+       28.0,
+       29.0
+      ],
+      "gripper_events": [
+       2.57,
+       5.3,
+       7.1,
+       9.1,
+       15.9,
+       17.67,
+       20.17,
+       22.27,
+       24.43,
+       26.0
+      ]
+     },
+     "robointer_droid_000010": {
+      "episode_id": "robointer_droid_000010",
+      "self_score": 0.6806,
+      "component_values": {
+       "telemetry_agreement": 0.5,
+       "visual_verification": 1.0,
+       "duration_variability": 0.0372,
+       "temporal_resolution": 1.0
+      },
+      "components": {
+       "telemetry_agreement": {
+        "f1": 0.5,
+        "precision": 0.5,
+        "recall": 0.5,
+        "gripper_events": 2,
+        "boundaries": 2
+       },
+       "visual_verification": {
+        "rate": 1.0,
+        "confirmed": 2,
+        "checked": 2,
+        "mean_offset_to_confirmed_change_sec": 0.0
+       },
+       "duration_variability": {
+        "score": 0.0372,
+        "cv": 0.0186,
+        "n_segments": 3
+       },
+       "temporal_resolution": {
+        "score": 1.0,
+        "sub_resolution_segments": 0,
+        "min_resolvable_sec": 2.0
+       }
+      },
+      "n_segments": 3,
+      "predicted_boundaries": [
+       5.0,
+       10.0
+      ],
+      "gripper_events": [
+       5.0,
+       8.1
+      ]
+     },
+     "galaxea_013": {
+      "episode_id": "galaxea_013",
+      "self_score": 0.7083,
+      "component_values": {
+       "telemetry_agreement": 0.6667,
+       "visual_verification": 0.5,
+       "duration_variability": 1.0,
+       "temporal_resolution": 1.0
+      },
+      "components": {
+       "telemetry_agreement": {
+        "f1": 0.6667,
+        "precision": 1.0,
+        "recall": 0.5,
+        "gripper_events": 4,
+        "boundaries": 2
+       },
+       "visual_verification": {
+        "rate": 0.5,
+        "confirmed": 1,
+        "checked": 2,
+        "mean_offset_to_confirmed_change_sec": 0.0
+       },
+       "duration_variability": {
+        "score": 1.0,
+        "cv": 0.5055,
+        "n_segments": 3
+       },
+       "temporal_resolution": {
+        "score": 1.0,
+        "sub_resolution_segments": 0,
+        "min_resolvable_sec": 2.0
+       }
+      },
+      "n_segments": 3,
+      "predicted_boundaries": [
+       10.0,
+       20.0
+      ],
+      "gripper_events": [
+       10.57,
+       12.97,
+       18.2,
+       20.03
+      ]
+     },
+     "robointer_droid_000012": {
+      "episode_id": "robointer_droid_000012",
+      "self_score": 0.5947,
+      "component_values": {
+       "telemetry_agreement": 0.0,
+       "visual_verification": 1.0,
+       "duration_variability": 0.6316,
+       "temporal_resolution": 1.0
+      },
+      "components": {
+       "telemetry_agreement": {
+        "f1": 0.0,
+        "precision": 0.0,
+        "recall": 0.0,
+        "gripper_events": 2,
+        "boundaries": 1
+       },
+       "visual_verification": {
+        "rate": 1.0,
+        "confirmed": 1,
+        "checked": 1,
+        "mean_offset_to_confirmed_change_sec": 0.0
+       },
+       "duration_variability": {
+        "score": 0.6316,
+        "cv": 0.3158,
+        "n_segments": 2
+       },
+       "temporal_resolution": {
+        "score": 1.0,
+        "sub_resolution_segments": 0,
+        "min_resolvable_sec": 2.0
+       }
+      },
+      "n_segments": 2,
+      "predicted_boundaries": [
+       10.0
+      ],
+      "gripper_events": [
+       5.0,
+       8.1
+      ]
+     },
+     "galaxea_007": {
+      "episode_id": "galaxea_007",
+      "self_score": 0.4487,
+      "component_values": {
+       "telemetry_agreement": 0.0,
+       "visual_verification": 0.6667,
+       "duration_variability": 0.4358,
+       "temporal_resolution": 1.0
+      },
+      "components": {
+       "telemetry_agreement": {
+        "f1": 0.0,
+        "precision": 0.0,
+        "recall": 0.0,
+        "gripper_events": 6,
+        "boundaries": 3
+       },
+       "visual_verification": {
+        "rate": 0.6667,
+        "confirmed": 2,
+        "checked": 3,
+        "mean_offset_to_confirmed_change_sec": 0.0
+       },
+       "duration_variability": {
+        "score": 0.4358,
+        "cv": 0.2179,
+        "n_segments": 4
+       },
+       "temporal_resolution": {
+        "score": 1.0,
+        "sub_resolution_segments": 0,
+        "min_resolvable_sec": 2.0
+       }
+      },
+      "n_segments": 4,
+      "predicted_boundaries": [
+       10.0,
+       20.0,
+       30.0
+      ],
+      "gripper_events": [
+       3.53,
+       6.07,
+       17.43,
+       21.07,
+       26.7,
+       31.27
+      ]
+     }
+    }
+   },
+   "task_id": null
+  },
+  "EV-9b5b91ca09": {
+   "id": "EV-9b5b91ca09",
+   "tool": "episode_predictions",
+   "args": {
+    "episode_id": "galaxea_011"
+   },
+   "result": {
+    "episode_id": "galaxea_011",
+    "instruction": "place the food in the right basket with the right gripper, and place the non food items in the left basket with the left gripper.",
+    "duration_sec": 29.166667,
+    "has_telemetry": true,
+    "sampling": {
+     "sampling_hz": 1.0,
+     "tile_px": 224,
+     "frames_per_sheet": 20,
+     "cols": 5
+    },
+    "predicted_segments": [
+     {
+      "start_sec": 0.0,
+      "end_sec": 1.0,
+      "subtask": "Move left gripper to pick up non-food item."
+     },
+     {
+      "start_sec": 1.0,
+      "end_sec": 2.0,
+      "subtask": "Move left gripper to place non-food item in left basket."
+     },
+     {
+      "start_sec": 2.0,
+      "end_sec": 3.0,
+      "subtask": "Move right gripper to pick up food item."
+     },
+     {
+      "start_sec": 3.0,
+      "end_sec": 4.0,
+      "subtask": "Move right gripper to place food item in right basket."
+     },
+     {
+      "start_sec": 4.0,
+      "end_sec": 5.0,
+      "subtask": "Move left gripper to pick up non-food item."
+     },
+     {
+      "start_sec": 5.0,
+      "end_sec": 6.0,
+      "subtask": "Move left gripper to place non-food item in left basket."
+     },
+     {
+      "start_sec": 6.0,
+      "end_sec": 7.0,
+      "subtask": "Move right gripper to pick up food item."
+     },
+     {
+      "start_sec": 7.0,
+      "end_sec": 8.0,
+      "subtask": "Move right gripper to place food item in right basket."
+     },
+     {
+      "start_sec": 8.0,
+      "end_sec": 9.0,
+      "subtask": "Move left gripper to pick up non-food item."
+     },
+     {
+      "start_sec": 9.0,
+      "end_sec": 10.0,
+      "subtask": "Move left gripper to place non-food item in left basket."
+     },
+     {
+      "start_sec": 10.0,
+      "end_sec": 11.0,
+      "subtask": "Move right gripper to pick up food item."
+     },
+     {
+      "start_sec": 11.0,
+      "end_sec": 12.0,
+      "subtask": "Move right gripper to place food item in right basket."
+     },
+     {
+      "start_sec": 12.0,
+      "end_sec": 13.0,
+      "subtask": "Move left gripper to pick up non-food item."
+     },
+     {
+      "start_sec": 13.0,
+      "end_sec": 14.0,
+      "subtask": "Move left gripper to place non-food item in left basket."
+     },
+     {
+      "start_sec": 14.0,
+      "end_sec": 15.0,
+      "subtask": "Move right gripper to pick up food item."
+     },
+     {
+      "start_sec": 15.0,
+      "end_sec": 16.0,
+      "subtask": "Move right gripper to place food item in right basket."
+     },
+     {
+      "start_sec": 16.0,
+      "end_sec": 17.0,
+      "subtask": "Move left gripper to pick up non-food item."
+     },
+     {
+      "start_sec": 17.0,
+      "end_sec": 18.0,
+      "subtask": "Move left gripper to place non-food item in left basket."
+     },
+     {
+      "start_sec": 18.0,
+      "end_sec": 19.0,
+      "subtask": "Move right gripper to pick up food item."
+     },
+     {
+      "start_sec": 19.0,
+      "end_sec": 20.0,
+      "subtask": "Move right gripper to place food item in right basket."
+     },
+     {
+      "start_sec": 20.0,
+      "end_sec": 21.0,
+      "subtask": "Move left gripper to pick up non-food item."
+     },
+     {
+      "start_sec": 21.0,
+      "end_sec": 22.0,
+      "subtask": "Move left gripper to place non-food item in left basket."
+     },
+     {
+      "start_sec": 22.0,
+      "end_sec": 23.0,
+      "subtask": "Move right gripper to pick up food item."
+     },
+     {
+      "start_sec": 23.0,
+      "end_sec": 24.0,
+      "subtask": "Move right gripper to place food item in right basket."
+     },
+     {
+      "start_sec": 24.0,
+      "end_sec": 25.0,
+      "subtask": "Move left gripper to pick up non-food item."
+     },
+     {
+      "start_sec": 25.0,
+      "end_sec": 26.0,
+      "subtask": "Move left gripper to place non-food item in left basket."
+     },
+     {
+      "start_sec": 26.0,
+      "end_sec": 27.0,
+      "subtask": "Move right gripper to pick up food item."
+     },
+     {
+      "start_sec": 27.0,
+      "end_sec": 28.0,
+      "subtask": "Move right gripper to place food item in right basket."
+     },
+     {
+      "start_sec": 28.0,
+      "end_sec": 29.0,
+      "subtask": "Move left gripper to pick up non-food item."
+     },
+     {
+      "start_sec": 29.0,
+      "end_sec": 29.167,
+      "subtask": "Move left gripper to place non-food item in left basket."
+     }
+    ]
+   },
+   "task_id": "TASK-c41c1862e1",
+   "created_at": 1792272280.163247
+  },
+  "EV-b0fc9c361d": {
+   "id": "EV-b0fc9c361d",
+   "tool": "telemetry_hints",
+   "args": {
+    "episode_id": "galaxea_011",
+    "signals": [
+     "gripper"
+    ]
+   },
+   "result": {
+    "episode_id": "galaxea_011",
+    "signals": [
+     "gripper"
+    ],
+    "n_hints": 10,
+    "n_predicted_boundaries": 29,
+    "hints": [
+     {
+      "t": 2.57,
+      "kind": "gripper_closed",
+      "channel": "gripper_open_scale_state:right_gripper_open_scale",
+      "strength": 1.0,
+      "nearest_predicted_boundary_sec": 3.0,
+      "distance_to_predicted_boundary_sec": 0.43
+     },
+     {
+      "t": 5.3,
+      "kind": "gripper_opened",
+      "channel": "gripper_open_scale_state:right_gripper_open_scale",
+      "strength": 1.0,
+      "nearest_predicted_boundary_sec": 5.0,
+      "distance_to_predicted_boundary_sec": 0.3
+     },
+     {
+      "t": 7.1,
+      "kind": "gripper_closed",
+      "channel": "gripper_open_scale_state:right_gripper_open_scale",
+      "strength": 1.0,
+      "nearest_predicted_boundary_sec": 7.0,
+      "distance_to_predicted_boundary_sec": 0.1
+     },
+     {
+      "t": 9.1,
+      "kind": "gripper_opened",
+      "channel": "gripper_open_scale_state:right_gripper_open_scale",
+      "strength": 1.0,
+      "nearest_predicted_boundary_sec": 9.0,
+      "distance_to_predicted_boundary_sec": 0.1
+     },
+     {
+      "t": 15.9,
+      "kind": "gripper_closed",
+      "channel": "gripper_open_scale_state:left_gripper_open_scale",
+      "strength": 1.0,
+      "nearest_predicted_boundary_sec": 16.0,
+      "distance_to_predicted_boundary_sec": 0.1
+     },
+     {
+      "t": 17.67,
+      "kind": "gripper_opened",
+      "channel": "gripper_open_scale_state:left_gripper_open_scale",
+      "strength": 1.0,
+      "nearest_predicted_boundary_sec": 18.0,
+      "distance_to_predicted_boundary_sec": 0.33
+     },
+     {
+      "t": 20.17,
+      "kind": "gripper_closed",
+      "channel": "gripper_open_scale_state:left_gripper_open_scale",
+      "strength": 1.0,
+      "nearest_predicted_boundary_sec": 20.0,
+      "distance_to_predicted_boundary_sec": 0.17
+     },
+     {
+      "t": 22.27,
+      "kind": "gripper_opened",
+      "channel": "gripper_open_scale_state:left_gripper_open_scale",
+      "strength": 1.0,
+      "nearest_predicted_boundary_sec": 22.0,
+      "distance_to_predicted_boundary_sec": 0.27
+     },
+     {
+      "t": 24.43,
+      "kind": "gripper_closed",
+      "channel": "gripper_open_scale_state:left_gripper_open_scale",
+      "strength": 1.0,
+      "nearest_predicted_boundary_sec": 24.0,
+      "distance_to_predicted_boundary_sec": 0.43
+     },
+     {
+      "t": 26.0,
+      "kind": "gripper_opened",
+      "channel": "gripper_open_scale_state:left_gripper_open_scale",
+      "strength": 1.0,
+      "nearest_predicted_boundary_sec": 26.0,
+      "distance_to_predicted_boundary_sec": 0.0
+     }
+    ]
+   },
+   "task_id": "TASK-c41c1862e1",
+   "created_at": 1792272280.179216
+  },
+  "EV-dc7b55db92": {
+   "id": "EV-dc7b55db92",
+   "tool": "inspect_frames",
+   "args": {
+    "episode_id": "galaxea_011",
+    "center_sec": 5.0,
+    "window_sec": 2.0,
+    "local_hz": 2,
+    "question": "Does the frame strip around 5.0 seconds show a clear manipulation state change?"
+   },
+   "result": {
+    "episode_id": "galaxea_011",
+    "window": [
+     4.0,
+     6.0
+    ],
+    "frame_timestamps": [
+     4.0,
+     4.5,
+     5.0,
+     5.5,
+     6.0
+    ],
+    "vision_model": "nvidia/Nemotron-3-Nano-Omni-Reasoning-30B-A3B",
+    "observation": {
+     "observed_state_changes": [
+      {
+       "completed_at_sec": 5.0,
+       "description": "The robot's left gripper has moved from holding a black rectangular object to holding a yellow and white checkered food item, while the right gripper has moved from holding a white object to holding a yellow object."
+      }
+     ],
+     "answer": "Yes",
+     "visual_confidence": 0.95
+    }
+   },
+   "task_id": "TASK-c41c1862e1",
+   "created_at": 1792272281.00819
+  },
+  "EV-7121464de9": {
+   "id": "EV-7121464de9",
+   "tool": "episode_predictions",
+   "args": {
+    "episode_id": "robointer_droid_000010"
+   },
+   "result": {
+    "episode_id": "robointer_droid_000010",
+    "instruction": "Put the blue object inside the drawer.",
+    "duration_sec": 15.2,
+    "has_telemetry": true,
+    "sampling": {
+     "sampling_hz": 1.0,
+     "tile_px": 224,
+     "frames_per_sheet": 20,
+     "cols": 5
+    },
+    "predicted_segments": [
+     {
+      "start_sec": 0.0,
+      "end_sec": 5.0,
+      "subtask": "Approach the blue object on the table"
+     },
+     {
+      "start_sec": 5.0,
+      "end_sec": 10.0,
+      "subtask": "Grasp the blue object"
+     },
+     {
+      "start_sec": 10.0,
+      "end_sec": 15.2,
+      "subtask": "Move the blue object into the drawer"
+     }
+    ]
+   },
+   "task_id": "TASK-05816ba4ce",
+   "created_at": 1792272316.1626601
+  },
+  "EV-296b2b8574": {
+   "id": "EV-296b2b8574",
+   "tool": "telemetry_hints",
+   "args": {
+    "episode_id": "robointer_droid_000010",
+    "signals": [
+     "gripper"
+    ]
+   },
+   "result": {
+    "episode_id": "robointer_droid_000010",
+    "signals": [
+     "gripper"
+    ],
+    "n_hints": 2,
+    "n_predicted_boundaries": 2,
+    "hints": [
+     {
+      "t": 5.0,
+      "kind": "gripper_released",
+      "channel": "state:gripper_state",
+      "strength": 1.0,
+      "nearest_predicted_boundary_sec": 5.0,
+      "distance_to_predicted_boundary_sec": 0.0
+     },
+     {
+      "t": 8.1,
+      "kind": "gripper_engaged",
+      "channel": "state:gripper_state",
+      "strength": 1.0,
+      "nearest_predicted_boundary_sec": 10.0,
+      "distance_to_predicted_boundary_sec": 1.9
+     }
+    ]
+   },
+   "task_id": "TASK-05816ba4ce",
+   "created_at": 1792272316.164562
+  },
+  "EV-9083d5e1c3": {
+   "id": "EV-9083d5e1c3",
+   "tool": "inspect_frames",
+   "args": {
+    "episode_id": "robointer_droid_000010",
+    "center_sec": 10.0,
+    "window_sec": 2.0,
+    "local_hz": 2,
+    "question": "Does the frame strip around 10.0 seconds show a clear manipulation state change?"
+   },
+   "result": {
+    "episode_id": "robointer_droid_000010",
+    "window": [
+     9.0,
+     11.0
+    ],
+    "frame_timestamps": [
+     9.0,
+     9.5,
+     10.0,
+     10.5,
+     11.0
+    ],
+    "vision_model": "nvidia/Nemotron-3-Nano-Omni-Reasoning-30B-A3B",
+    "observation": {
+     "observed_state_changes": [
+      {
+       "completed_at_sec": 10.0,
+       "description": "The robot's gripper is shown closing around the blue object, indicating the start of the manipulation action."
+      }
+     ],
+     "answer": "Yes",
+     "visual_confidence": 0.95
+    }
+   },
+   "task_id": "TASK-05816ba4ce",
+   "created_at": 1792272316.9015622
+  },
+  "EV-6f36b2f5a4": {
+   "id": "EV-6f36b2f5a4",
+   "tool": "telemetry_hints",
+   "args": {
+    "episode_id": "robointer_droid_000012",
+    "signals": [
+     "gripper"
+    ]
+   },
+   "result": {
+    "episode_id": "robointer_droid_000012",
+    "signals": [
+     "gripper"
+    ],
+    "n_hints": 2,
+    "n_predicted_boundaries": 1,
+    "hints": [
+     {
+      "t": 5.0,
+      "kind": "gripper_released",
+      "channel": "state:gripper_state",
+      "strength": 1.0,
+      "nearest_predicted_boundary_sec": 10.0,
+      "distance_to_predicted_boundary_sec": 5.0
+     },
+     {
+      "t": 8.1,
+      "kind": "gripper_engaged",
+      "channel": "state:gripper_state",
+      "strength": 1.0,
+      "nearest_predicted_boundary_sec": 10.0,
+      "distance_to_predicted_boundary_sec": 1.9
+     }
+    ]
+   },
+   "task_id": "TASK-05816ba4ce",
+   "created_at": 1792272330.3180192
+  }
+ },
+ "incumbent_after": "N000",
+ "usage": {
+  "nemotron": {
+   "calls": 13,
+   "cache_hits": 0,
+   "prompt_tokens": 41528,
+   "completion_tokens": 20626,
+   "cost_usd": 0.061961,
+   "model_latency_s": 567.15
+  },
+  "vision": {
+   "calls": 59,
+   "cache_hits": 29,
+   "prompt_tokens": 27054,
+   "completion_tokens": 2542,
+   "cost_usd": 0.012768,
+   "model_latency_s": 64.78
+  }
+ }
+}

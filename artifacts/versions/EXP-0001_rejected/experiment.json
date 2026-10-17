@@ -1,0 +1,75 @@
+{
+ "id": "EXP-0001",
+ "parent_version": "N000",
+ "hypothesis": "The incumbent workflow produces overly short segments (often one frame apart) because the prompt does not discourage fine-grained predictions, leading to poor temporal resolution, low telemetry agreement, and low visual verification. By updating the annotation prompt to explicitly require longer subtasks (minimum ~1.5 seconds) and to avoid predicting a subtask for every sampled frame, the model will produce boundaries that better align with detectable manipulation state changes, improving telemetry agreement and visual verification while keeping inference cost unchanged.",
+ "failure_slice": "Episodes where the incumbent's mean segment duration is less than 1.5 seconds (indicating many short segments) or where visual_verification is below 0.5, as evidenced by the 1\u2011second boundary pattern in galaxea_011 and low telemetry agreement in galaxea_007/robointer_droid_000012.",
+ "evidence_ids": [
+  "SELF-0ce68ee9fe",
+  "EV-fd5d685402",
+  "EV-a8a57be878",
+  "EV-a89faebf8c",
+  "EV-8003cb5f5f",
+  "EV-92f796e446"
+ ],
+ "objective": "Raise the label\u2011free self\u2011score (weighted mean of telemetry_agreement, visual_verification, duration_variability, temporal_resolution) by at least 0.03 on held\u2011out validation episodes without exceeding 1.5\u00d7 the incumbent's annotation inference cost.",
+ "candidate_patch": {
+  "insert_nodes": [],
+  "remove_nodes": [],
+  "set_params": {},
+  "set_when": {},
+  "set_depends_on": {},
+  "prompt_updates": {
+   "prompt.md": "You are annotating a robot manipulation video.\nThe images are contact sheets of frames sampled uniformly at $sampling_hz Hz from a $duration_sec-second video, in time order (left to right, top to bottom). Each tile shows its timestamp in seconds in yellow.\n\nTask instruction: \"$instruction\"\n\nSplit the video into the sequence of completed manipulation subtasks the robot performs.\nReturn only JSON: {\"segments\": [{\"start_sec\": <float>, \"end_sec\": <float>, \"subtask\": \"<short description>\"}]}\n\nAdditional guidelines:\n- Each subtask must span at least 1.5 seconds (or at least two sampled frames) to ensure a meaningful manipulation state change.\n- Avoid predicting a subtask for every sampled frame; instead, group consecutive frames that belong to the same manipulation phase.\n- If uncertain about exact boundaries, prefer longer segments that capture a clear start and end of a manipulation state change."
+  }
+ },
+ "expected_outcome": "The updated prompt will yield longer, more plausible segments, increasing telemetry_agreement (better alignment with gripper/open\u2011close events), visual_verification (more visual change per segment), duration_variability (less uniform spacing), and temporal_resolution (fewer segments shorter than two frames). Overall label\u2011free score should rise by \u22650.03. Annotation inference cost remains unchanged (one multimodal call per episode), staying well under the 1.5\u00d7 limit.",
+ "verification_plan": {
+  "metric": "label_free_self_score",
+  "split": "validation",
+  "compare_to": "incumbent"
+ },
+ "stop_conditions": [
+  "Annotation inference cost > 1.5 \u00d7 incumbent mean cost per episode",
+  "Fewer than 50% of validation episodes show non\u2011regressing label\u2011free score",
+  "Any episode produces invalid JSON or fails schema/monotonic validation"
+ ],
+ "authored_by": "nvidia/NVIDIA-Nemotron-3-Super-120B-A12B",
+ "task_ids": [
+  "TASK-a8abb4010d",
+  "TASK-a1c5c9898c"
+ ],
+ "protocol": "v2-label-free",
+ "task_tree": [
+  {
+   "task_id": "TASK-a8abb4010d",
+   "parent": null,
+   "depth": 1,
+   "question": "Why does galaxea_011 produce boundaries at 1\u2011second intervals with zero visual confirmation?",
+   "status": "done",
+   "finding": "Galaxea_011\u2019s 1\u2011second boundaries result from the workflow\u2019s uniform 1\u202fHz sampling (one frame per second) combined with the model predicting a subtask for each sampled frame; because each predicted segment is shorter than two frames, the model cannot rely on visual change between frames, yielding zero visual verification.",
+   "implication": "Increase the sampling rate (e.g., to 2\u202fHz or higher) or modify the annotation prompt to encourage longer segments, so that boundaries can be anchored to visually detectable changes and visual verification improves.",
+   "evidence_ids": [
+    "SELF-0ce68ee9fe",
+    "EV-fd5d685402",
+    "EV-a8a57be878",
+    "EV-a89faebf8c"
+   ],
+   "dispatch_decision": null
+  },
+  {
+   "task_id": "TASK-a1c5c9898c",
+   "parent": null,
+   "depth": 1,
+   "question": "Why do galaxea_007 and robointer_droid_000012 have low telemetry agreement despite moderate visual verification?",
+   "status": "done",
+   "finding": "Galaxea_007 and robointer_droid_000012 show zero telemetry agreement because their gripper events (telemetry hints) occur far from the predicted segment boundaries, yielding zero precision/recall, while visual verification remains moderate because some visual confirmation exists but is not perfectly aligned.",
+   "implication": "Refine segment boundaries using telemetry hints (e.g., align predicted boundaries to gripper open/close events) or increase sampling rate to better capture telemetry changes, thereby improving telemetry agreement.",
+   "evidence_ids": [
+    "SELF-0ce68ee9fe",
+    "EV-8003cb5f5f",
+    "EV-92f796e446"
+   ],
+   "dispatch_decision": null
+  }
+ ]
+}

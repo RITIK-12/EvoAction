@@ -1,0 +1,209 @@
+{
+ "protocol": "v2-label-free",
+ "incumbent": "N000",
+ "next_experiment": 3,
+ "next_version": 1,
+ "experiments": [
+  {
+   "id": "EXP-0001",
+   "parent_version": "N000",
+   "version_dir": "EXP-0001_rejected",
+   "hypothesis": "The incumbent workflow produces overly short segments (often one frame apart) because the prompt does not discourage fine-grained predictions, leading to poor temporal resolution, low telemetry agreement, and low visual verification. By updating the annotation prompt to explicitly require longer subtasks (minimum ~1.5 seconds) and to avoid predicting a subtask for every sampled frame, the model will produce boundaries that better align with detectable manipulation state changes, improving telemetry agreement and visual verification while keeping inference cost unchanged.",
+   "patch_summary": {
+    "prompt_updates": {
+     "prompt.md": "You are annotating a robot manipulation video.\nThe images are contact sheets of frames sampled uniformly at $sampling_hz Hz from a $duration_sec-second video, in time order (left to right, top to bottom). Each tile shows its timestamp in seconds in yellow.\n\nTask instruction: \"$instruction\"\n\nSplit the video into the sequence of completed manipulation subtasks the robot performs.\nReturn only JSON: {\"segments\": [{\"start_sec\": <float>, \"end_sec\": <float>, \"subtask\": \"<short description>\"}]}\n\nAdditional guidelines:\n- Each subtask must span at least 1.5 seconds (or at least two sampled frames) to ensure a meaningful manipulation state change.\n- Avoid predicting a subtask for every sampled frame; instead, group consecutive frames that belong to the same manipulation phase.\n- If uncertain about exact boundaries, prefer longer segments that capture a clear start and end of a manipulation state change."
+    }
+   },
+   "decision": "REJECTED",
+   "label_free": {
+    "candidate_self_score": 0.3664,
+    "incumbent_self_score": 0.5115,
+    "candidate_components": {
+     "telemetry_agreement": 0.1723,
+     "visual_verification": 0.25,
+     "duration_variability": 0.4573,
+     "temporal_resolution": 1.0
+    },
+    "incumbent_components": {
+     "telemetry_agreement": 0.2722,
+     "visual_verification": 0.5,
+     "duration_variability": 0.6085,
+     "temporal_resolution": 1.0
+    }
+   },
+   "topology_change": false,
+   "shadow_gt": {
+    "candidate": {
+     "micro_f1": 0.0975609756097561,
+     "micro_f1_iou05": 0.3414634146341463,
+     "short_event_recall": 0.0,
+     "mean_boundary_mae_sec": 4.754541666666666,
+     "outer_snapped_micro_f1": 0.14634146341463414,
+     "per_episode_f1": {
+      "galaxea_002": 0.0,
+      "galaxea_052": 0.0,
+      "robointer_droid_000045": 0.28571428571428575,
+      "robointer_droid_000046": 0.28571428571428575
+     }
+    },
+    "incumbent": {
+     "micro_f1": 0.0975609756097561,
+     "micro_f1_iou05": 0.0975609756097561,
+     "short_event_recall": 0.0,
+     "mean_boundary_mae_sec": 5.4688125,
+     "outer_snapped_micro_f1": 0.0975609756097561,
+     "per_episode_f1": {
+      "galaxea_002": 0.0,
+      "galaxea_052": 0.0,
+      "robointer_droid_000045": 0.28571428571428575,
+      "robointer_droid_000046": 0.28571428571428575
+     }
+    }
+   }
+  },
+  {
+   "id": "EXP-0002",
+   "parent_version": "N000",
+   "version_dir": "EXP-0002_rejected",
+   "hypothesis": "Increasing the sampling rate to 2\u202fHz provides finer temporal detail, and adding a deterministic telemetry\u2011hint detection step followed by visual inspection of hint\u2011aligned windows and a lightweight refinement pass will shift predicted boundaries toward true manipulation state changes, thereby improving telemetry agreement and visual verification without exceeding 1.5\u00d7 the incumbent\u2019s inference cost.",
+   "patch_summary": {
+    "insert_nodes": [
+     {
+      "node": {
+       "id": "hints",
+       "operator": "state_hint_detection",
+       "depends_on": [
+        "sample"
+       ],
+       "params": {
+        "signals": [
+         "gripper",
+         "eef_pause"
+        ],
+        "min_gap_sec": 0.8,
+        "pause_speed_quantile": 0.15,
+        "min_pause_sec": 0.3
+       },
+       "when": "has_telemetry"
+      },
+      "rewire_dependents_of": null
+     },
+     {
+      "node": {
+       "id": "inspect",
+       "operator": "inspect_transition_windows",
+       "depends_on": [
+        "annotate",
+        "hints"
+       ],
+       "params": {
+        "select": "near_hints",
+        "window_sec": 2.0,
+        "local_hz": 2.0,
+        "max_windows": 4,
+        "include_unmatched_hints": false,
+        "tile_px": 224,
+        "confidence_threshold": 0.7
+       },
+       "when": "has_hints"
+      },
+      "rewire_dependents_of": null
+     },
+     {
+      "node": {
+       "id": "refine",
+       "operator": "refine_intervals",
+       "depends_on": [
+        "annotate",
+        "inspect"
+       ],
+       "params": {
+        "prompt": "refine.md",
+        "thinking": false,
+        "max_tokens": 2048,
+        "temperature": 0.2,
+        "allow_insert": true,
+        "allow_delete": true
+       },
+       "when": "always"
+      },
+      "rewire_dependents_of": null
+     },
+     {
+      "node": {
+       "id": "merge",
+       "operator": "merge_filter_segments",
+       "depends_on": [
+        "refine"
+       ],
+       "params": {
+        "min_duration_sec": 0.4,
+        "max_gap_sec": 1.0,
+        "tile_full_episode": true,
+        "merge_same_label": false
+       },
+       "when": "always"
+      },
+      "rewire_dependents_of": null
+     }
+    ],
+    "set_params": {
+     "sample": {
+      "sampling_hz": 2.0
+     }
+    },
+    "set_depends_on": {
+     "export": [
+      "merge"
+     ]
+    }
+   },
+   "decision": "REJECTED",
+   "label_free": {
+    "candidate_self_score": 0.6022,
+    "incumbent_self_score": 0.5115,
+    "candidate_components": {
+     "telemetry_agreement": 0.2178,
+     "visual_verification": 0.75,
+     "duration_variability": 0.7563,
+     "temporal_resolution": 1.0
+    },
+    "incumbent_components": {
+     "telemetry_agreement": 0.2722,
+     "visual_verification": 0.5,
+     "duration_variability": 0.6085,
+     "temporal_resolution": 1.0
+    }
+   },
+   "topology_change": true,
+   "shadow_gt": {
+    "candidate": {
+     "micro_f1": 0.13953488372093023,
+     "micro_f1_iou05": 0.27906976744186046,
+     "short_event_recall": 0.0,
+     "mean_boundary_mae_sec": 5.049427083333333,
+     "outer_snapped_micro_f1": 0.13953488372093023,
+     "per_episode_f1": {
+      "galaxea_002": 0.0,
+      "galaxea_052": 0.28571428571428575,
+      "robointer_droid_000045": 0.28571428571428575,
+      "robointer_droid_000046": 0.28571428571428575
+     }
+    },
+    "incumbent": {
+     "micro_f1": 0.0975609756097561,
+     "micro_f1_iou05": 0.0975609756097561,
+     "short_event_recall": 0.0,
+     "mean_boundary_mae_sec": 5.4688125,
+     "outer_snapped_micro_f1": 0.0975609756097561,
+     "per_episode_f1": {
+      "galaxea_002": 0.0,
+      "galaxea_052": 0.0,
+      "robointer_droid_000045": 0.28571428571428575,
+      "robointer_droid_000046": 0.28571428571428575
+     }
+    }
+   }
+  }
+ ]
+}

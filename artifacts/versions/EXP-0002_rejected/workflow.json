@@ -1,0 +1,106 @@
+{
+ "nodes": [
+  {
+   "id": "sample",
+   "operator": "sample_contact_sheets",
+   "depends_on": [],
+   "params": {
+    "sampling_hz": 2.0,
+    "tile_px": 224,
+    "frames_per_sheet": 20,
+    "cols": 5
+   },
+   "when": "always"
+  },
+  {
+   "id": "annotate",
+   "operator": "initial_annotate",
+   "depends_on": [
+    "sample"
+   ],
+   "params": {
+    "prompt": "prompt.md",
+    "thinking": false,
+    "max_tokens": 8192
+   },
+   "when": "always"
+  },
+  {
+   "id": "hints",
+   "operator": "state_hint_detection",
+   "depends_on": [
+    "sample"
+   ],
+   "params": {
+    "signals": [
+     "gripper",
+     "eef_pause"
+    ],
+    "min_gap_sec": 0.8,
+    "pause_speed_quantile": 0.15,
+    "min_pause_sec": 0.3
+   },
+   "when": "has_telemetry"
+  },
+  {
+   "id": "inspect",
+   "operator": "inspect_transition_windows",
+   "depends_on": [
+    "annotate",
+    "hints"
+   ],
+   "params": {
+    "select": "near_hints",
+    "window_sec": 2.0,
+    "local_hz": 2.0,
+    "max_windows": 4,
+    "include_unmatched_hints": false,
+    "tile_px": 224,
+    "confidence_threshold": 0.7
+   },
+   "when": "has_hints"
+  },
+  {
+   "id": "refine",
+   "operator": "refine_intervals",
+   "depends_on": [
+    "annotate",
+    "inspect"
+   ],
+   "params": {
+    "prompt": "refine.md",
+    "thinking": false,
+    "max_tokens": 2048,
+    "temperature": 0.2,
+    "allow_insert": true,
+    "allow_delete": true
+   },
+   "when": "always"
+  },
+  {
+   "id": "merge",
+   "operator": "merge_filter_segments",
+   "depends_on": [
+    "refine"
+   ],
+   "params": {
+    "min_duration_sec": 0.4,
+    "max_gap_sec": 1.0,
+    "tile_full_episode": true,
+    "merge_same_label": false
+   },
+   "when": "always"
+  },
+  {
+   "id": "export",
+   "operator": "validate_export",
+   "depends_on": [
+    "merge"
+   ],
+   "params": {},
+   "when": "always"
+  }
+ ],
+ "max_calls": 2,
+ "max_wall_seconds": 240
+}

@@ -1,0 +1,85 @@
+{
+ "experiment_id": "EXP-0002",
+ "protocol": "v2-label-free",
+ "validation": {
+  "decision": "REJECTED",
+  "gate": {
+   "signal": "label-free-v1",
+   "min_self_score_delta": 0.03,
+   "min_nonregressing_fraction": 0.5,
+   "max_annotation_cost_ratio": 1.5,
+   "require_valid_outputs": true,
+   "note": "label-free gate predeclared before the v2 run; ground truth is never consulted for promotion"
+  },
+  "checks": {
+   "self_score_delta": {
+    "value": 0.0907,
+    "threshold": 0.03,
+    "pass": true
+   },
+   "non_regressing_fraction": {
+    "value": 1.0,
+    "threshold": 0.5,
+    "pass": true
+   },
+   "valid_outputs": {
+    "value": {
+     "bad_status": {},
+     "empty_output_episodes": []
+    },
+    "pass": true
+   },
+   "annotation_cost_ratio": {
+    "value": 2.555,
+    "threshold": 1.5,
+    "candidate_usd_per_episode": 0.001349,
+    "incumbent_usd_per_episode": 0.000528,
+    "pass": false
+   }
+  },
+  "paired_self_score": {
+   "episodes": [
+    "galaxea_002",
+    "galaxea_052",
+    "robointer_droid_000045",
+    "robointer_droid_000046"
+   ],
+   "per_episode_delta": {
+    "galaxea_002": 0.057499999999999996,
+    "galaxea_052": 0.22279999999999994,
+    "robointer_droid_000045": 0.08220000000000005,
+    "robointer_droid_000046": 0.0
+   },
+   "non_regressing_fraction": 1.0,
+   "improved": 3,
+   "regressed": 0,
+   "mean_delta": 0.090625
+  },
+  "label_free": {
+   "candidate_self_score": 0.6022,
+   "incumbent_self_score": 0.5115,
+   "candidate_components": {
+    "telemetry_agreement": 0.2178,
+    "visual_verification": 0.75,
+    "duration_variability": 0.7563,
+    "temporal_resolution": 1.0
+   },
+   "incumbent_components": {
+    "telemetry_agreement": 0.2722,
+    "visual_verification": 0.5,
+    "duration_variability": 0.6085,
+    "temporal_resolution": 1.0
+   }
+  },
+  "uncertainty": "n=4 validation episodes; label-free proxy, not ground truth",
+  "candidate_usage": {
+   "calls": 12,
+   "cache_hits": 3,
+   "prompt_tokens": 9843,
+   "completion_tokens": 893,
+   "cost_usd": 0.004587,
+   "model_latency_s": 12.58
+  },
+  "topology_change": true
+ }
+}

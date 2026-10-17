@@ -1,0 +1,18 @@
+{
+ "id": "EXP-0002_rejected",
+ "parent_id": "N000",
+ "status": "REJECTED",
+ "frozen": true,
+ "created_at": 1792272544.538023,
+ "workflow_sha256": "b1aa28a1d0c78731958bc2af5de614cfed59076e8020ff6274bf556f5403f30b",
+ "files": {
+  "workflow.json": "82c8cdc599e207d36baecd74ceef64817af6b52f819a9e34f5bbe873dfdab1b6",
+  "config.json": "53e574e73406ebc1eca87fbcf0b8e8a6ca099986a8f08b3dcead2bf810f60cd5",
+  "prompt.md": "04c3c82356498849910193e07b3ca59674ba3715f02b6f9fc9ad9805e6f98c32",
+  "refine.md": "f478372773f8a0131d0ff6188feb5e649b2fa6a6cde4379fa9a918b370f4df3b",
+  "experiment.json": "46cb9e2a00c52257b7c5ab38b0f2c54d4817aeb382c2417470564c36ae697aef",
+  "validation_report.json": "da9c67ad9f40eaba70d05274191807676d1451d1b84e615aeba5aab3b94778d7"
+ },
+ "frozen_at": 1792272549.082318,
+ "original_id": "EXP-0002"
+}
