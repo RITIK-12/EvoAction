@@ -1,0 +1,151 @@
+{
+ "episode_id": "galaxea_011",
+ "version_id": "strong_fixed",
+ "segments": [
+  {
+   "start_sec": 0.0,
+   "end_sec": 1.5,
+   "subtask": "pick up the red cup from the table"
+  },
+  {
+   "start_sec": 1.5,
+   "end_sec": 2.5,
+   "subtask": "place the red cup in the right basket"
+  },
+  {
+   "start_sec": 2.5,
+   "end_sec": 3.5,
+   "subtask": "pick up the yellow spoon from the table"
+  },
+  {
+   "start_sec": 3.5,
+   "end_sec": 4.5,
+   "subtask": "place the yellow spoon in the right basket"
+  },
+  {
+   "start_sec": 4.5,
+   "end_sec": 5.5,
+   "subtask": "pick up the blue cup from the table"
+  },
+  {
+   "start_sec": 5.5,
+   "end_sec": 6.5,
+   "subtask": "place the blue cup in the right basket"
+  },
+  {
+   "start_sec": 6.5,
+   "end_sec": 7.5,
+   "subtask": "pick up the yellow spoon from the table"
+  },
+  {
+   "start_sec": 7.5,
+   "end_sec": 8.5,
+   "subtask": "place the yellow spoon in the right basket"
+  },
+  {
+   "start_sec": 8.5,
+   "end_sec": 9.5,
+   "subtask": "pick up the blue cup from the table"
+  },
+  {
+   "start_sec": 9.5,
+   "end_sec": 10.5,
+   "subtask": "place the blue cup in the right basket"
+  },
+  {
+   "start_sec": 10.5,
+   "end_sec": 11.5,
+   "subtask": "pick up the red cup from the table"
+  },
+  {
+   "start_sec": 11.5,
+   "end_sec": 12.5,
+   "subtask": "place the red cup in the right basket"
+  },
+  {
+   "start_sec": 12.5,
+   "end_sec": 13.5,
+   "subtask": "pick up the yellow spoon from the table"
+  },
+  {
+   "start_sec": 13.5,
+   "end_sec": 14.5,
+   "subtask": "place the yellow spoon in the right basket"
+  },
+  {
+   "start_sec": 14.5,
+   "end_sec": 15.5,
+   "subtask": "pick up the blue cup from the table"
+  },
+  {
+   "start_sec": 15.5,
+   "end_sec": 16.5,
+   "subtask": "place the blue cup in the right basket"
+  },
+  {
+   "start_sec": 16.5,
+   "end_sec": 17.5,
+   "subtask": "pick up the yellow spoon from the table"
+  },
+  {
+   "start_sec": 17.5,
+   "end_sec": 18.5,
+   "subtask": "place the yellow spoon in the right basket"
+  },
+  {
+   "start_sec": 18.5,
+   "end_sec": 19.5,
+   "subtask": "pick up the blue cup from the table"
+  },
+  {
+   "start_sec": 19.5,
+   "end_sec": 20.5,
+   "subtask": "place the blue cup in the right basket"
+  },
+  {
+   "start_sec": 20.5,
+   "end_sec": 21.5,
+   "subtask": "pick up the red cup from the table"
+  },
+  {
+   "start_sec": 21.5,
+   "end_sec": 22.5,
+   "subtask": "place the red cup in the right basket"
+  },
+  {
+   "start_sec": 22.5,
+   "end_sec": 23.5,
+   "subtask": "pick up the yellow spoon from the table"
+  },
+  {
+   "start_sec": 23.5,
+   "end_sec": 24.5,
+   "subtask": "place the yellow spoon in the right basket"
+  },
+  {
+   "start_sec": 24.5,
+   "end_sec": 25.5,
+   "subtask": "pick up the blue cup from the table"
+  },
+  {
+   "start_sec": 25.5,
+   "end_sec": 26.5,
+   "subtask": "place the blue cup in the right basket"
+  },
+  {
+   "start_sec": 26.5,
+   "end_sec": 27.5,
+   "subtask": "pick up the yellow spoon from the table"
+  },
+  {
+   "start_sec": 27.5,
+   "end_sec": 28.5,
+   "subtask": "place the yellow spoon in the right basket"
+  },
+  {
+   "start_sec": 28.5,
+   "end_sec": 29.167,
+   "subtask": "pick up the blue cup from the table"
+  }
+ ]
+}

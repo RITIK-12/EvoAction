@@ -1,0 +1,78 @@
+{
+ "experiment_id": "EXP-0002",
+ "validation": {
+  "decision": "REJECTED",
+  "gate": {
+   "min_val_micro_f1_delta": 0.02,
+   "min_nonregressing_fraction": 0.5,
+   "max_annotation_cost_ratio": 1.5,
+   "require_valid_outputs": true,
+   "note": "operational heuristics on a tiny validation set, not statistical significance"
+  },
+  "checks": {
+   "val_micro_f1_delta": {
+    "value": -0.008,
+    "threshold": 0.02,
+    "pass": false
+   },
+   "non_regressing_fraction": {
+    "value": 1.0,
+    "threshold": 0.5,
+    "pass": true
+   },
+   "valid_outputs": {
+    "value": {
+     "candidate_invalid": 0,
+     "candidate_empty": 0,
+     "bad_status": {}
+    },
+    "pass": true
+   },
+   "annotation_cost_ratio": {
+    "value": 1.711,
+    "threshold": 1.5,
+    "candidate_usd_per_episode": 0.00096,
+    "incumbent_usd_per_episode": 0.000561,
+    "pass": false
+   }
+  },
+  "paired": {
+   "episodes": [
+    "galaxea_002",
+    "robointer_droid_000045"
+   ],
+   "per_episode_delta": {
+    "galaxea_002": 0.0,
+    "robointer_droid_000045": 0.0
+   },
+   "non_regressing_fraction": 1.0,
+   "improved": 0,
+   "regressed": 0,
+   "mean_delta": 0.0
+  },
+  "candidate_val": {
+   "micro_f1": 0.06896551724137931,
+   "micro_f1_iou05": 0.13793103448275862,
+   "short_event_recall": 0.0,
+   "mean_boundary_mae_sec": 5.1394375,
+   "outer_snapped_micro_f1": 0.06896551724137931
+  },
+  "incumbent_val": {
+   "micro_f1": 0.07692307692307693,
+   "micro_f1_iou05": 0.07692307692307693,
+   "short_event_recall": 0.0,
+   "mean_boundary_mae_sec": 5.728875,
+   "outer_snapped_micro_f1": 0.07692307692307693
+  },
+  "uncertainty": "n=2 validation episodes; differences of a few segments swing F1 by >0.05",
+  "candidate_usage": {
+   "calls": 2,
+   "cache_hits": 2,
+   "prompt_tokens": 0,
+   "completion_tokens": 0,
+   "cost_usd": 0.0,
+   "model_latency_s": 2.87
+  },
+  "topology_change": true
+ }
+}

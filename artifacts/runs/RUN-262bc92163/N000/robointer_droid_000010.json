@@ -1,0 +1,21 @@
+{
+ "episode_id": "robointer_droid_000010",
+ "version_id": "N000",
+ "segments": [
+  {
+   "start_sec": 0.0,
+   "end_sec": 5.0,
+   "subtask": "The robot arm is positioned over the work surface, holding a blue object."
+  },
+  {
+   "start_sec": 5.0,
+   "end_sec": 9.0,
+   "subtask": "The robot moves the blue object to the open drawer on the left and places it inside."
+  },
+  {
+   "start_sec": 9.0,
+   "end_sec": 15.0,
+   "subtask": "The robot retracts its arm and moves back to the initial position."
+  }
+ ]
+}

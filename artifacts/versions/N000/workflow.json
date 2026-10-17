@@ -1,0 +1,40 @@
+{
+ "nodes": [
+  {
+   "id": "sample",
+   "operator": "sample_contact_sheets",
+   "depends_on": [],
+   "params": {
+    "sampling_hz": 1.0,
+    "tile_px": 224,
+    "frames_per_sheet": 20,
+    "cols": 5
+   },
+   "when": "always"
+  },
+  {
+   "id": "annotate",
+   "operator": "initial_annotate",
+   "depends_on": [
+    "sample"
+   ],
+   "params": {
+    "prompt": "prompt.md",
+    "thinking": false,
+    "max_tokens": 8192
+   },
+   "when": "always"
+  },
+  {
+   "id": "export",
+   "operator": "validate_export",
+   "depends_on": [
+    "annotate"
+   ],
+   "params": {},
+   "when": "always"
+  }
+ ],
+ "max_calls": 1,
+ "max_wall_seconds": 240
+}

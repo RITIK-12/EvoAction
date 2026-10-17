@@ -1,0 +1,178 @@
+{
+ "incumbent": "N000",
+ "next_experiment": 3,
+ "next_version": 1,
+ "experiments": [
+  {
+   "id": "EXP-0001",
+   "parent_version": "N000",
+   "version_dir": "EXP-0001_rejected",
+   "hypothesis": "Increasing the uniform sampling frequency to at least 2.0 Hz provides sufficient temporal resolution to prevent over\u2011segmentation caused by predicted segments shorter than two frames. Adding a deterministic telemetry\u2011hint detector (gripper/eef_pause) and a lightweight, hint\u2011guided refinement pass (few inspection windows and a low\u2011token refine_intervals call) will align predicted boundaries with meaningful robot\u2011state change points, thereby improving segment F1@0.75.",
+   "patch_summary": {
+    "insert_nodes": [
+     {
+      "node": {
+       "id": "state_hint_detection",
+       "operator": "state_hint_detection",
+       "depends_on": [],
+       "params": {
+        "signals": [
+         "gripper",
+         "eef_pause"
+        ],
+        "min_gap_sec": 0.8,
+        "pause_speed_quantile": 0.15,
+        "min_pause_sec": 0.3
+       },
+       "when": "has_telemetry"
+      },
+      "rewire_dependents_of": null
+     },
+     {
+      "node": {
+       "id": "inspect_transition_windows",
+       "operator": "inspect_transition_windows",
+       "depends_on": [
+        "annotate",
+        "state_hint_detection"
+       ],
+       "params": {
+        "select": "near_hints",
+        "window_sec": 2.0,
+        "local_hz": 3.0,
+        "max_windows": 2,
+        "include_unmatched_hints": false,
+        "tile_px": 224,
+        "confidence_threshold": 0.7
+       },
+       "when": "has_hints"
+      },
+      "rewire_dependents_of": null
+     },
+     {
+      "node": {
+       "id": "refine_intervals",
+       "operator": "refine_intervals",
+       "depends_on": [
+        "annotate",
+        "inspect_transition_windows"
+       ],
+       "params": {
+        "prompt": "refine.md",
+        "thinking": false,
+        "max_tokens": 512,
+        "temperature": 0.2,
+        "allow_insert": true,
+        "allow_delete": true
+       },
+       "when": "has_boundaries"
+      },
+      "rewire_dependents_of": null
+     },
+     {
+      "node": {
+       "id": "merge_filter_segments",
+       "operator": "merge_filter_segments",
+       "depends_on": [
+        "refine_intervals"
+       ],
+       "params": {
+        "min_duration_sec": 0.4,
+        "max_gap_sec": 1.0,
+        "tile_full_episode": true,
+        "merge_same_label": false
+       },
+       "when": "always"
+      },
+      "rewire_dependents_of": null
+     }
+    ],
+    "set_params": {
+     "sample": {
+      "sampling_hz": 2.0
+     }
+    },
+    "set_when": {
+     "export": "always"
+    },
+    "set_depends_on": {
+     "annotate": [
+      "sample"
+     ],
+     "export": [
+      "merge_filter_segments"
+     ]
+    }
+   },
+   "decision": "REJECTED",
+   "candidate_val": {
+    "micro_f1": 0.06896551724137931,
+    "micro_f1_iou05": 0.13793103448275862,
+    "short_event_recall": 0.0,
+    "mean_boundary_mae_sec": 5.1394375,
+    "outer_snapped_micro_f1": 0.06896551724137931
+   },
+   "incumbent_val": {
+    "micro_f1": 0.07692307692307693,
+    "micro_f1_iou05": 0.07692307692307693,
+    "short_event_recall": 0.0,
+    "mean_boundary_mae_sec": 5.728875,
+    "outer_snapped_micro_f1": 0.07692307692307693
+   },
+   "topology_change": true
+  },
+  {
+   "id": "EXP-0002",
+   "parent_version": "N000",
+   "version_dir": "EXP-0002_rejected",
+   "hypothesis": "Increasing the uniform sampling frequency to 2.0 Hz provides sufficient temporal resolution to prevent over\u2011segmentation caused by predicted segments shorter than two frames, and adding a deterministic merge_filter_segments step removes spurious short segments, thereby aligning predicted boundaries with true subtask transitions and improving segment F1@0.75.",
+   "patch_summary": {
+    "insert_nodes": [
+     {
+      "node": {
+       "id": "merge_filter",
+       "operator": "merge_filter_segments",
+       "depends_on": [
+        "annotate"
+       ],
+       "params": {
+        "min_duration_sec": 0.4,
+        "max_gap_sec": 1.0,
+        "tile_full_episode": true,
+        "merge_same_label": false
+       },
+       "when": "always"
+      },
+      "rewire_dependents_of": "annotate"
+     }
+    ],
+    "set_params": {
+     "sample": {
+      "sampling_hz": 2.0
+     }
+    },
+    "set_depends_on": {
+     "export": [
+      "merge_filter"
+     ]
+    }
+   },
+   "decision": "REJECTED",
+   "candidate_val": {
+    "micro_f1": 0.06896551724137931,
+    "micro_f1_iou05": 0.13793103448275862,
+    "short_event_recall": 0.0,
+    "mean_boundary_mae_sec": 5.1394375,
+    "outer_snapped_micro_f1": 0.06896551724137931
+   },
+   "incumbent_val": {
+    "micro_f1": 0.07692307692307693,
+    "micro_f1_iou05": 0.07692307692307693,
+    "short_event_recall": 0.0,
+    "mean_boundary_mae_sec": 5.728875,
+    "outer_snapped_micro_f1": 0.07692307692307693
+   },
+   "topology_change": true
+  }
+ ]
+}

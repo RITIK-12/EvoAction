@@ -1,0 +1,3940 @@
+{
+ "run_id": "RUN-e9cd34b042",
+ "pilot": true,
+ "gate": {
+  "min_val_micro_f1_delta": 0.02,
+  "min_nonregressing_fraction": 0.5,
+  "max_annotation_cost_ratio": 1.5,
+  "require_valid_outputs": true,
+  "note": "operational heuristics on a tiny validation set, not statistical significance"
+ },
+ "dev_ids": [
+  "galaxea_011",
+  "robointer_droid_000010"
+ ],
+ "val_ids": [
+  "galaxea_002",
+  "robointer_droid_000045"
+ ],
+ "iterations": [
+  {
+   "iteration": 1,
+   "incumbent": "N000",
+   "plan": {
+    "failure_summary": "The incumbent workflow severely over-segments the galaxea_011 episode (30 predicted vs 12 reference segments) yielding zero F1 at IoU>=0.75, while the robointer_droid_000010 episode predicts the correct number of segments but with poor boundary alignment (mean boundary MAE ~1.23s). Errors are dominated by boundary misalignments and spurious placements, indicating that the model struggles to detect true subtask boundaries and often inserts false cuts.",
+    "investigations": [
+     {
+      "question": "Are the incumbent's predicted boundaries temporally aligned with meaningful robot-state change points (gripper actuation or end\u2011effector pauses) as revealed by telemetry hints?",
+      "tools_allowed": [
+       "telemetry_hints",
+       "episode_predictions"
+      ],
+      "tool_requests": [
+       {
+        "tool": "telemetry_hints",
+        "args": {
+         "episode_id": "galaxea_011",
+         "signals": [
+          "gripper",
+          "eef_pause"
+         ]
+        }
+       },
+       {
+        "tool": "telemetry_hints",
+        "args": {
+         "episode_id": "robointer_droid_000010",
+         "signals": [
+          "gripper",
+          "eef_pause"
+         ]
+        }
+       },
+       {
+        "tool": "episode_predictions",
+        "args": {
+         "episode_id": "galaxea_011"
+        }
+       },
+       {
+        "tool": "episode_predictions",
+        "args": {
+         "episode_id": "robointer_droid_000010"
+        }
+       }
+      ]
+     },
+     {
+      "question": "Does over\u2011segmentation arise because many predicted segments are shorter than the temporal resolution of the uniform sampling (i.e., less than two sampled frames), causing the model to hallucinate cuts between adjacent tiles?",
+      "tools_allowed": [
+       "episode_predictions",
+       "sampling_coverage"
+      ],
+      "tool_requests": [
+       {
+        "tool": "episode_predictions",
+        "args": {
+         "episode_id": "galaxea_011"
+        }
+       },
+       {
+        "tool": "episode_predictions",
+        "args": {
+         "episode_id": "robointer_droid_000010"
+        }
+       },
+       {
+        "tool": "sampling_coverage",
+        "args": {
+         "episode_id": "galaxea_011",
+         "sampling_hz": 1.0
+        }
+       },
+       {
+        "tool": "sampling_coverage",
+        "args": {
+         "episode_id": "robointer_droid_000010",
+         "sampling_hz": 1.0
+        }
+       }
+      ]
+     }
+    ],
+    "call_id": "CALL-bcfca1c3f8",
+    "model": "nvidia/NVIDIA-Nemotron-3-Super-120B-A12B"
+   },
+   "proposal_record": {
+    "exp_id": "EXP-0001",
+    "attempts": [
+     {
+      "call_id": "CALL-cf567ae1e2",
+      "errors": [],
+      "raw": {
+       "hypothesis": "Increasing the uniform sampling frequency to 1.5 Hz will provide finer temporal resolution, reducing over\u2011segmentation caused by segments shorter than two frames. Adding a deterministic telemetry\u2011hint detector and a lightweight refinement pass (using hint\u2011guided windows) will align predicted boundaries with gripper/eef\u2011pause change points, thereby improving segment F1@0.75.",
+       "failure_slice": "Episodes where the incumbent shows (a) boundary misalignment with telemetry hints (high boundary MAE, low micro\u2011F1) or (b) over\u2011segmentation due to predicted segments shorter than two sampled frames.",
+       "evidence_ids": [
+        "EVAL-e05d4bb044",
+        "EV-e9cbb73abb",
+        "EV-6c5bce8463",
+        "EV-332c022143",
+        "EV-5584e1f0d8"
+       ],
+       "objective": "Raise validation segment F1 at IoU >= 0.75 by at least 0.02 relative to the incumbent while keeping annotation inference cost <= 1.5x the incumbent.",
+       "candidate_patch": {
+        "insert_nodes": [
+         {
+          "node": {
+           "id": "state_hint_detection",
+           "operator": "state_hint_detection",
+           "depends_on": [],
+           "params": {
+            "signals": [
+             "gripper",
+             "eef_pause"
+            ],
+            "min_gap_sec": 0.8,
+            "pause_speed_quantile": 0.15,
+            "min_pause_sec": 0.3
+           },
+           "when": "has_telemetry"
+          },
+          "rewire_dependents_of": null
+         },
+         {
+          "node": {
+           "id": "inspect_transition_windows",
+           "operator": "inspect_transition_windows",
+           "depends_on": [
+            "annotate",
+            "state_hint_detection"
+           ],
+           "params": {
+            "select": "near_hints",
+            "window_sec": 2.0,
+            "local_hz": 4.0,
+            "max_windows": 8,
+            "include_unmatched_hints": false,
+            "tile_px": 224,
+            "confidence_threshold": 0.7
+           },
+           "when": "has_hints"
+          },
+          "rewire_dependents_of": null
+         },
+         {
+          "node": {
+           "id": "refine_intervals",
+           "operator": "refine_intervals",
+           "depends_on": [
+            "annotate",
+            "inspect_transition_windows"
+           ],
+           "params": {
+            "prompt": "refine.md",
+            "thinking": false,
+            "max_tokens": 4096,
+            "temperature": 0.2,
+            "allow_insert": true,
+            "allow_delete": true
+           },
+           "when": "has_boundaries"
+          },
+          "rewire_dependents_of": null
+         },
+         {
+          "node": {
+           "id": "merge_filter_segments",
+           "operator": "merge_filter_segments",
+           "depends_on": [
+            "refine_intervals"
+           ],
+           "params": {
+            "min_duration_sec": 0.4,
+            "max_gap_sec": 1.0,
+            "tile_full_episode": true,
+            "merge_same_label": false
+           },
+           "when": "always"
+          },
+          "rewire_dependents_of": null
+         }
+        ],
+        "set_params": {
+         "sample": {
+          "sampling_hz": 1.5
+         }
+        },
+        "set_depends_on": {
+         "annotate": [
+          "sample"
+         ],
+         "export": [
+          "merge_filter_segments"
+         ]
+        },
+        "set_when": {
+         "export": "always"
+        }
+       },
+       "expected_outcome": "Validation segment F1@0.75 improves by >=0.02; annotation inference cost remains <=1.5x incumbent (approx. <=0.00084 USD per episode).",
+       "verification_plan": {
+        "metric": "segment_f1_iou075",
+        "split": "validation",
+        "compare_to": "incumbent"
+       },
+       "stop_conditions": [
+        "validation micro F1@0.75 delta < 0.02",
+        "annotation inference cost > 1.5x incumbent",
+        "any node fails to produce valid JSON output",
+        "graph invariant violation (e.g., >8 nodes, cycle, missing inputs)"
+       ]
+      }
+     },
+     {
+      "call_id": "CALL-a5eb6e4a97",
+      "errors": [],
+      "raw": {
+       "hypothesis": "Increasing the uniform sampling frequency to at least 2.0 Hz provides sufficient temporal resolution to prevent over\u2011segmentation caused by predicted segments shorter than two frames. Adding a deterministic telemetry\u2011hint detector (gripper/eef_pause) and a lightweight, hint\u2011guided refinement pass (few inspection windows and a low\u2011token refine_intervals call) will align predicted boundaries with meaningful robot\u2011state change points, thereby improving segment F1@0.75.",
+       "failure_slice": "Episodes where the incumbent shows (a) boundary misalignment with telemetry hints (high boundary MAE, low micro\u2011F1) or (b) over\u2011segmentation due to predicted segments shorter than two sampled frames.",
+       "evidence_ids": [
+        "EVAL-e05d4bb044",
+        "EV-e9cbb73abb",
+        "EV-6c5bce8463",
+        "EV-332c022143",
+        "EV-5584e1f0d8"
+       ],
+       "objective": "Raise validation segment F1 at IoU >= 0.75 by at least 0.02 relative to the incumbent while keeping annotation inference cost <= 1.5x the incumbent.",
+       "candidate_patch": {
+        "insert_nodes": [
+         {
+          "node": {
+           "id": "state_hint_detection",
+           "operator": "state_hint_detection",
+           "depends_on": [],
+           "params": {
+            "signals": [
+             "gripper",
+             "eef_pause"
+            ],
+            "min_gap_sec": 0.8,
+            "pause_speed_quantile": 0.15,
+            "min_pause_sec": 0.3
+           },
+           "when": "has_telemetry"
+          },
+          "rewire_dependents_of": null
+         },
+         {
+          "node": {
+           "id": "inspect_transition_windows",
+           "operator": "inspect_transition_windows",
+           "depends_on": [
+            "annotate",
+            "state_hint_detection"
+           ],
+           "params": {
+            "select": "near_hints",
+            "window_sec": 2.0,
+            "local_hz": 3.0,
+            "max_windows": 2,
+            "include_unmatched_hints": false,
+            "tile_px": 224,
+            "confidence_threshold": 0.7
+           },
+           "when": "has_hints"
+          },
+          "rewire_dependents_of": null
+         },
+         {
+          "node": {
+           "id": "refine_intervals",
+           "operator": "refine_intervals",
+           "depends_on": [
+            "annotate",
+            "inspect_transition_windows"
+           ],
+           "params": {
+            "prompt": "refine.md",
+            "thinking": false,
+            "max_tokens": 512,
+            "temperature": 0.2,
+            "allow_insert": true,
+            "allow_delete": true
+           },
+           "when": "has_boundaries"
+          },
+          "rewire_dependents_of": null
+         },
+         {
+          "node": {
+           "id": "merge_filter_segments",
+           "operator": "merge_filter_segments",
+           "depends_on": [
+            "refine_intervals"
+           ],
+           "params": {
+            "min_duration_sec": 0.4,
+            "max_gap_sec": 1.0,
+            "tile_full_episode": true,
+            "merge_same_label": false
+           },
+           "when": "always"
+          },
+          "rewire_dependents_of": null
+         }
+        ],
+        "remove_nodes": [],
+        "set_params": {
+         "sample": {
+          "sampling_hz": 2.0
+         }
+        },
+        "set_when": {
+         "export": "always"
+        },
+        "set_depends_on": {
+         "annotate": [
+          "sample"
+         ],
+         "export": [
+          "merge_filter_segments"
+         ]
+        },
+        "prompt_updates": {}
+       },
+       "expected_outcome": "Validation segment F1@0.75 improves by >=0.02; annotation inference cost remains <=1.5x incumbent (approx. <=0.00084 USD per episode).",
+       "verification_plan": {
+        "metric": "segment_f1_iou075",
+        "split": "validation",
+        "compare_to": "incumbent"
+       },
+       "stop_conditions": [
+        "validation micro F1@0.75 delta < 0.02",
+        "annotation inference cost > 1.5x incumbent",
+        "any node fails to produce valid JSON output",
+        "graph invariant violation (>8 nodes, cycle, missing inputs)"
+       ]
+      },
+      "after_critique": true
+     }
+    ],
+    "critique": {
+     "call_id": "CALL-f4ce4b2d24",
+     "verdict": "revise",
+     "issues": [
+      "Hypothesis claims that increasing sampling to 1.5 Hz will reduce over\u2011segmentation, but cited evidence indicates that segments shorter than two frames occur at 1.0 Hz and suggests a sampling rate of \u22652.0 Hz is needed; 1.5 Hz may still produce segments <2 frames, so the hypothesis is not fully supported by the evidence.",
+      "The candidate patch adds multiple annotation passes (inspect_transition_windows with up to 8 windows at local_hz=4.0 and a separate refine_intervals call), which is likely to increase inference cost beyond 1.5\u00d7 the incumbent (incumbent \u22480.00056 USD/episode; expected \u22640.00084 USD/episode). No cost estimate is provided for these additional passes.",
+      "Verification plan relies on stop conditions that include cost >1.5\u00d7 incumbent, but the proposal does not demonstrate that the cost constraint will be satisfied; risk of failing the stop condition."
+     ],
+     "required_changes": "1. Adjust the sampling frequency to at least 2.0 Hz (or provide empirical evidence that 1.5 Hz sufficiently mitigates over\u2011segmentation). 2. Reduce the computational load of the hint\u2011guided refinement: either limit max_windows to a smaller number (e.g., \u22642), lower local_hz, or merge inspect_transition_windows and refine_intervals into a single, cheaper pass. 3. Provide a rough cost estimate showing total annotation inference cost \u22641.5\u00d7 incumbent after the changes, or adjust the objective/cost threshold accordingly. 4. Update the hypothesis and evidence discussion to reflect the revised sampling rate and any changes to the patch."
+    },
+    "status": "valid",
+    "proposal": {
+     "id": "EXP-0001",
+     "parent_version": "N000",
+     "hypothesis": "Increasing the uniform sampling frequency to at least 2.0 Hz provides sufficient temporal resolution to prevent over\u2011segmentation caused by predicted segments shorter than two frames. Adding a deterministic telemetry\u2011hint detector (gripper/eef_pause) and a lightweight, hint\u2011guided refinement pass (few inspection windows and a low\u2011token refine_intervals call) will align predicted boundaries with meaningful robot\u2011state change points, thereby improving segment F1@0.75.",
+     "failure_slice": "Episodes where the incumbent shows (a) boundary misalignment with telemetry hints (high boundary MAE, low micro\u2011F1) or (b) over\u2011segmentation due to predicted segments shorter than two sampled frames.",
+     "evidence_ids": [
+      "EVAL-e05d4bb044",
+      "EV-e9cbb73abb",
+      "EV-6c5bce8463",
+      "EV-332c022143",
+      "EV-5584e1f0d8"
+     ],
+     "objective": "Raise validation segment F1 at IoU >= 0.75 by at least 0.02 relative to the incumbent while keeping annotation inference cost <= 1.5x the incumbent.",
+     "candidate_patch": {
+      "insert_nodes": [
+       {
+        "node": {
+         "id": "state_hint_detection",
+         "operator": "state_hint_detection",
+         "depends_on": [],
+         "params": {
+          "signals": [
+           "gripper",
+           "eef_pause"
+          ],
+          "min_gap_sec": 0.8,
+          "pause_speed_quantile": 0.15,
+          "min_pause_sec": 0.3
+         },
+         "when": "has_telemetry"
+        },
+        "rewire_dependents_of": null
+       },
+       {
+        "node": {
+         "id": "inspect_transition_windows",
+         "operator": "inspect_transition_windows",
+         "depends_on": [
+          "annotate",
+          "state_hint_detection"
+         ],
+         "params": {
+          "select": "near_hints",
+          "window_sec": 2.0,
+          "local_hz": 3.0,
+          "max_windows": 2,
+          "include_unmatched_hints": false,
+          "tile_px": 224,
+          "confidence_threshold": 0.7
+         },
+         "when": "has_hints"
+        },
+        "rewire_dependents_of": null
+       },
+       {
+        "node": {
+         "id": "refine_intervals",
+         "operator": "refine_intervals",
+         "depends_on": [
+          "annotate",
+          "inspect_transition_windows"
+         ],
+         "params": {
+          "prompt": "refine.md",
+          "thinking": false,
+          "max_tokens": 512,
+          "temperature": 0.2,
+          "allow_insert": true,
+          "allow_delete": true
+         },
+         "when": "has_boundaries"
+        },
+        "rewire_dependents_of": null
+       },
+       {
+        "node": {
+         "id": "merge_filter_segments",
+         "operator": "merge_filter_segments",
+         "depends_on": [
+          "refine_intervals"
+         ],
+         "params": {
+          "min_duration_sec": 0.4,
+          "max_gap_sec": 1.0,
+          "tile_full_episode": true,
+          "merge_same_label": false
+         },
+         "when": "always"
+        },
+        "rewire_dependents_of": null
+       }
+      ],
+      "remove_nodes": [],
+      "set_params": {
+       "sample": {
+        "sampling_hz": 2.0
+       }
+      },
+      "set_when": {
+       "export": "always"
+      },
+      "set_depends_on": {
+       "annotate": [
+        "sample"
+       ],
+       "export": [
+        "merge_filter_segments"
+       ]
+      },
+      "prompt_updates": {}
+     },
+     "expected_outcome": "Validation segment F1@0.75 improves by >=0.02; annotation inference cost remains <=1.5x incumbent (approx. <=0.00084 USD per episode).",
+     "verification_plan": {
+      "metric": "segment_f1_iou075",
+      "split": "validation",
+      "compare_to": "incumbent"
+     },
+     "stop_conditions": [
+      "validation micro F1@0.75 delta < 0.02",
+      "annotation inference cost > 1.5x incumbent",
+      "any node fails to produce valid JSON output",
+      "graph invariant violation (>8 nodes, cycle, missing inputs)"
+     ],
+     "authored_by": "nvidia/NVIDIA-Nemotron-3-Super-120B-A12B",
+     "task_ids": [
+      "TASK-5e74ff7aed",
+      "TASK-fe7f4b0fe3"
+     ]
+    }
+   },
+   "decision": {
+    "decision": "REJECTED",
+    "gate": {
+     "min_val_micro_f1_delta": 0.02,
+     "min_nonregressing_fraction": 0.5,
+     "max_annotation_cost_ratio": 1.5,
+     "require_valid_outputs": true,
+     "note": "operational heuristics on a tiny validation set, not statistical significance"
+    },
+    "checks": {
+     "val_micro_f1_delta": {
+      "value": -0.008,
+      "threshold": 0.02,
+      "pass": false
+     },
+     "non_regressing_fraction": {
+      "value": 1.0,
+      "threshold": 0.5,
+      "pass": true
+     },
+     "valid_outputs": {
+      "value": {
+       "candidate_invalid": 0,
+       "candidate_empty": 0,
+       "bad_status": {}
+      },
+      "pass": true
+     },
+     "annotation_cost_ratio": {
+      "value": 2.642,
+      "threshold": 1.5,
+      "candidate_usd_per_episode": 0.001482,
+      "incumbent_usd_per_episode": 0.000561,
+      "pass": false
+     }
+    },
+    "paired": {
+     "episodes": [
+      "galaxea_002",
+      "robointer_droid_000045"
+     ],
+     "per_episode_delta": {
+      "galaxea_002": 0.0,
+      "robointer_droid_000045": 0.0
+     },
+     "non_regressing_fraction": 1.0,
+     "improved": 0,
+     "regressed": 0,
+     "mean_delta": 0.0
+    },
+    "candidate_val": {
+     "micro_f1": 0.06896551724137931,
+     "micro_f1_iou05": 0.13793103448275862,
+     "short_event_recall": 0.0,
+     "mean_boundary_mae_sec": 5.1394375,
+     "outer_snapped_micro_f1": 0.06896551724137931
+    },
+    "incumbent_val": {
+     "micro_f1": 0.07692307692307693,
+     "micro_f1_iou05": 0.07692307692307693,
+     "short_event_recall": 0.0,
+     "mean_boundary_mae_sec": 5.728875,
+     "outer_snapped_micro_f1": 0.07692307692307693
+    },
+    "uncertainty": "n=2 validation episodes; differences of a few segments swing F1 by >0.05",
+    "candidate_usage": {
+     "calls": 4,
+     "cache_hits": 0,
+     "prompt_tokens": 6970,
+     "completion_tokens": 477,
+     "cost_usd": 0.002964,
+     "model_latency_s": 4.7
+    },
+    "topology_change": true,
+    "rollback": "incumbent remains N000; candidate preserved as EXP-0001_rejected"
+   }
+  },
+  {
+   "iteration": 2,
+   "incumbent": "N000",
+   "plan": {
+    "failure_summary": "The incumbent workflow severely over-segments episodes (e.g., 30 predicted vs 12 reference segments in galaxea_011) while failing to recall any short reference events (<2\u202fs). Most predictions are classified as boundary misaligned or spurious/badly placed, and boundary offsets show many early/late errors. This indicates the model is generating uniformly spaced, short segments that do not correspond to actual manipulation subtasks.",
+    "investigations": [
+     {
+      "question": "What proportion of predicted segments are shorter than the temporal resolution of the current 1\u202fHz sampling (i.e., <2 sampled frames), and are the predicted segments uniformly spaced across the video?",
+      "tools_allowed": [
+       "sampling_coverage",
+       "episode_predictions"
+      ],
+      "tool_requests": [
+       {
+        "tool": "sampling_coverage",
+        "args": {
+         "episode_id": "galaxea_011",
+         "sampling_hz": 1.0
+        }
+       },
+       {
+        "tool": "episode_predictions",
+        "args": {
+         "episode_id": "galaxea_011"
+        }
+       }
+      ]
+     },
+     {
+      "question": "Do the predicted boundaries align with robot\u2011state change points (gripper/eef_pause) derived from telemetry, or are they largely unrelated to such hints?",
+      "tools_allowed": [
+       "telemetry_hints",
+       "episode_predictions"
+      ],
+      "tool_requests": [
+       {
+        "tool": "telemetry_hints",
+        "args": {
+         "episode_id": "galaxea_011",
+         "signals": [
+          "gripper",
+          "eef_pause"
+         ]
+        }
+       },
+       {
+        "tool": "episode_predictions",
+        "args": {
+         "episode_id": "galaxea_011"
+        }
+       }
+      ]
+     }
+    ],
+    "call_id": "CALL-da6cde037b",
+    "model": "nvidia/NVIDIA-Nemotron-3-Super-120B-A12B"
+   },
+   "proposal_record": {
+    "exp_id": "EXP-0002",
+    "attempts": [
+     {
+      "call_id": "CALL-84f6b1b7db",
+      "errors": [],
+      "raw": {
+       "hypothesis": "Increasing the uniform sampling frequency to 2.0 Hz provides sufficient temporal resolution to prevent over\u2011segmentation caused by predicted segments shorter than two frames, and adding a deterministic merge_filter_segments step removes spurious short segments, thereby aligning predicted boundaries with true subtask transitions and improving segment F1@0.75.",
+       "failure_slice": "Episodes where the incumbent predicts many segments shorter than two sampled frames (<2\u202fs at 1\u202fHz) and where predicted boundaries are poorly aligned with robot\u2011state change points (gripper actuation or end\u2011effector pauses) from telemetry.",
+       "evidence_ids": [
+        "EV-332c022143",
+        "EV-5584e1f0d8",
+        "EV-ab30cdbb9c",
+        "EV-0f142eb507",
+        "EV-e9cbb73abb",
+        "EV-6c5bce8463"
+       ],
+       "objective": "Raise validation micro F1@0.75 by at least 0.02 relative to the incumbent while keeping annotation inference cost \u22641.5\u00d7 incumbent.",
+       "candidate_patch": {
+        "set_params": {
+         "sample": {
+          "sampling_hz": 2.0
+         }
+        },
+        "insert_nodes": [
+         {
+          "node": {
+           "id": "merge_filter",
+           "operator": "merge_filter_segments",
+           "depends_on": [
+            "annotate"
+           ],
+           "params": {
+            "min_duration_sec": 0.4,
+            "max_gap_sec": 1.0,
+            "tile_full_episode": true,
+            "merge_same_label": false
+           },
+           "when": "always"
+          },
+          "rewire_dependents_of": "annotate"
+         }
+        ],
+        "set_depends_on": {
+         "export": [
+          "merge_filter"
+         ]
+        }
+       },
+       "expected_outcome": "Validation micro F1@0.75 improves from ~0.077 to \u22650.097, mean annotation cost stays below 0.00084\u202fUSD per episode (\u22641.5\u00d7 incumbent), and \u226550% of validation episodes show non\u2011regressing F1 scores.",
+       "verification_plan": {
+        "metric": "segment_f1_iou075",
+        "split": "validation",
+        "compare_to": "incumbent"
+       },
+       "stop_conditions": [
+        "Annotation inference cost > 1.5\u00d7 incumbent mean cost",
+        "Validation micro F1@0.75 delta < 0.02",
+        "More than 50% of validation episodes show a decrease in F1@0.75 relative to incumbent"
+       ]
+      }
+     }
+    ],
+    "critique": {
+     "call_id": "CALL-41273669a6",
+     "verdict": "approve",
+     "issues": [],
+     "required_changes": ""
+    },
+    "status": "valid",
+    "proposal": {
+     "id": "EXP-0002",
+     "parent_version": "N000",
+     "hypothesis": "Increasing the uniform sampling frequency to 2.0 Hz provides sufficient temporal resolution to prevent over\u2011segmentation caused by predicted segments shorter than two frames, and adding a deterministic merge_filter_segments step removes spurious short segments, thereby aligning predicted boundaries with true subtask transitions and improving segment F1@0.75.",
+     "failure_slice": "Episodes where the incumbent predicts many segments shorter than two sampled frames (<2\u202fs at 1\u202fHz) and where predicted boundaries are poorly aligned with robot\u2011state change points (gripper actuation or end\u2011effector pauses) from telemetry.",
+     "evidence_ids": [
+      "EV-332c022143",
+      "EV-5584e1f0d8",
+      "EV-ab30cdbb9c",
+      "EV-0f142eb507",
+      "EV-e9cbb73abb",
+      "EV-6c5bce8463"
+     ],
+     "objective": "Raise validation micro F1@0.75 by at least 0.02 relative to the incumbent while keeping annotation inference cost \u22641.5\u00d7 incumbent.",
+     "candidate_patch": {
+      "insert_nodes": [
+       {
+        "node": {
+         "id": "merge_filter",
+         "operator": "merge_filter_segments",
+         "depends_on": [
+          "annotate"
+         ],
+         "params": {
+          "min_duration_sec": 0.4,
+          "max_gap_sec": 1.0,
+          "tile_full_episode": true,
+          "merge_same_label": false
+         },
+         "when": "always"
+        },
+        "rewire_dependents_of": "annotate"
+       }
+      ],
+      "remove_nodes": [],
+      "set_params": {
+       "sample": {
+        "sampling_hz": 2.0
+       }
+      },
+      "set_when": {},
+      "set_depends_on": {
+       "export": [
+        "merge_filter"
+       ]
+      },
+      "prompt_updates": {}
+     },
+     "expected_outcome": "Validation micro F1@0.75 improves from ~0.077 to \u22650.097, mean annotation cost stays below 0.00084\u202fUSD per episode (\u22641.5\u00d7 incumbent), and \u226550% of validation episodes show non\u2011regressing F1 scores.",
+     "verification_plan": {
+      "metric": "segment_f1_iou075",
+      "split": "validation",
+      "compare_to": "incumbent"
+     },
+     "stop_conditions": [
+      "Annotation inference cost > 1.5\u00d7 incumbent mean cost",
+      "Validation micro F1@0.75 delta < 0.02",
+      "More than 50% of validation episodes show a decrease in F1@0.75 relative to incumbent"
+     ],
+     "authored_by": "nvidia/NVIDIA-Nemotron-3-Super-120B-A12B",
+     "task_ids": [
+      "TASK-5e74ff7aed",
+      "TASK-fe7f4b0fe3",
+      "TASK-6fd3d95323",
+      "TASK-b473addfb6"
+     ]
+    }
+   },
+   "decision": {
+    "decision": "REJECTED",
+    "gate": {
+     "min_val_micro_f1_delta": 0.02,
+     "min_nonregressing_fraction": 0.5,
+     "max_annotation_cost_ratio": 1.5,
+     "require_valid_outputs": true,
+     "note": "operational heuristics on a tiny validation set, not statistical significance"
+    },
+    "checks": {
+     "val_micro_f1_delta": {
+      "value": -0.008,
+      "threshold": 0.02,
+      "pass": false
+     },
+     "non_regressing_fraction": {
+      "value": 1.0,
+      "threshold": 0.5,
+      "pass": true
+     },
+     "valid_outputs": {
+      "value": {
+       "candidate_invalid": 0,
+       "candidate_empty": 0,
+       "bad_status": {}
+      },
+      "pass": true
+     },
+     "annotation_cost_ratio": {
+      "value": 1.711,
+      "threshold": 1.5,
+      "candidate_usd_per_episode": 0.00096,
+      "incumbent_usd_per_episode": 0.000561,
+      "pass": false
+     }
+    },
+    "paired": {
+     "episodes": [
+      "galaxea_002",
+      "robointer_droid_000045"
+     ],
+     "per_episode_delta": {
+      "galaxea_002": 0.0,
+      "robointer_droid_000045": 0.0
+     },
+     "non_regressing_fraction": 1.0,
+     "improved": 0,
+     "regressed": 0,
+     "mean_delta": 0.0
+    },
+    "candidate_val": {
+     "micro_f1": 0.06896551724137931,
+     "micro_f1_iou05": 0.13793103448275862,
+     "short_event_recall": 0.0,
+     "mean_boundary_mae_sec": 5.1394375,
+     "outer_snapped_micro_f1": 0.06896551724137931
+    },
+    "incumbent_val": {
+     "micro_f1": 0.07692307692307693,
+     "micro_f1_iou05": 0.07692307692307693,
+     "short_event_recall": 0.0,
+     "mean_boundary_mae_sec": 5.728875,
+     "outer_snapped_micro_f1": 0.07692307692307693
+    },
+    "uncertainty": "n=2 validation episodes; differences of a few segments swing F1 by >0.05",
+    "candidate_usage": {
+     "calls": 2,
+     "cache_hits": 2,
+     "prompt_tokens": 0,
+     "completion_tokens": 0,
+     "cost_usd": 0.0,
+     "model_latency_s": 2.87
+    },
+    "topology_change": true,
+    "rollback": "incumbent remains N000; candidate preserved as EXP-0002_rejected"
+   }
+  }
+ ],
+ "task_tree": [
+  {
+   "id": "TASK-5e74ff7aed",
+   "parent_task_id": null,
+   "depth": 1,
+   "question": "Are the incumbent's predicted boundaries temporally aligned with meaningful robot-state change points (gripper actuation or end\u2011effector pauses) as revealed by telemetry hints?",
+   "evidence_ids": [
+    "EVAL-e05d4bb044",
+    "EV-e9cbb73abb",
+    "EV-6c5bce8463",
+    "EV-25b1d21b6b"
+   ],
+   "tools_allowed": [
+    "telemetry_hints",
+    "episode_predictions"
+   ],
+   "budget": {
+    "tool_requests": [
+     {
+      "tool": "telemetry_hints",
+      "args": {
+       "episode_id": "galaxea_011",
+       "signals": [
+        "gripper",
+        "eef_pause"
+       ]
+      }
+     },
+     {
+      "tool": "telemetry_hints",
+      "args": {
+       "episode_id": "robointer_droid_000010",
+       "signals": [
+        "gripper",
+        "eef_pause"
+       ]
+      }
+     },
+     {
+      "tool": "episode_predictions",
+      "args": {
+       "episode_id": "galaxea_011"
+      }
+     }
+    ],
+    "max_tool_rounds": 2,
+    "why": ""
+   },
+   "status": "done",
+   "result": {
+    "finding": "Predicted boundaries show some proximity to gripper actuation hints (e.g., all galaxea_011 gripper hints within 0.43\u202fs of a predicted boundary and two of three robointer_droid hints within 0.15\u202fs), but overall alignment is poor: micro\u2011F1 is 0.083, mean boundary MAE is 0.75\u202fs, and error breakdown lists many \u2018boundary misaligned\u2019 cases (18 in galaxea_011, 1 in robointer_droid). Thus the incumbent\u2019s predictions are not consistently temporally aligned with meaningful robot\u2011state change points.",
+    "evidence_ids": [
+     "EVAL-e05d4bb044",
+     "EV-e9cbb73abb",
+     "EV-6c5bce8463"
+    ],
+    "confidence": 0.9,
+    "implication_for_workflow": "Incorporate telemetry hints (gripper/eef_pause) as explicit guidance in the annotation prompt or increase sampling frequency to better capture rapid state changes, thereby reducing boundary misalignment.",
+    "call_id": "CALL-f7dbd06c8d",
+    "uncited_ids_dropped": [],
+    "new_question_requests": []
+   },
+   "new_questions": [],
+   "model_used": "nvidia/NVIDIA-Nemotron-3-Super-120B-A12B",
+   "run_id": "RUN-e9cd34b042"
+  },
+  {
+   "id": "TASK-fe7f4b0fe3",
+   "parent_task_id": null,
+   "depth": 1,
+   "question": "Does over\u2011segmentation arise because many predicted segments are shorter than the temporal resolution of the uniform sampling (i.e., less than two sampled frames), causing the model to hallucinate cuts between adjacent tiles?",
+   "evidence_ids": [
+    "EVAL-e05d4bb044",
+    "EV-332c022143",
+    "EV-0580bcd61f",
+    "EV-5584e1f0d8"
+   ],
+   "tools_allowed": [
+    "episode_predictions",
+    "sampling_coverage"
+   ],
+   "budget": {
+    "tool_requests": [
+     {
+      "tool": "episode_predictions",
+      "args": {
+       "episode_id": "galaxea_011"
+      }
+     },
+     {
+      "tool": "episode_predictions",
+      "args": {
+       "episode_id": "robointer_droid_000010"
+      }
+     },
+     {
+      "tool": "sampling_coverage",
+      "args": {
+       "episode_id": "galaxea_011",
+       "sampling_hz": 1.0
+      }
+     }
+    ],
+    "max_tool_rounds": 2,
+    "why": ""
+   },
+   "status": "done",
+   "result": {
+    "finding": "Over\u2011segmentation in galaxea_011 occurs because every predicted segment (30 segments) is shorter than two sampled frames (1\u202fs each at 1\u202fHz), leading the model to hallucinate cuts between adjacent tiles.",
+    "evidence_ids": [
+     "EVAL-e05d4bb044",
+     "EV-332c022143",
+     "EV-5584e1f0d8"
+    ],
+    "confidence": 0.95,
+    "implication_for_workflow": "Increase the temporal resolution of the uniform sampling (e.g., raise sampling_hz to \u22652\u202fHz or increase frames_per_sheet) so that predicted segments are not systematically shorter than two frames, or modify the model/prompt to encourage longer, more coherent segment predictions.",
+    "call_id": "CALL-475514e63d",
+    "uncited_ids_dropped": [],
+    "new_question_requests": []
+   },
+   "new_questions": [],
+   "model_used": "nvidia/NVIDIA-Nemotron-3-Super-120B-A12B",
+   "run_id": "RUN-e9cd34b042"
+  },
+  {
+   "id": "TASK-6fd3d95323",
+   "parent_task_id": null,
+   "depth": 1,
+   "question": "What proportion of predicted segments are shorter than the temporal resolution of the current 1\u202fHz sampling (i.e., <2 sampled frames), and are the predicted segments uniformly spaced across the video?",
+   "evidence_ids": [
+    "EVAL-1a54ffa356",
+    "EV-ab30cdbb9c",
+    "EV-8a5fe29362",
+    "EV-0f142eb507"
+   ],
+   "tools_allowed": [
+    "sampling_coverage",
+    "episode_predictions"
+   ],
+   "budget": {
+    "tool_requests": [
+     {
+      "tool": "sampling_coverage",
+      "args": {
+       "episode_id": "galaxea_011",
+       "sampling_hz": 1.0
+      }
+     },
+     {
+      "tool": "episode_predictions",
+      "args": {
+       "episode_id": "galaxea_011"
+      }
+     }
+    ],
+    "max_tool_rounds": 2,
+    "why": ""
+   },
+   "status": "done",
+   "result": {
+    "finding": "90.9% of predicted segments (30 out of 33) are shorter than 2 sampled frames (<2\u202fs at 1\u202fHz). Predicted segments are uniformly spaced across each video: in galaxea_011 they are 1\u2011second intervals covering the video, and in robointer_droid_000010 they are 5\u2011second intervals (with the last segment slightly longer to fill the duration).",
+    "evidence_ids": [
+     "EV-ab30cdbb9c",
+     "EV-8a5fe29362",
+     "EV-0f142eb507",
+     "EVAL-1a54ffa356"
+    ],
+    "confidence": 0.95,
+    "implication_for_workflow": "Consider increasing the sampling rate or applying a post\u2011processing step to merge sub\u2011resolution predictions, as the current 1\u202fHz sampling yields many predicted segments that cannot be resolved.",
+    "call_id": "CALL-3ae875f1bf",
+    "uncited_ids_dropped": [],
+    "new_question_requests": []
+   },
+   "new_questions": [],
+   "model_used": "nvidia/NVIDIA-Nemotron-3-Super-120B-A12B",
+   "run_id": "RUN-e9cd34b042"
+  },
+  {
+   "id": "TASK-b473addfb6",
+   "parent_task_id": null,
+   "depth": 1,
+   "question": "Do the predicted boundaries align with robot\u2011state change points (gripper/eef_pause) derived from telemetry, or are they largely unrelated to such hints?",
+   "evidence_ids": [
+    "EVAL-1a54ffa356",
+    "EV-5f52cdbf9b",
+    "EV-d1790ee080"
+   ],
+   "tools_allowed": [
+    "telemetry_hints",
+    "episode_predictions"
+   ],
+   "budget": {
+    "tool_requests": [
+     {
+      "tool": "telemetry_hints",
+      "args": {
+       "episode_id": "galaxea_011",
+       "signals": [
+        "gripper",
+        "eef_pause"
+       ]
+      }
+     },
+     {
+      "tool": "episode_predictions",
+      "args": {
+       "episode_id": "galaxea_011"
+      }
+     }
+    ],
+    "max_tool_rounds": 2,
+    "why": ""
+   },
+   "status": "done",
+   "result": {
+    "finding": "Predicted boundaries are closely aligned with robot\u2011state change points (gripper/eef_pause) from telemetry; for galaxea_011 each of the 10 telemetry hints lies within 0.5\u202fs of a predicted boundary (distances 0.0\u20130.43\u202fs), and the binned boundary offsets show a large proportion of predictions within 0.5\u202fs of reference boundaries.",
+    "evidence_ids": [
+     "EV-5f52cdbf9b",
+     "EV-d1790ee080",
+     "EVAL-1a54ffa356"
+    ],
+    "confidence": 0.9,
+    "implication_for_workflow": "The current 1\u202fHz sampling already captures robot\u2011state changes adequately; no adjustment to sampling rate, tile size, or prompt is needed.",
+    "call_id": "CALL-96e85730ab",
+    "uncited_ids_dropped": [],
+    "new_question_requests": []
+   },
+   "new_questions": [],
+   "model_used": "nvidia/NVIDIA-Nemotron-3-Super-120B-A12B",
+   "run_id": "RUN-e9cd34b042"
+  }
+ ],
+ "dispatch_decisions": [
+  {
+   "task_id": "TASK-5e74ff7aed",
+   "parent_task_id": null,
+   "depth": 1,
+   "question": "Are the incumbent's predicted boundaries temporally aligned with meaningful robot-state change points (gripper actuation or end\u2011effector pauses) as revealed by telemetry hints?",
+   "decision": "accepted"
+  },
+  {
+   "task_id": "TASK-fe7f4b0fe3",
+   "parent_task_id": null,
+   "depth": 1,
+   "question": "Does over\u2011segmentation arise because many predicted segments are shorter than the temporal resolution of the uniform sampling (i.e., less than two sampled frames), causing the model to hallucinate cuts between adjacent tiles?",
+   "decision": "accepted"
+  },
+  {
+   "task_id": "TASK-6fd3d95323",
+   "parent_task_id": null,
+   "depth": 1,
+   "question": "What proportion of predicted segments are shorter than the temporal resolution of the current 1\u202fHz sampling (i.e., <2 sampled frames), and are the predicted segments uniformly spaced across the video?",
+   "decision": "accepted"
+  },
+  {
+   "task_id": "TASK-b473addfb6",
+   "parent_task_id": null,
+   "depth": 1,
+   "question": "Do the predicted boundaries align with robot\u2011state change points (gripper/eef_pause) derived from telemetry, or are they largely unrelated to such hints?",
+   "decision": "accepted"
+  }
+ ],
+ "max_depth_reached": 1,
+ "task_status": {
+  "finished": [
+   "TASK-5e74ff7aed",
+   "TASK-fe7f4b0fe3",
+   "TASK-6fd3d95323",
+   "TASK-b473addfb6"
+  ],
+  "unfinished": [],
+  "not_dispatched": []
+ },
+ "evidence": {
+  "EV-40fdb2a9fb": {
+   "id": "EV-40fdb2a9fb",
+   "tool": "dev_failure_profile",
+   "args": {
+    "version": "N000",
+    "eval_id": "EVAL-e05d4bb044"
+   },
+   "result": {
+    "split": "dev",
+    "protocol": "evoaction-temporal-v1",
+    "aggregate": {
+     "episodes": 2,
+     "micro_precision": 0.06060606060606061,
+     "micro_recall": 0.13333333333333333,
+     "micro_f1": 0.08333333333333333,
+     "micro_f1_iou05": 0.29166666666666663,
+     "tp": 2,
+     "fp": 31,
+     "fn": 13,
+     "n_pred": 33,
+     "n_ref": 15,
+     "short_event_recall": 0.0,
+     "short_ref": 5,
+     "invalid_items": 0,
+     "empty_output_episodes": 0,
+     "mean_boundary_mae_sec": 0.7488863636363636
+    },
+    "reference_duration_buckets": {
+     "<2s": 5,
+     "2-5s": 8,
+     "5-10s": 2,
+     ">=10s": 0
+    },
+    "episodes": {
+     "galaxea_011": {
+      "n_pred": 30,
+      "n_ref": 12,
+      "n_invalid": 0,
+      "segmentation": "over-segmented",
+      "f1_iou075": 0.0,
+      "f1_iou05": 0.19,
+      "short_reference_events": 5,
+      "short_events_recalled": 0,
+      "reference_interior_boundaries": 11,
+      "reference_boundaries_with_pred_within_0.5s": 11,
+      "reference_boundaries_with_pred_within_1.0s": 11,
+      "boundary_mae_sec": 0.27,
+      "predictions": [
+       {
+        "pred_index": 0,
+        "pred_start_sec": 0.0,
+        "pred_end_sec": 1.0,
+        "best_iou": 0.35,
+        "matched_at_0.75": false,
+        "reference_events_mostly_covered": 0,
+        "start_error": "within 0.5s",
+        "end_error": "1-2s early",
+        "error_class": "boundary misaligned"
+       },
+       {
+        "pred_index": 1,
+        "pred_start_sec": 1.0,
+        "pred_end_sec": 2.0,
+        "best_iou": 0.35,
+        "matched_at_0.75": false,
+        "reference_events_mostly_covered": 0,
+        "start_error": "0.5-1s late",
+        "end_error": "0.5-1s early",
+        "error_class": "boundary misaligned"
+       },
+       {
+        "pred_index": 2,
+        "pred_start_sec": 2.0,
+        "pred_end_sec": 3.0,
+        "best_iou": 0.29,
+        "matched_at_0.75": false,
+        "reference_events_mostly_covered": 0,
+        "start_error": "1-2s late",
+        "end_error": "within 0.5s",
+        "error_class": "spurious or badly placed"
+       },
+       {
+        "pred_index": 3,
+        "pred_start_sec": 3.0,
+        "pred_end_sec": 4.0,
+        "best_iou": 0.42,
+        "matched_at_0.75": false,
+        "reference_events_mostly_covered": 0,
+        "start_error": "within 0.5s",
+        "end_error": "1-2s early",
+        "error_class": "boundary misaligned"
+       },
+       {
+        "pred_index": 4,
+        "pred_start_sec": 4.0,
+        "pred_end_sec": 5.0,
+        "best_iou": 0.42,
+        "matched_at_0.75": false,
+        "reference_events_mostly_covered": 0,
+        "start_error": "1-2s late",
+        "end_error": "within 0.5s",
+        "error_class": "boundary misaligned"
+       },
+       {
+        "pred_index": 5,
+        "pred_start_sec": 5.0,
+        "pred_end_sec": 6.0,
+        "best_iou": 0.31,
+        "matched_at_0.75": false,
+        "reference_events_mostly_covered": 0,
+        "start_error": "within 0.5s",
+        "end_error": "1-2s early",
+        "error_class": "boundary misaligned"
+       },
+       {
+        "pred_index": 6,
+        "pred_start_sec": 6.0,
+        "pred_end_sec": 7.0,
+        "best_iou": 0.47,
+        "matched_at_0.75": false,
+        "reference_events_mostly_covered": 0,
+        "start_error": "0.5-1s late",
+        "end_error": "within 0.5s",
+        "error_class": "boundary misaligned"
+       },
+       {
+        "pred_index": 7,
+        "pred_start_sec": 7.0,
+        "pred_end_sec": 8.0,
+        "best_iou": 0.27,
+        "matched_at_0.75": false,
+        "reference_events_mostly_covered": 0,
+        "start_error": "within 0.5s",
+        "end_error": "1-2s early",
+        "error_class": "spurious or badly placed"
+       },
+       {
+        "pred_index": 8,
+        "pred_start_sec": 8.0,
+        "pred_end_sec": 9.0,
+        "best_iou": 0.54,
+        "matched_at_0.75": false,
+        "reference_events_mostly_covered": 1,
+        "start_error": "0.5-1s late",
+        "end_error": "within 0.5s",
+        "error_class": "boundary misaligned"
+       },
+       {
+        "pred_index": 9,
+        "pred_start_sec": 9.0,
+        "pred_end_sec": 10.0,
+        "best_iou": 0.28,
+        "matched_at_0.75": false,
+        "reference_events_mostly_covered": 0,
+        "start_error": "within 0.5s",
+        "end_error": "1-2s early",
+        "error_class": "spurious or badly placed"
+       },
+       {
+        "pred_index": 10,
+        "pred_start_sec": 10.0,
+        "pred_end_sec": 11.0,
+        "best_iou": 0.42,
+        "matched_at_0.75": false,
+        "reference_events_mostly_covered": 0,
+        "start_error": "0.5-1s late",
+        "end_error": "0.5-1s early",
+        "error_class": "boundary misaligned"
+       },
+       {
+        "pred_index": 11,
+        "pred_start_sec": 11.0,
+        "pred_end_sec": 12.0,
+        "best_iou": 0.23,
+        "matched_at_0.75": false,
+        "reference_events_mostly_covered": 0,
+        "start_error": "1-2s late",
+        "end_error": "within 0.5s",
+        "error_class": "spurious or badly placed"
+       },
+       {
+        "pred_index": 12,
+        "pred_start_sec": 12.0,
+        "pred_end_sec": 13.0,
+        "best_iou": 0.63,
+        "matched_at_0.75": false,
+        "reference_events_mostly_covered": 1,
+        "start_error": "within 0.5s",
+        "end_error": "within 0.5s",
+        "error_class": "boundary misaligned"
+       },
+       {
+        "pred_index": 13,
+        "pred_start_sec": 13.0,
+        "pred_end_sec": 14.0,
+        "best_iou": 0.24,
+        "matched_at_0.75": false,
+        "reference_events_mostly_covered": 0,
+        "start_error": "within 0.5s",
+        "end_error": ">2s early",
+        "error_class": "spurious or badly placed"
+       },
+       {
+        "pred_index": 14,
+        "pred_start_sec": 14.0,
+        "pred_end_sec": 15.0,
+        "best_iou": 0.34,
+        "matched_at_0.75": false,
+        "reference_events_mostly_covered": 0,
+        "start_error": "0.5-1s late",
+        "end_error": "1-2s early",
+        "error_class": "boundary misaligned"
+       },
+       {
+        "pred_index": 15,
+        "pred_start_sec": 15.0,
+        "pred_end_sec": 16.0,
+        "best_iou": 0.34,
+        "matched_at_0.75": false,
+        "reference_events_mostly_covered": 0,
+        "start_error": "1-2s late",
+        "end_error": "within 0.5s",
+        "error_class": "boundary misaligned"
+       },
+       {
+        "pred_index": 16,
+        "pred_start_sec": 16.0,
+        "pred_end_sec": 17.0,
+        "best_iou": 0.48,
+        "matched_at_0.75": false,
+        "reference_events_mostly_covered": 1,
+        "start_error": "within 0.5s",
+        "end_error": "0.5-1s early",
+        "error_class": "boundary misaligned"
+       },
+       {
+        "pred_index": 17,
+        "pred_start_sec": 17.0,
+        "pred_end_sec": 18.0,
+        "best_iou": 0.41,
+        "matched_at_0.75": false,
+        "reference_events_mostly_covered": 0,
+        "start_error": "0.5-1s late",
+        "end_error": "within 0.5s",
+        "error_class": "boundary misaligned"
+       },
+       {
+        "pred_index": 18,
+        "pred_start_sec": 18.0,
+        "pred_end_sec": 19.0,
+        "best_iou": 0.34,
+        "matched_at_0.75": false,
+        "reference_events_mostly_covered": 0,
+        "start_error": "within 0.5s",
+        "end_error": "1-2s early",
+        "error_class": "boundary misaligned"
+       },
+       {
+        "pred_index": 19,
+        "pred_start_sec": 19.0,
+        "pred_end_sec": 20.0,
+        "best_iou": 0.34,
+        "matched_at_0.75": false,
+        "reference_events_mostly_covered": 0,
+        "start_error": "1-2s late",
+        "end_error": "0.5-1s early",
+        "error_class": "boundary misaligned"
+       },
+       {
+        "pred_index": 20,
+        "pred_start_sec": 20.0,
+        "pred_end_sec": 21.0,
+        "best_iou": 0.21,
+        "matched_at_0.75": false,
+        "reference_events_mostly_covered": 0,
+        "start_error": ">2s late",
+        "end_error": "within 0.5s",
+        "error_class": "spurious or badly placed"
+       },
+       {
+        "pred_index": 21,
+        "pred_start_sec": 21.0,
+        "pred_end_sec": 22.0,
+        "best_iou": 0.63,
+        "matched_at_0.75": false,
+        "reference_events_mostly_covered": 1,
+        "start_error": "within 0.5s",
+        "end_error": "within 0.5s",
+        "error_class": "boundary misaligned"
+       },
+       {
+        "pred_index": 22,
+        "pred_start_sec": 22.0,
+        "pred_end_sec": 23.0,
+        "best_iou": 0.28,
+        "matched_at_0.75": false,
+        "reference_events_mostly_covered": 0,
+        "start_error": "within 0.5s",
+        "end_error": "1-2s early",
+        "error_class": "spurious or badly placed"
+       },
+       {
+        "pred_index": 23,
+        "pred_start_sec": 23.0,
+        "pred_end_sec": 24.0,
+        "best_iou": 0.42,
+        "matched_at_0.75": false,
+        "reference_events_mostly_covered": 0,
+        "start_error": "0.5-1s late",
+        "end_error": "0.5-1s early",
+        "error_class": "boundary misaligned"
+       },
+       {
+        "pred_index": 24,
+        "pred_start_sec": 24.0,
+        "pred_end_sec": 25.0,
+        "best_iou": 0.24,
+        "matched_at_0.75": false,
+        "reference_events_mostly_covered": 0,
+        "start_error": "1-2s late",
+        "end_error": "within 0.5s",
+        "error_class": "spurious or badly placed"
+       },
+       {
+        "pred_index": 25,
+        "pred_start_sec": 25.0,
+        "pred_end_sec": 26.0,
+        "best_iou": 0.63,
+        "matched_at_0.75": false,
+        "reference_events_mostly_covered": 1,
+        "start_error": "within 0.5s",
+        "end_error": "within 0.5s",
+        "error_class": "boundary misaligned"
+       },
+       {
+        "pred_index": 26,
+        "pred_start_sec": 26.0,
+        "pred_end_sec": 27.0,
+        "best_iou": 0.11,
+        "matched_at_0.75": false,
+        "reference_events_mostly_covered": 0,
+        "start_error": "1-2s late",
+        "end_error": "0.5-1s late",
+        "error_class": "spurious or badly placed"
+       },
+       {
+        "pred_index": 27,
+        "pred_start_sec": 27.0,
+        "pred_end_sec": 28.0,
+        "best_iou": 0.0,
+        "matched_at_0.75": false,
+        "reference_events_mostly_covered": 0,
+        "start_error": ">2s late",
+        "end_error": ">2s late",
+        "error_class": "spurious or badly placed"
+       },
+       {
+        "pred_index": 28,
+        "pred_start_sec": 28.0,
+        "pred_end_sec": 29.0,
+        "best_iou": 0.0,
+        "matched_at_0.75": false,
+        "reference_events_mostly_covered": 0,
+        "start_error": ">2s late",
+        "end_error": ">2s late",
+        "error_class": "spurious or badly placed"
+       },
+       {
+        "pred_index": 29,
+        "pred_start_sec": 29.0,
+        "pred_end_sec": 29.17,
+        "best_iou": 0.0,
+        "matched_at_0.75": false,
+        "reference_events_mostly_covered": 0,
+        "start_error": ">2s late",
+        "end_error": ">2s late",
+        "error_class": "spurious or badly placed"
+       }
+      ]
+     },
+     "robointer_droid_000010": {
+      "n_pred": 3,
+      "n_ref": 3,
+      "n_invalid": 0,
+      "segmentation": "count matches",
+      "f1_iou075": 0.667,
+      "f1_iou05": 1.0,
+      "short_reference_events": 0,
+      "short_events_recalled": 0,
+      "reference_interior_boundaries": 2,
+      "reference_boundaries_with_pred_within_0.5s": 0,
+      "reference_boundaries_with_pred_within_1.0s": 1,
+      "boundary_mae_sec": 1.23,
+      "predictions": [
+       {
+        "pred_index": 0,
+        "pred_start_sec": 0.0,
+        "pred_end_sec": 5.0,
+        "best_iou": 0.85,
+        "matched_at_0.75": true,
+        "reference_events_mostly_covered": 1,
+        "start_error": "within 0.5s",
+        "end_error": "0.5-1s early",
+        "error_class": "correct"
+       },
+       {
+        "pred_index": 1,
+        "pred_start_sec": 5.0,
+        "pred_end_sec": 10.0,
+        "best_iou": 0.51,
+        "matched_at_0.75": false,
+        "reference_events_mostly_covered": 1,
+        "start_error": "0.5-1s early",
+        "end_error": "1-2s late",
+        "error_class": "boundary misaligned"
+       },
+       {
+        "pred_index": 2,
+        "pred_start_sec": 10.0,
+        "pred_end_sec": 15.2,
+        "best_iou": 0.76,
+        "matched_at_0.75": true,
+        "reference_events_mostly_covered": 1,
+        "start_error": "1-2s late",
+        "end_error": "within 0.5s",
+        "error_class": "correct"
+       }
+      ]
+     }
+    }
+   },
+   "task_id": null,
+   "created_at": 1792270117.1322591
+  },
+  "EVAL-e05d4bb044": {
+   "id": "EVAL-e05d4bb044",
+   "tool": "dev_failure_profile",
+   "args": {
+    "version": "N000"
+   },
+   "result": {
+    "split": "dev",
+    "protocol": "evoaction-temporal-v1",
+    "aggregate": {
+     "episodes": 2,
+     "micro_precision": 0.06060606060606061,
+     "micro_recall": 0.13333333333333333,
+     "micro_f1": 0.08333333333333333,
+     "micro_f1_iou05": 0.29166666666666663,
+     "tp": 2,
+     "fp": 31,
+     "fn": 13,
+     "n_pred": 33,
+     "n_ref": 15,
+     "short_event_recall": 0.0,
+     "short_ref": 5,
+     "invalid_items": 0,
+     "empty_output_episodes": 0,
+     "mean_boundary_mae_sec": 0.7488863636363636
+    },
+    "reference_duration_buckets": {
+     "<2s": 5,
+     "2-5s": 8,
+     "5-10s": 2,
+     ">=10s": 0
+    },
+    "episodes": {
+     "galaxea_011": {
+      "n_pred": 30,
+      "n_ref": 12,
+      "n_invalid": 0,
+      "segmentation": "over-segmented",
+      "f1_iou075": 0.0,
+      "f1_iou05": 0.19,
+      "short_reference_events": 5,
+      "short_events_recalled": 0,
+      "reference_interior_boundaries": 11,
+      "reference_boundaries_with_pred_within_0.5s": 11,
+      "reference_boundaries_with_pred_within_1.0s": 11,
+      "boundary_mae_sec": 0.27,
+      "predictions": [
+       {
+        "pred_index": 0,
+        "pred_start_sec": 0.0,
+        "pred_end_sec": 1.0,
+        "best_iou": 0.35,
+        "matched_at_0.75": false,
+        "reference_events_mostly_covered": 0,
+        "start_error": "within 0.5s",
+        "end_error": "1-2s early",
+        "error_class": "boundary misaligned"
+       },
+       {
+        "pred_index": 1,
+        "pred_start_sec": 1.0,
+        "pred_end_sec": 2.0,
+        "best_iou": 0.35,
+        "matched_at_0.75": false,
+        "reference_events_mostly_covered": 0,
+        "start_error": "0.5-1s late",
+        "end_error": "0.5-1s early",
+        "error_class": "boundary misaligned"
+       },
+       {
+        "pred_index": 2,
+        "pred_start_sec": 2.0,
+        "pred_end_sec": 3.0,
+        "best_iou": 0.29,
+        "matched_at_0.75": false,
+        "reference_events_mostly_covered": 0,
+        "start_error": "1-2s late",
+        "end_error": "within 0.5s",
+        "error_class": "spurious or badly placed"
+       },
+       {
+        "pred_index": 3,
+        "pred_start_sec": 3.0,
+        "pred_end_sec": 4.0,
+        "best_iou": 0.42,
+        "matched_at_0.75": false,
+        "reference_events_mostly_covered": 0,
+        "start_error": "within 0.5s",
+        "end_error": "1-2s early",
+        "error_class": "boundary misaligned"
+       },
+       {
+        "pred_index": 4,
+        "pred_start_sec": 4.0,
+        "pred_end_sec": 5.0,
+        "best_iou": 0.42,
+        "matched_at_0.75": false,
+        "reference_events_mostly_covered": 0,
+        "start_error": "1-2s late",
+        "end_error": "within 0.5s",
+        "error_class": "boundary misaligned"
+       },
+       {
+        "pred_index": 5,
+        "pred_start_sec": 5.0,
+        "pred_end_sec": 6.0,
+        "best_iou": 0.31,
+        "matched_at_0.75": false,
+        "reference_events_mostly_covered": 0,
+        "start_error": "within 0.5s",
+        "end_error": "1-2s early",
+        "error_class": "boundary misaligned"
+       },
+       {
+        "pred_index": 6,
+        "pred_start_sec": 6.0,
+        "pred_end_sec": 7.0,
+        "best_iou": 0.47,
+        "matched_at_0.75": false,
+        "reference_events_mostly_covered": 0,
+        "start_error": "0.5-1s late",
+        "end_error": "within 0.5s",
+        "error_class": "boundary misaligned"
+       },
+       {
+        "pred_index": 7,
+        "pred_start_sec": 7.0,
+        "pred_end_sec": 8.0,
+        "best_iou": 0.27,
+        "matched_at_0.75": false,
+        "reference_events_mostly_covered": 0,
+        "start_error": "within 0.5s",
+        "end_error": "1-2s early",
+        "error_class": "spurious or badly placed"
+       },
+       {
+        "pred_index": 8,
+        "pred_start_sec": 8.0,
+        "pred_end_sec": 9.0,
+        "best_iou": 0.54,
+        "matched_at_0.75": false,
+        "reference_events_mostly_covered": 1,
+        "start_error": "0.5-1s late",
+        "end_error": "within 0.5s",
+        "error_class": "boundary misaligned"
+       },
+       {
+        "pred_index": 9,
+        "pred_start_sec": 9.0,
+        "pred_end_sec": 10.0,
+        "best_iou": 0.28,
+        "matched_at_0.75": false,
+        "reference_events_mostly_covered": 0,
+        "start_error": "within 0.5s",
+        "end_error": "1-2s early",
+        "error_class": "spurious or badly placed"
+       },
+       {
+        "pred_index": 10,
+        "pred_start_sec": 10.0,
+        "pred_end_sec": 11.0,
+        "best_iou": 0.42,
+        "matched_at_0.75": false,
+        "reference_events_mostly_covered": 0,
+        "start_error": "0.5-1s late",
+        "end_error": "0.5-1s early",
+        "error_class": "boundary misaligned"
+       },
+       {
+        "pred_index": 11,
+        "pred_start_sec": 11.0,
+        "pred_end_sec": 12.0,
+        "best_iou": 0.23,
+        "matched_at_0.75": false,
+        "reference_events_mostly_covered": 0,
+        "start_error": "1-2s late",
+        "end_error": "within 0.5s",
+        "error_class": "spurious or badly placed"
+       },
+       {
+        "pred_index": 12,
+        "pred_start_sec": 12.0,
+        "pred_end_sec": 13.0,
+        "best_iou": 0.63,
+        "matched_at_0.75": false,
+        "reference_events_mostly_covered": 1,
+        "start_error": "within 0.5s",
+        "end_error": "within 0.5s",
+        "error_class": "boundary misaligned"
+       },
+       {
+        "pred_index": 13,
+        "pred_start_sec": 13.0,
+        "pred_end_sec": 14.0,
+        "best_iou": 0.24,
+        "matched_at_0.75": false,
+        "reference_events_mostly_covered": 0,
+        "start_error": "within 0.5s",
+        "end_error": ">2s early",
+        "error_class": "spurious or badly placed"
+       },
+       {
+        "pred_index": 14,
+        "pred_start_sec": 14.0,
+        "pred_end_sec": 15.0,
+        "best_iou": 0.34,
+        "matched_at_0.75": false,
+        "reference_events_mostly_covered": 0,
+        "start_error": "0.5-1s late",
+        "end_error": "1-2s early",
+        "error_class": "boundary misaligned"
+       },
+       {
+        "pred_index": 15,
+        "pred_start_sec": 15.0,
+        "pred_end_sec": 16.0,
+        "best_iou": 0.34,
+        "matched_at_0.75": false,
+        "reference_events_mostly_covered": 0,
+        "start_error": "1-2s late",
+        "end_error": "within 0.5s",
+        "error_class": "boundary misaligned"
+       },
+       {
+        "pred_index": 16,
+        "pred_start_sec": 16.0,
+        "pred_end_sec": 17.0,
+        "best_iou": 0.48,
+        "matched_at_0.75": false,
+        "reference_events_mostly_covered": 1,
+        "start_error": "within 0.5s",
+        "end_error": "0.5-1s early",
+        "error_class": "boundary misaligned"
+       },
+       {
+        "pred_index": 17,
+        "pred_start_sec": 17.0,
+        "pred_end_sec": 18.0,
+        "best_iou": 0.41,
+        "matched_at_0.75": false,
+        "reference_events_mostly_covered": 0,
+        "start_error": "0.5-1s late",
+        "end_error": "within 0.5s",
+        "error_class": "boundary misaligned"
+       },
+       {
+        "pred_index": 18,
+        "pred_start_sec": 18.0,
+        "pred_end_sec": 19.0,
+        "best_iou": 0.34,
+        "matched_at_0.75": false,
+        "reference_events_mostly_covered": 0,
+        "start_error": "within 0.5s",
+        "end_error": "1-2s early",
+        "error_class": "boundary misaligned"
+       },
+       {
+        "pred_index": 19,
+        "pred_start_sec": 19.0,
+        "pred_end_sec": 20.0,
+        "best_iou": 0.34,
+        "matched_at_0.75": false,
+        "reference_events_mostly_covered": 0,
+        "start_error": "1-2s late",
+        "end_error": "0.5-1s early",
+        "error_class": "boundary misaligned"
+       },
+       {
+        "pred_index": 20,
+        "pred_start_sec": 20.0,
+        "pred_end_sec": 21.0,
+        "best_iou": 0.21,
+        "matched_at_0.75": false,
+        "reference_events_mostly_covered": 0,
+        "start_error": ">2s late",
+        "end_error": "within 0.5s",
+        "error_class": "spurious or badly placed"
+       },
+       {
+        "pred_index": 21,
+        "pred_start_sec": 21.0,
+        "pred_end_sec": 22.0,
+        "best_iou": 0.63,
+        "matched_at_0.75": false,
+        "reference_events_mostly_covered": 1,
+        "start_error": "within 0.5s",
+        "end_error": "within 0.5s",
+        "error_class": "boundary misaligned"
+       },
+       {
+        "pred_index": 22,
+        "pred_start_sec": 22.0,
+        "pred_end_sec": 23.0,
+        "best_iou": 0.28,
+        "matched_at_0.75": false,
+        "reference_events_mostly_covered": 0,
+        "start_error": "within 0.5s",
+        "end_error": "1-2s early",
+        "error_class": "spurious or badly placed"
+       },
+       {
+        "pred_index": 23,
+        "pred_start_sec": 23.0,
+        "pred_end_sec": 24.0,
+        "best_iou": 0.42,
+        "matched_at_0.75": false,
+        "reference_events_mostly_covered": 0,
+        "start_error": "0.5-1s late",
+        "end_error": "0.5-1s early",
+        "error_class": "boundary misaligned"
+       },
+       {
+        "pred_index": 24,
+        "pred_start_sec": 24.0,
+        "pred_end_sec": 25.0,
+        "best_iou": 0.24,
+        "matched_at_0.75": false,
+        "reference_events_mostly_covered": 0,
+        "start_error": "1-2s late",
+        "end_error": "within 0.5s",
+        "error_class": "spurious or badly placed"
+       },
+       {
+        "pred_index": 25,
+        "pred_start_sec": 25.0,
+        "pred_end_sec": 26.0,
+        "best_iou": 0.63,
+        "matched_at_0.75": false,
+        "reference_events_mostly_covered": 1,
+        "start_error": "within 0.5s",
+        "end_error": "within 0.5s",
+        "error_class": "boundary misaligned"
+       },
+       {
+        "pred_index": 26,
+        "pred_start_sec": 26.0,
+        "pred_end_sec": 27.0,
+        "best_iou": 0.11,
+        "matched_at_0.75": false,
+        "reference_events_mostly_covered": 0,
+        "start_error": "1-2s late",
+        "end_error": "0.5-1s late",
+        "error_class": "spurious or badly placed"
+       },
+       {
+        "pred_index": 27,
+        "pred_start_sec": 27.0,
+        "pred_end_sec": 28.0,
+        "best_iou": 0.0,
+        "matched_at_0.75": false,
+        "reference_events_mostly_covered": 0,
+        "start_error": ">2s late",
+        "end_error": ">2s late",
+        "error_class": "spurious or badly placed"
+       },
+       {
+        "pred_index": 28,
+        "pred_start_sec": 28.0,
+        "pred_end_sec": 29.0,
+        "best_iou": 0.0,
+        "matched_at_0.75": false,
+        "reference_events_mostly_covered": 0,
+        "start_error": ">2s late",
+        "end_error": ">2s late",
+        "error_class": "spurious or badly placed"
+       },
+       {
+        "pred_index": 29,
+        "pred_start_sec": 29.0,
+        "pred_end_sec": 29.17,
+        "best_iou": 0.0,
+        "matched_at_0.75": false,
+        "reference_events_mostly_covered": 0,
+        "start_error": ">2s late",
+        "end_error": ">2s late",
+        "error_class": "spurious or badly placed"
+       }
+      ]
+     },
+     "robointer_droid_000010": {
+      "n_pred": 3,
+      "n_ref": 3,
+      "n_invalid": 0,
+      "segmentation": "count matches",
+      "f1_iou075": 0.667,
+      "f1_iou05": 1.0,
+      "short_reference_events": 0,
+      "short_events_recalled": 0,
+      "reference_interior_boundaries": 2,
+      "reference_boundaries_with_pred_within_0.5s": 0,
+      "reference_boundaries_with_pred_within_1.0s": 1,
+      "boundary_mae_sec": 1.23,
+      "predictions": [
+       {
+        "pred_index": 0,
+        "pred_start_sec": 0.0,
+        "pred_end_sec": 5.0,
+        "best_iou": 0.85,
+        "matched_at_0.75": true,
+        "reference_events_mostly_covered": 1,
+        "start_error": "within 0.5s",
+        "end_error": "0.5-1s early",
+        "error_class": "correct"
+       },
+       {
+        "pred_index": 1,
+        "pred_start_sec": 5.0,
+        "pred_end_sec": 10.0,
+        "best_iou": 0.51,
+        "matched_at_0.75": false,
+        "reference_events_mostly_covered": 1,
+        "start_error": "0.5-1s early",
+        "end_error": "1-2s late",
+        "error_class": "boundary misaligned"
+       },
+       {
+        "pred_index": 2,
+        "pred_start_sec": 10.0,
+        "pred_end_sec": 15.2,
+        "best_iou": 0.76,
+        "matched_at_0.75": true,
+        "reference_events_mostly_covered": 1,
+        "start_error": "1-2s late",
+        "end_error": "within 0.5s",
+        "error_class": "correct"
+       }
+      ]
+     }
+    }
+   },
+   "task_id": null
+  },
+  "EV-e9cbb73abb": {
+   "id": "EV-e9cbb73abb",
+   "tool": "telemetry_hints",
+   "args": {
+    "episode_id": "galaxea_011",
+    "signals": [
+     "gripper",
+     "eef_pause"
+    ]
+   },
+   "result": {
+    "episode_id": "galaxea_011",
+    "signals": [
+     "gripper",
+     "eef_pause"
+    ],
+    "n_hints": 10,
+    "n_predicted_boundaries": 29,
+    "hints": [
+     {
+      "t": 2.57,
+      "kind": "gripper_closed",
+      "channel": "gripper_open_scale_state:right_gripper_open_scale",
+      "strength": 1.0,
+      "nearest_predicted_boundary_sec": 3.0,
+      "distance_to_predicted_boundary_sec": 0.43
+     },
+     {
+      "t": 5.3,
+      "kind": "gripper_opened",
+      "channel": "gripper_open_scale_state:right_gripper_open_scale",
+      "strength": 1.0,
+      "nearest_predicted_boundary_sec": 5.0,
+      "distance_to_predicted_boundary_sec": 0.3
+     },
+     {
+      "t": 7.1,
+      "kind": "gripper_closed",
+      "channel": "gripper_open_scale_state:right_gripper_open_scale",
+      "strength": 1.0,
+      "nearest_predicted_boundary_sec": 7.0,
+      "distance_to_predicted_boundary_sec": 0.1
+     },
+     {
+      "t": 9.1,
+      "kind": "gripper_opened",
+      "channel": "gripper_open_scale_state:right_gripper_open_scale",
+      "strength": 1.0,
+      "nearest_predicted_boundary_sec": 9.0,
+      "distance_to_predicted_boundary_sec": 0.1
+     },
+     {
+      "t": 15.9,
+      "kind": "gripper_closed",
+      "channel": "gripper_open_scale_state:left_gripper_open_scale",
+      "strength": 1.0,
+      "nearest_predicted_boundary_sec": 16.0,
+      "distance_to_predicted_boundary_sec": 0.1
+     },
+     {
+      "t": 17.67,
+      "kind": "gripper_opened",
+      "channel": "gripper_open_scale_state:left_gripper_open_scale",
+      "strength": 1.0,
+      "nearest_predicted_boundary_sec": 18.0,
+      "distance_to_predicted_boundary_sec": 0.33
+     },
+     {
+      "t": 20.17,
+      "kind": "gripper_closed",
+      "channel": "gripper_open_scale_state:left_gripper_open_scale",
+      "strength": 1.0,
+      "nearest_predicted_boundary_sec": 20.0,
+      "distance_to_predicted_boundary_sec": 0.17
+     },
+     {
+      "t": 22.27,
+      "kind": "gripper_opened",
+      "channel": "gripper_open_scale_state:left_gripper_open_scale",
+      "strength": 1.0,
+      "nearest_predicted_boundary_sec": 22.0,
+      "distance_to_predicted_boundary_sec": 0.27
+     },
+     {
+      "t": 24.43,
+      "kind": "gripper_closed",
+      "channel": "gripper_open_scale_state:left_gripper_open_scale",
+      "strength": 1.0,
+      "nearest_predicted_boundary_sec": 24.0,
+      "distance_to_predicted_boundary_sec": 0.43
+     },
+     {
+      "t": 26.0,
+      "kind": "gripper_opened",
+      "channel": "gripper_open_scale_state:left_gripper_open_scale",
+      "strength": 1.0,
+      "nearest_predicted_boundary_sec": 26.0,
+      "distance_to_predicted_boundary_sec": 0.0
+     }
+    ]
+   },
+   "task_id": "TASK-5e74ff7aed",
+   "created_at": 1792270159.703197
+  },
+  "EV-6c5bce8463": {
+   "id": "EV-6c5bce8463",
+   "tool": "telemetry_hints",
+   "args": {
+    "episode_id": "robointer_droid_000010",
+    "signals": [
+     "gripper",
+     "eef_pause"
+    ]
+   },
+   "result": {
+    "episode_id": "robointer_droid_000010",
+    "signals": [
+     "gripper",
+     "eef_pause"
+    ],
+    "n_hints": 3,
+    "n_predicted_boundaries": 2,
+    "hints": [
+     {
+      "t": 5.0,
+      "kind": "gripper_released",
+      "channel": "state:gripper_state",
+      "strength": 1.0,
+      "nearest_predicted_boundary_sec": 5.0,
+      "distance_to_predicted_boundary_sec": 0.0
+     },
+     {
+      "t": 8.1,
+      "kind": "gripper_engaged",
+      "channel": "state:gripper_state",
+      "strength": 1.0,
+      "nearest_predicted_boundary_sec": 10.0,
+      "distance_to_predicted_boundary_sec": 1.9
+     },
+     {
+      "t": 10.15,
+      "kind": "eef_pause",
+      "channel": "speed",
+      "strength": 0.5,
+      "nearest_predicted_boundary_sec": 10.0,
+      "distance_to_predicted_boundary_sec": 0.15
+     }
+    ]
+   },
+   "task_id": "TASK-5e74ff7aed",
+   "created_at": 1792270159.705596
+  },
+  "EV-25b1d21b6b": {
+   "id": "EV-25b1d21b6b",
+   "tool": "episode_predictions",
+   "args": {
+    "episode_id": "galaxea_011"
+   },
+   "result": {
+    "episode_id": "galaxea_011",
+    "instruction": "place the food in the right basket with the right gripper, and place the non food items in the left basket with the left gripper.",
+    "duration_sec": 29.166667,
+    "has_telemetry": true,
+    "sampling": {
+     "sampling_hz": 1.0,
+     "tile_px": 224,
+     "frames_per_sheet": 20,
+     "cols": 5
+    },
+    "predicted_segments": [
+     {
+      "start_sec": 0.0,
+      "end_sec": 1.0,
+      "subtask": "Move left gripper to pick up non-food item."
+     },
+     {
+      "start_sec": 1.0,
+      "end_sec": 2.0,
+      "subtask": "Move left gripper to place non-food item in left basket."
+     },
+     {
+      "start_sec": 2.0,
+      "end_sec": 3.0,
+      "subtask": "Move right gripper to pick up food item."
+     },
+     {
+      "start_sec": 3.0,
+      "end_sec": 4.0,
+      "subtask": "Move right gripper to place food item in right basket."
+     },
+     {
+      "start_sec": 4.0,
+      "end_sec": 5.0,
+      "subtask": "Move left gripper to pick up non-food item."
+     },
+     {
+      "start_sec": 5.0,
+      "end_sec": 6.0,
+      "subtask": "Move left gripper to place non-food item in left basket."
+     },
+     {
+      "start_sec": 6.0,
+      "end_sec": 7.0,
+      "subtask": "Move right gripper to pick up food item."
+     },
+     {
+      "start_sec": 7.0,
+      "end_sec": 8.0,
+      "subtask": "Move right gripper to place food item in right basket."
+     },
+     {
+      "start_sec": 8.0,
+      "end_sec": 9.0,
+      "subtask": "Move left gripper to pick up non-food item."
+     },
+     {
+      "start_sec": 9.0,
+      "end_sec": 10.0,
+      "subtask": "Move left gripper to place non-food item in left basket."
+     },
+     {
+      "start_sec": 10.0,
+      "end_sec": 11.0,
+      "subtask": "Move right gripper to pick up food item."
+     },
+     {
+      "start_sec": 11.0,
+      "end_sec": 12.0,
+      "subtask": "Move right gripper to place food item in right basket."
+     },
+     {
+      "start_sec": 12.0,
+      "end_sec": 13.0,
+      "subtask": "Move left gripper to pick up non-food item."
+     },
+     {
+      "start_sec": 13.0,
+      "end_sec": 14.0,
+      "subtask": "Move left gripper to place non-food item in left basket."
+     },
+     {
+      "start_sec": 14.0,
+      "end_sec": 15.0,
+      "subtask": "Move right gripper to pick up food item."
+     },
+     {
+      "start_sec": 15.0,
+      "end_sec": 16.0,
+      "subtask": "Move right gripper to place food item in right basket."
+     },
+     {
+      "start_sec": 16.0,
+      "end_sec": 17.0,
+      "subtask": "Move left gripper to pick up non-food item."
+     },
+     {
+      "start_sec": 17.0,
+      "end_sec": 18.0,
+      "subtask": "Move left gripper to place non-food item in left basket."
+     },
+     {
+      "start_sec": 18.0,
+      "end_sec": 19.0,
+      "subtask": "Move right gripper to pick up food item."
+     },
+     {
+      "start_sec": 19.0,
+      "end_sec": 20.0,
+      "subtask": "Move right gripper to place food item in right basket."
+     },
+     {
+      "start_sec": 20.0,
+      "end_sec": 21.0,
+      "subtask": "Move left gripper to pick up non-food item."
+     },
+     {
+      "start_sec": 21.0,
+      "end_sec": 22.0,
+      "subtask": "Move left gripper to place non-food item in left basket."
+     },
+     {
+      "start_sec": 22.0,
+      "end_sec": 23.0,
+      "subtask": "Move right gripper to pick up food item."
+     },
+     {
+      "start_sec": 23.0,
+      "end_sec": 24.0,
+      "subtask": "Move right gripper to place food item in right basket."
+     },
+     {
+      "start_sec": 24.0,
+      "end_sec": 25.0,
+      "subtask": "Move left gripper to pick up non-food item."
+     },
+     {
+      "start_sec": 25.0,
+      "end_sec": 26.0,
+      "subtask": "Move left gripper to place non-food item in left basket."
+     },
+     {
+      "start_sec": 26.0,
+      "end_sec": 27.0,
+      "subtask": "Move right gripper to pick up food item."
+     },
+     {
+      "start_sec": 27.0,
+      "end_sec": 28.0,
+      "subtask": "Move right gripper to place food item in right basket."
+     },
+     {
+      "start_sec": 28.0,
+      "end_sec": 29.0,
+      "subtask": "Move left gripper to pick up non-food item."
+     },
+     {
+      "start_sec": 29.0,
+      "end_sec": 29.167,
+      "subtask": "Move left gripper to place non-food item in left basket."
+     }
+    ]
+   },
+   "task_id": "TASK-5e74ff7aed",
+   "created_at": 1792270159.706552
+  },
+  "EV-332c022143": {
+   "id": "EV-332c022143",
+   "tool": "episode_predictions",
+   "args": {
+    "episode_id": "galaxea_011"
+   },
+   "result": {
+    "episode_id": "galaxea_011",
+    "instruction": "place the food in the right basket with the right gripper, and place the non food items in the left basket with the left gripper.",
+    "duration_sec": 29.166667,
+    "has_telemetry": true,
+    "sampling": {
+     "sampling_hz": 1.0,
+     "tile_px": 224,
+     "frames_per_sheet": 20,
+     "cols": 5
+    },
+    "predicted_segments": [
+     {
+      "start_sec": 0.0,
+      "end_sec": 1.0,
+      "subtask": "Move left gripper to pick up non-food item."
+     },
+     {
+      "start_sec": 1.0,
+      "end_sec": 2.0,
+      "subtask": "Move left gripper to place non-food item in left basket."
+     },
+     {
+      "start_sec": 2.0,
+      "end_sec": 3.0,
+      "subtask": "Move right gripper to pick up food item."
+     },
+     {
+      "start_sec": 3.0,
+      "end_sec": 4.0,
+      "subtask": "Move right gripper to place food item in right basket."
+     },
+     {
+      "start_sec": 4.0,
+      "end_sec": 5.0,
+      "subtask": "Move left gripper to pick up non-food item."
+     },
+     {
+      "start_sec": 5.0,
+      "end_sec": 6.0,
+      "subtask": "Move left gripper to place non-food item in left basket."
+     },
+     {
+      "start_sec": 6.0,
+      "end_sec": 7.0,
+      "subtask": "Move right gripper to pick up food item."
+     },
+     {
+      "start_sec": 7.0,
+      "end_sec": 8.0,
+      "subtask": "Move right gripper to place food item in right basket."
+     },
+     {
+      "start_sec": 8.0,
+      "end_sec": 9.0,
+      "subtask": "Move left gripper to pick up non-food item."
+     },
+     {
+      "start_sec": 9.0,
+      "end_sec": 10.0,
+      "subtask": "Move left gripper to place non-food item in left basket."
+     },
+     {
+      "start_sec": 10.0,
+      "end_sec": 11.0,
+      "subtask": "Move right gripper to pick up food item."
+     },
+     {
+      "start_sec": 11.0,
+      "end_sec": 12.0,
+      "subtask": "Move right gripper to place food item in right basket."
+     },
+     {
+      "start_sec": 12.0,
+      "end_sec": 13.0,
+      "subtask": "Move left gripper to pick up non-food item."
+     },
+     {
+      "start_sec": 13.0,
+      "end_sec": 14.0,
+      "subtask": "Move left gripper to place non-food item in left basket."
+     },
+     {
+      "start_sec": 14.0,
+      "end_sec": 15.0,
+      "subtask": "Move right gripper to pick up food item."
+     },
+     {
+      "start_sec": 15.0,
+      "end_sec": 16.0,
+      "subtask": "Move right gripper to place food item in right basket."
+     },
+     {
+      "start_sec": 16.0,
+      "end_sec": 17.0,
+      "subtask": "Move left gripper to pick up non-food item."
+     },
+     {
+      "start_sec": 17.0,
+      "end_sec": 18.0,
+      "subtask": "Move left gripper to place non-food item in left basket."
+     },
+     {
+      "start_sec": 18.0,
+      "end_sec": 19.0,
+      "subtask": "Move right gripper to pick up food item."
+     },
+     {
+      "start_sec": 19.0,
+      "end_sec": 20.0,
+      "subtask": "Move right gripper to place food item in right basket."
+     },
+     {
+      "start_sec": 20.0,
+      "end_sec": 21.0,
+      "subtask": "Move left gripper to pick up non-food item."
+     },
+     {
+      "start_sec": 21.0,
+      "end_sec": 22.0,
+      "subtask": "Move left gripper to place non-food item in left basket."
+     },
+     {
+      "start_sec": 22.0,
+      "end_sec": 23.0,
+      "subtask": "Move right gripper to pick up food item."
+     },
+     {
+      "start_sec": 23.0,
+      "end_sec": 24.0,
+      "subtask": "Move right gripper to place food item in right basket."
+     },
+     {
+      "start_sec": 24.0,
+      "end_sec": 25.0,
+      "subtask": "Move left gripper to pick up non-food item."
+     },
+     {
+      "start_sec": 25.0,
+      "end_sec": 26.0,
+      "subtask": "Move left gripper to place non-food item in left basket."
+     },
+     {
+      "start_sec": 26.0,
+      "end_sec": 27.0,
+      "subtask": "Move right gripper to pick up food item."
+     },
+     {
+      "start_sec": 27.0,
+      "end_sec": 28.0,
+      "subtask": "Move right gripper to place food item in right basket."
+     },
+     {
+      "start_sec": 28.0,
+      "end_sec": 29.0,
+      "subtask": "Move left gripper to pick up non-food item."
+     },
+     {
+      "start_sec": 29.0,
+      "end_sec": 29.167,
+      "subtask": "Move left gripper to place non-food item in left basket."
+     }
+    ]
+   },
+   "task_id": "TASK-fe7f4b0fe3",
+   "created_at": 1792270202.718127
+  },
+  "EV-0580bcd61f": {
+   "id": "EV-0580bcd61f",
+   "tool": "episode_predictions",
+   "args": {
+    "episode_id": "robointer_droid_000010"
+   },
+   "result": {
+    "episode_id": "robointer_droid_000010",
+    "instruction": "Put the blue object inside the drawer.",
+    "duration_sec": 15.2,
+    "has_telemetry": true,
+    "sampling": {
+     "sampling_hz": 1.0,
+     "tile_px": 224,
+     "frames_per_sheet": 20,
+     "cols": 5
+    },
+    "predicted_segments": [
+     {
+      "start_sec": 0.0,
+      "end_sec": 5.0,
+      "subtask": "Approach the blue object on the table"
+     },
+     {
+      "start_sec": 5.0,
+      "end_sec": 10.0,
+      "subtask": "Grasp the blue object"
+     },
+     {
+      "start_sec": 10.0,
+      "end_sec": 15.2,
+      "subtask": "Move the blue object into the drawer"
+     }
+    ]
+   },
+   "task_id": "TASK-fe7f4b0fe3",
+   "created_at": 1792270202.719638
+  },
+  "EV-5584e1f0d8": {
+   "id": "EV-5584e1f0d8",
+   "tool": "sampling_coverage",
+   "args": {
+    "episode_id": "galaxea_011",
+    "sampling_hz": 1.0
+   },
+   "result": {
+    "episode_id": "galaxea_011",
+    "sampling_hz": 1.0,
+    "n_frames": 30,
+    "frame_spacing_sec": 1.0,
+    "duration_sec": 29.166667,
+    "predicted_segments_shorter_than_2_frames": 30,
+    "n_predicted_segments": 30
+   },
+   "task_id": "TASK-fe7f4b0fe3",
+   "created_at": 1792270202.720756
+  },
+  "EV-c325b1d612": {
+   "id": "EV-c325b1d612",
+   "tool": "dev_failure_profile",
+   "args": {
+    "version": "N000",
+    "eval_id": "EVAL-1a54ffa356"
+   },
+   "result": {
+    "split": "dev",
+    "protocol": "evoaction-temporal-v1",
+    "aggregate": {
+     "episodes": 2,
+     "micro_precision": 0.06060606060606061,
+     "micro_recall": 0.13333333333333333,
+     "micro_f1": 0.08333333333333333,
+     "micro_f1_iou05": 0.29166666666666663,
+     "tp": 2,
+     "fp": 31,
+     "fn": 13,
+     "n_pred": 33,
+     "n_ref": 15,
+     "short_event_recall": 0.0,
+     "short_ref": 5,
+     "invalid_items": 0,
+     "empty_output_episodes": 0,
+     "mean_boundary_mae_sec": 0.7488863636363636
+    },
+    "reference_duration_buckets": {
+     "<2s": 5,
+     "2-5s": 8,
+     "5-10s": 2,
+     ">=10s": 0
+    },
+    "episodes": {
+     "galaxea_011": {
+      "n_pred": 30,
+      "n_ref": 12,
+      "n_invalid": 0,
+      "segmentation": "over-segmented",
+      "f1_iou075": 0.0,
+      "f1_iou05": 0.19,
+      "short_reference_events": 5,
+      "short_events_recalled": 0,
+      "reference_interior_boundaries": 11,
+      "reference_boundaries_with_pred_within_0.5s": 11,
+      "reference_boundaries_with_pred_within_1.0s": 11,
+      "boundary_mae_sec": 0.27,
+      "predictions": [
+       {
+        "pred_index": 0,
+        "pred_start_sec": 0.0,
+        "pred_end_sec": 1.0,
+        "best_iou": 0.35,
+        "matched_at_0.75": false,
+        "reference_events_mostly_covered": 0,
+        "start_error": "within 0.5s",
+        "end_error": "1-2s early",
+        "error_class": "boundary misaligned"
+       },
+       {
+        "pred_index": 1,
+        "pred_start_sec": 1.0,
+        "pred_end_sec": 2.0,
+        "best_iou": 0.35,
+        "matched_at_0.75": false,
+        "reference_events_mostly_covered": 0,
+        "start_error": "0.5-1s late",
+        "end_error": "0.5-1s early",
+        "error_class": "boundary misaligned"
+       },
+       {
+        "pred_index": 2,
+        "pred_start_sec": 2.0,
+        "pred_end_sec": 3.0,
+        "best_iou": 0.29,
+        "matched_at_0.75": false,
+        "reference_events_mostly_covered": 0,
+        "start_error": "1-2s late",
+        "end_error": "within 0.5s",
+        "error_class": "spurious or badly placed"
+       },
+       {
+        "pred_index": 3,
+        "pred_start_sec": 3.0,
+        "pred_end_sec": 4.0,
+        "best_iou": 0.42,
+        "matched_at_0.75": false,
+        "reference_events_mostly_covered": 0,
+        "start_error": "within 0.5s",
+        "end_error": "1-2s early",
+        "error_class": "boundary misaligned"
+       },
+       {
+        "pred_index": 4,
+        "pred_start_sec": 4.0,
+        "pred_end_sec": 5.0,
+        "best_iou": 0.42,
+        "matched_at_0.75": false,
+        "reference_events_mostly_covered": 0,
+        "start_error": "1-2s late",
+        "end_error": "within 0.5s",
+        "error_class": "boundary misaligned"
+       },
+       {
+        "pred_index": 5,
+        "pred_start_sec": 5.0,
+        "pred_end_sec": 6.0,
+        "best_iou": 0.31,
+        "matched_at_0.75": false,
+        "reference_events_mostly_covered": 0,
+        "start_error": "within 0.5s",
+        "end_error": "1-2s early",
+        "error_class": "boundary misaligned"
+       },
+       {
+        "pred_index": 6,
+        "pred_start_sec": 6.0,
+        "pred_end_sec": 7.0,
+        "best_iou": 0.47,
+        "matched_at_0.75": false,
+        "reference_events_mostly_covered": 0,
+        "start_error": "0.5-1s late",
+        "end_error": "within 0.5s",
+        "error_class": "boundary misaligned"
+       },
+       {
+        "pred_index": 7,
+        "pred_start_sec": 7.0,
+        "pred_end_sec": 8.0,
+        "best_iou": 0.27,
+        "matched_at_0.75": false,
+        "reference_events_mostly_covered": 0,
+        "start_error": "within 0.5s",
+        "end_error": "1-2s early",
+        "error_class": "spurious or badly placed"
+       },
+       {
+        "pred_index": 8,
+        "pred_start_sec": 8.0,
+        "pred_end_sec": 9.0,
+        "best_iou": 0.54,
+        "matched_at_0.75": false,
+        "reference_events_mostly_covered": 1,
+        "start_error": "0.5-1s late",
+        "end_error": "within 0.5s",
+        "error_class": "boundary misaligned"
+       },
+       {
+        "pred_index": 9,
+        "pred_start_sec": 9.0,
+        "pred_end_sec": 10.0,
+        "best_iou": 0.28,
+        "matched_at_0.75": false,
+        "reference_events_mostly_covered": 0,
+        "start_error": "within 0.5s",
+        "end_error": "1-2s early",
+        "error_class": "spurious or badly placed"
+       },
+       {
+        "pred_index": 10,
+        "pred_start_sec": 10.0,
+        "pred_end_sec": 11.0,
+        "best_iou": 0.42,
+        "matched_at_0.75": false,
+        "reference_events_mostly_covered": 0,
+        "start_error": "0.5-1s late",
+        "end_error": "0.5-1s early",
+        "error_class": "boundary misaligned"
+       },
+       {
+        "pred_index": 11,
+        "pred_start_sec": 11.0,
+        "pred_end_sec": 12.0,
+        "best_iou": 0.23,
+        "matched_at_0.75": false,
+        "reference_events_mostly_covered": 0,
+        "start_error": "1-2s late",
+        "end_error": "within 0.5s",
+        "error_class": "spurious or badly placed"
+       },
+       {
+        "pred_index": 12,
+        "pred_start_sec": 12.0,
+        "pred_end_sec": 13.0,
+        "best_iou": 0.63,
+        "matched_at_0.75": false,
+        "reference_events_mostly_covered": 1,
+        "start_error": "within 0.5s",
+        "end_error": "within 0.5s",
+        "error_class": "boundary misaligned"
+       },
+       {
+        "pred_index": 13,
+        "pred_start_sec": 13.0,
+        "pred_end_sec": 14.0,
+        "best_iou": 0.24,
+        "matched_at_0.75": false,
+        "reference_events_mostly_covered": 0,
+        "start_error": "within 0.5s",
+        "end_error": ">2s early",
+        "error_class": "spurious or badly placed"
+       },
+       {
+        "pred_index": 14,
+        "pred_start_sec": 14.0,
+        "pred_end_sec": 15.0,
+        "best_iou": 0.34,
+        "matched_at_0.75": false,
+        "reference_events_mostly_covered": 0,
+        "start_error": "0.5-1s late",
+        "end_error": "1-2s early",
+        "error_class": "boundary misaligned"
+       },
+       {
+        "pred_index": 15,
+        "pred_start_sec": 15.0,
+        "pred_end_sec": 16.0,
+        "best_iou": 0.34,
+        "matched_at_0.75": false,
+        "reference_events_mostly_covered": 0,
+        "start_error": "1-2s late",
+        "end_error": "within 0.5s",
+        "error_class": "boundary misaligned"
+       },
+       {
+        "pred_index": 16,
+        "pred_start_sec": 16.0,
+        "pred_end_sec": 17.0,
+        "best_iou": 0.48,
+        "matched_at_0.75": false,
+        "reference_events_mostly_covered": 1,
+        "start_error": "within 0.5s",
+        "end_error": "0.5-1s early",
+        "error_class": "boundary misaligned"
+       },
+       {
+        "pred_index": 17,
+        "pred_start_sec": 17.0,
+        "pred_end_sec": 18.0,
+        "best_iou": 0.41,
+        "matched_at_0.75": false,
+        "reference_events_mostly_covered": 0,
+        "start_error": "0.5-1s late",
+        "end_error": "within 0.5s",
+        "error_class": "boundary misaligned"
+       },
+       {
+        "pred_index": 18,
+        "pred_start_sec": 18.0,
+        "pred_end_sec": 19.0,
+        "best_iou": 0.34,
+        "matched_at_0.75": false,
+        "reference_events_mostly_covered": 0,
+        "start_error": "within 0.5s",
+        "end_error": "1-2s early",
+        "error_class": "boundary misaligned"
+       },
+       {
+        "pred_index": 19,
+        "pred_start_sec": 19.0,
+        "pred_end_sec": 20.0,
+        "best_iou": 0.34,
+        "matched_at_0.75": false,
+        "reference_events_mostly_covered": 0,
+        "start_error": "1-2s late",
+        "end_error": "0.5-1s early",
+        "error_class": "boundary misaligned"
+       },
+       {
+        "pred_index": 20,
+        "pred_start_sec": 20.0,
+        "pred_end_sec": 21.0,
+        "best_iou": 0.21,
+        "matched_at_0.75": false,
+        "reference_events_mostly_covered": 0,
+        "start_error": ">2s late",
+        "end_error": "within 0.5s",
+        "error_class": "spurious or badly placed"
+       },
+       {
+        "pred_index": 21,
+        "pred_start_sec": 21.0,
+        "pred_end_sec": 22.0,
+        "best_iou": 0.63,
+        "matched_at_0.75": false,
+        "reference_events_mostly_covered": 1,
+        "start_error": "within 0.5s",
+        "end_error": "within 0.5s",
+        "error_class": "boundary misaligned"
+       },
+       {
+        "pred_index": 22,
+        "pred_start_sec": 22.0,
+        "pred_end_sec": 23.0,
+        "best_iou": 0.28,
+        "matched_at_0.75": false,
+        "reference_events_mostly_covered": 0,
+        "start_error": "within 0.5s",
+        "end_error": "1-2s early",
+        "error_class": "spurious or badly placed"
+       },
+       {
+        "pred_index": 23,
+        "pred_start_sec": 23.0,
+        "pred_end_sec": 24.0,
+        "best_iou": 0.42,
+        "matched_at_0.75": false,
+        "reference_events_mostly_covered": 0,
+        "start_error": "0.5-1s late",
+        "end_error": "0.5-1s early",
+        "error_class": "boundary misaligned"
+       },
+       {
+        "pred_index": 24,
+        "pred_start_sec": 24.0,
+        "pred_end_sec": 25.0,
+        "best_iou": 0.24,
+        "matched_at_0.75": false,
+        "reference_events_mostly_covered": 0,
+        "start_error": "1-2s late",
+        "end_error": "within 0.5s",
+        "error_class": "spurious or badly placed"
+       },
+       {
+        "pred_index": 25,
+        "pred_start_sec": 25.0,
+        "pred_end_sec": 26.0,
+        "best_iou": 0.63,
+        "matched_at_0.75": false,
+        "reference_events_mostly_covered": 1,
+        "start_error": "within 0.5s",
+        "end_error": "within 0.5s",
+        "error_class": "boundary misaligned"
+       },
+       {
+        "pred_index": 26,
+        "pred_start_sec": 26.0,
+        "pred_end_sec": 27.0,
+        "best_iou": 0.11,
+        "matched_at_0.75": false,
+        "reference_events_mostly_covered": 0,
+        "start_error": "1-2s late",
+        "end_error": "0.5-1s late",
+        "error_class": "spurious or badly placed"
+       },
+       {
+        "pred_index": 27,
+        "pred_start_sec": 27.0,
+        "pred_end_sec": 28.0,
+        "best_iou": 0.0,
+        "matched_at_0.75": false,
+        "reference_events_mostly_covered": 0,
+        "start_error": ">2s late",
+        "end_error": ">2s late",
+        "error_class": "spurious or badly placed"
+       },
+       {
+        "pred_index": 28,
+        "pred_start_sec": 28.0,
+        "pred_end_sec": 29.0,
+        "best_iou": 0.0,
+        "matched_at_0.75": false,
+        "reference_events_mostly_covered": 0,
+        "start_error": ">2s late",
+        "end_error": ">2s late",
+        "error_class": "spurious or badly placed"
+       },
+       {
+        "pred_index": 29,
+        "pred_start_sec": 29.0,
+        "pred_end_sec": 29.17,
+        "best_iou": 0.0,
+        "matched_at_0.75": false,
+        "reference_events_mostly_covered": 0,
+        "start_error": ">2s late",
+        "end_error": ">2s late",
+        "error_class": "spurious or badly placed"
+       }
+      ]
+     },
+     "robointer_droid_000010": {
+      "n_pred": 3,
+      "n_ref": 3,
+      "n_invalid": 0,
+      "segmentation": "count matches",
+      "f1_iou075": 0.667,
+      "f1_iou05": 1.0,
+      "short_reference_events": 0,
+      "short_events_recalled": 0,
+      "reference_interior_boundaries": 2,
+      "reference_boundaries_with_pred_within_0.5s": 0,
+      "reference_boundaries_with_pred_within_1.0s": 1,
+      "boundary_mae_sec": 1.23,
+      "predictions": [
+       {
+        "pred_index": 0,
+        "pred_start_sec": 0.0,
+        "pred_end_sec": 5.0,
+        "best_iou": 0.85,
+        "matched_at_0.75": true,
+        "reference_events_mostly_covered": 1,
+        "start_error": "within 0.5s",
+        "end_error": "0.5-1s early",
+        "error_class": "correct"
+       },
+       {
+        "pred_index": 1,
+        "pred_start_sec": 5.0,
+        "pred_end_sec": 10.0,
+        "best_iou": 0.51,
+        "matched_at_0.75": false,
+        "reference_events_mostly_covered": 1,
+        "start_error": "0.5-1s early",
+        "end_error": "1-2s late",
+        "error_class": "boundary misaligned"
+       },
+       {
+        "pred_index": 2,
+        "pred_start_sec": 10.0,
+        "pred_end_sec": 15.2,
+        "best_iou": 0.76,
+        "matched_at_0.75": true,
+        "reference_events_mostly_covered": 1,
+        "start_error": "1-2s late",
+        "end_error": "within 0.5s",
+        "error_class": "correct"
+       }
+      ]
+     }
+    }
+   },
+   "task_id": null,
+   "created_at": 1792270453.228652
+  },
+  "EVAL-1a54ffa356": {
+   "id": "EVAL-1a54ffa356",
+   "tool": "dev_failure_profile",
+   "args": {
+    "version": "N000"
+   },
+   "result": {
+    "split": "dev",
+    "protocol": "evoaction-temporal-v1",
+    "aggregate": {
+     "episodes": 2,
+     "micro_precision": 0.06060606060606061,
+     "micro_recall": 0.13333333333333333,
+     "micro_f1": 0.08333333333333333,
+     "micro_f1_iou05": 0.29166666666666663,
+     "tp": 2,
+     "fp": 31,
+     "fn": 13,
+     "n_pred": 33,
+     "n_ref": 15,
+     "short_event_recall": 0.0,
+     "short_ref": 5,
+     "invalid_items": 0,
+     "empty_output_episodes": 0,
+     "mean_boundary_mae_sec": 0.7488863636363636
+    },
+    "reference_duration_buckets": {
+     "<2s": 5,
+     "2-5s": 8,
+     "5-10s": 2,
+     ">=10s": 0
+    },
+    "episodes": {
+     "galaxea_011": {
+      "n_pred": 30,
+      "n_ref": 12,
+      "n_invalid": 0,
+      "segmentation": "over-segmented",
+      "f1_iou075": 0.0,
+      "f1_iou05": 0.19,
+      "short_reference_events": 5,
+      "short_events_recalled": 0,
+      "reference_interior_boundaries": 11,
+      "reference_boundaries_with_pred_within_0.5s": 11,
+      "reference_boundaries_with_pred_within_1.0s": 11,
+      "boundary_mae_sec": 0.27,
+      "predictions": [
+       {
+        "pred_index": 0,
+        "pred_start_sec": 0.0,
+        "pred_end_sec": 1.0,
+        "best_iou": 0.35,
+        "matched_at_0.75": false,
+        "reference_events_mostly_covered": 0,
+        "start_error": "within 0.5s",
+        "end_error": "1-2s early",
+        "error_class": "boundary misaligned"
+       },
+       {
+        "pred_index": 1,
+        "pred_start_sec": 1.0,
+        "pred_end_sec": 2.0,
+        "best_iou": 0.35,
+        "matched_at_0.75": false,
+        "reference_events_mostly_covered": 0,
+        "start_error": "0.5-1s late",
+        "end_error": "0.5-1s early",
+        "error_class": "boundary misaligned"
+       },
+       {
+        "pred_index": 2,
+        "pred_start_sec": 2.0,
+        "pred_end_sec": 3.0,
+        "best_iou": 0.29,
+        "matched_at_0.75": false,
+        "reference_events_mostly_covered": 0,
+        "start_error": "1-2s late",
+        "end_error": "within 0.5s",
+        "error_class": "spurious or badly placed"
+       },
+       {
+        "pred_index": 3,
+        "pred_start_sec": 3.0,
+        "pred_end_sec": 4.0,
+        "best_iou": 0.42,
+        "matched_at_0.75": false,
+        "reference_events_mostly_covered": 0,
+        "start_error": "within 0.5s",
+        "end_error": "1-2s early",
+        "error_class": "boundary misaligned"
+       },
+       {
+        "pred_index": 4,
+        "pred_start_sec": 4.0,
+        "pred_end_sec": 5.0,
+        "best_iou": 0.42,
+        "matched_at_0.75": false,
+        "reference_events_mostly_covered": 0,
+        "start_error": "1-2s late",
+        "end_error": "within 0.5s",
+        "error_class": "boundary misaligned"
+       },
+       {
+        "pred_index": 5,
+        "pred_start_sec": 5.0,
+        "pred_end_sec": 6.0,
+        "best_iou": 0.31,
+        "matched_at_0.75": false,
+        "reference_events_mostly_covered": 0,
+        "start_error": "within 0.5s",
+        "end_error": "1-2s early",
+        "error_class": "boundary misaligned"
+       },
+       {
+        "pred_index": 6,
+        "pred_start_sec": 6.0,
+        "pred_end_sec": 7.0,
+        "best_iou": 0.47,
+        "matched_at_0.75": false,
+        "reference_events_mostly_covered": 0,
+        "start_error": "0.5-1s late",
+        "end_error": "within 0.5s",
+        "error_class": "boundary misaligned"
+       },
+       {
+        "pred_index": 7,
+        "pred_start_sec": 7.0,
+        "pred_end_sec": 8.0,
+        "best_iou": 0.27,
+        "matched_at_0.75": false,
+        "reference_events_mostly_covered": 0,
+        "start_error": "within 0.5s",
+        "end_error": "1-2s early",
+        "error_class": "spurious or badly placed"
+       },
+       {
+        "pred_index": 8,
+        "pred_start_sec": 8.0,
+        "pred_end_sec": 9.0,
+        "best_iou": 0.54,
+        "matched_at_0.75": false,
+        "reference_events_mostly_covered": 1,
+        "start_error": "0.5-1s late",
+        "end_error": "within 0.5s",
+        "error_class": "boundary misaligned"
+       },
+       {
+        "pred_index": 9,
+        "pred_start_sec": 9.0,
+        "pred_end_sec": 10.0,
+        "best_iou": 0.28,
+        "matched_at_0.75": false,
+        "reference_events_mostly_covered": 0,
+        "start_error": "within 0.5s",
+        "end_error": "1-2s early",
+        "error_class": "spurious or badly placed"
+       },
+       {
+        "pred_index": 10,
+        "pred_start_sec": 10.0,
+        "pred_end_sec": 11.0,
+        "best_iou": 0.42,
+        "matched_at_0.75": false,
+        "reference_events_mostly_covered": 0,
+        "start_error": "0.5-1s late",
+        "end_error": "0.5-1s early",
+        "error_class": "boundary misaligned"
+       },
+       {
+        "pred_index": 11,
+        "pred_start_sec": 11.0,
+        "pred_end_sec": 12.0,
+        "best_iou": 0.23,
+        "matched_at_0.75": false,
+        "reference_events_mostly_covered": 0,
+        "start_error": "1-2s late",
+        "end_error": "within 0.5s",
+        "error_class": "spurious or badly placed"
+       },
+       {
+        "pred_index": 12,
+        "pred_start_sec": 12.0,
+        "pred_end_sec": 13.0,
+        "best_iou": 0.63,
+        "matched_at_0.75": false,
+        "reference_events_mostly_covered": 1,
+        "start_error": "within 0.5s",
+        "end_error": "within 0.5s",
+        "error_class": "boundary misaligned"
+       },
+       {
+        "pred_index": 13,
+        "pred_start_sec": 13.0,
+        "pred_end_sec": 14.0,
+        "best_iou": 0.24,
+        "matched_at_0.75": false,
+        "reference_events_mostly_covered": 0,
+        "start_error": "within 0.5s",
+        "end_error": ">2s early",
+        "error_class": "spurious or badly placed"
+       },
+       {
+        "pred_index": 14,
+        "pred_start_sec": 14.0,
+        "pred_end_sec": 15.0,
+        "best_iou": 0.34,
+        "matched_at_0.75": false,
+        "reference_events_mostly_covered": 0,
+        "start_error": "0.5-1s late",
+        "end_error": "1-2s early",
+        "error_class": "boundary misaligned"
+       },
+       {
+        "pred_index": 15,
+        "pred_start_sec": 15.0,
+        "pred_end_sec": 16.0,
+        "best_iou": 0.34,
+        "matched_at_0.75": false,
+        "reference_events_mostly_covered": 0,
+        "start_error": "1-2s late",
+        "end_error": "within 0.5s",
+        "error_class": "boundary misaligned"
+       },
+       {
+        "pred_index": 16,
+        "pred_start_sec": 16.0,
+        "pred_end_sec": 17.0,
+        "best_iou": 0.48,
+        "matched_at_0.75": false,
+        "reference_events_mostly_covered": 1,
+        "start_error": "within 0.5s",
+        "end_error": "0.5-1s early",
+        "error_class": "boundary misaligned"
+       },
+       {
+        "pred_index": 17,
+        "pred_start_sec": 17.0,
+        "pred_end_sec": 18.0,
+        "best_iou": 0.41,
+        "matched_at_0.75": false,
+        "reference_events_mostly_covered": 0,
+        "start_error": "0.5-1s late",
+        "end_error": "within 0.5s",
+        "error_class": "boundary misaligned"
+       },
+       {
+        "pred_index": 18,
+        "pred_start_sec": 18.0,
+        "pred_end_sec": 19.0,
+        "best_iou": 0.34,
+        "matched_at_0.75": false,
+        "reference_events_mostly_covered": 0,
+        "start_error": "within 0.5s",
+        "end_error": "1-2s early",
+        "error_class": "boundary misaligned"
+       },
+       {
+        "pred_index": 19,
+        "pred_start_sec": 19.0,
+        "pred_end_sec": 20.0,
+        "best_iou": 0.34,
+        "matched_at_0.75": false,
+        "reference_events_mostly_covered": 0,
+        "start_error": "1-2s late",
+        "end_error": "0.5-1s early",
+        "error_class": "boundary misaligned"
+       },
+       {
+        "pred_index": 20,
+        "pred_start_sec": 20.0,
+        "pred_end_sec": 21.0,
+        "best_iou": 0.21,
+        "matched_at_0.75": false,
+        "reference_events_mostly_covered": 0,
+        "start_error": ">2s late",
+        "end_error": "within 0.5s",
+        "error_class": "spurious or badly placed"
+       },
+       {
+        "pred_index": 21,
+        "pred_start_sec": 21.0,
+        "pred_end_sec": 22.0,
+        "best_iou": 0.63,
+        "matched_at_0.75": false,
+        "reference_events_mostly_covered": 1,
+        "start_error": "within 0.5s",
+        "end_error": "within 0.5s",
+        "error_class": "boundary misaligned"
+       },
+       {
+        "pred_index": 22,
+        "pred_start_sec": 22.0,
+        "pred_end_sec": 23.0,
+        "best_iou": 0.28,
+        "matched_at_0.75": false,
+        "reference_events_mostly_covered": 0,
+        "start_error": "within 0.5s",
+        "end_error": "1-2s early",
+        "error_class": "spurious or badly placed"
+       },
+       {
+        "pred_index": 23,
+        "pred_start_sec": 23.0,
+        "pred_end_sec": 24.0,
+        "best_iou": 0.42,
+        "matched_at_0.75": false,
+        "reference_events_mostly_covered": 0,
+        "start_error": "0.5-1s late",
+        "end_error": "0.5-1s early",
+        "error_class": "boundary misaligned"
+       },
+       {
+        "pred_index": 24,
+        "pred_start_sec": 24.0,
+        "pred_end_sec": 25.0,
+        "best_iou": 0.24,
+        "matched_at_0.75": false,
+        "reference_events_mostly_covered": 0,
+        "start_error": "1-2s late",
+        "end_error": "within 0.5s",
+        "error_class": "spurious or badly placed"
+       },
+       {
+        "pred_index": 25,
+        "pred_start_sec": 25.0,
+        "pred_end_sec": 26.0,
+        "best_iou": 0.63,
+        "matched_at_0.75": false,
+        "reference_events_mostly_covered": 1,
+        "start_error": "within 0.5s",
+        "end_error": "within 0.5s",
+        "error_class": "boundary misaligned"
+       },
+       {
+        "pred_index": 26,
+        "pred_start_sec": 26.0,
+        "pred_end_sec": 27.0,
+        "best_iou": 0.11,
+        "matched_at_0.75": false,
+        "reference_events_mostly_covered": 0,
+        "start_error": "1-2s late",
+        "end_error": "0.5-1s late",
+        "error_class": "spurious or badly placed"
+       },
+       {
+        "pred_index": 27,
+        "pred_start_sec": 27.0,
+        "pred_end_sec": 28.0,
+        "best_iou": 0.0,
+        "matched_at_0.75": false,
+        "reference_events_mostly_covered": 0,
+        "start_error": ">2s late",
+        "end_error": ">2s late",
+        "error_class": "spurious or badly placed"
+       },
+       {
+        "pred_index": 28,
+        "pred_start_sec": 28.0,
+        "pred_end_sec": 29.0,
+        "best_iou": 0.0,
+        "matched_at_0.75": false,
+        "reference_events_mostly_covered": 0,
+        "start_error": ">2s late",
+        "end_error": ">2s late",
+        "error_class": "spurious or badly placed"
+       },
+       {
+        "pred_index": 29,
+        "pred_start_sec": 29.0,
+        "pred_end_sec": 29.17,
+        "best_iou": 0.0,
+        "matched_at_0.75": false,
+        "reference_events_mostly_covered": 0,
+        "start_error": ">2s late",
+        "end_error": ">2s late",
+        "error_class": "spurious or badly placed"
+       }
+      ]
+     },
+     "robointer_droid_000010": {
+      "n_pred": 3,
+      "n_ref": 3,
+      "n_invalid": 0,
+      "segmentation": "count matches",
+      "f1_iou075": 0.667,
+      "f1_iou05": 1.0,
+      "short_reference_events": 0,
+      "short_events_recalled": 0,
+      "reference_interior_boundaries": 2,
+      "reference_boundaries_with_pred_within_0.5s": 0,
+      "reference_boundaries_with_pred_within_1.0s": 1,
+      "boundary_mae_sec": 1.23,
+      "predictions": [
+       {
+        "pred_index": 0,
+        "pred_start_sec": 0.0,
+        "pred_end_sec": 5.0,
+        "best_iou": 0.85,
+        "matched_at_0.75": true,
+        "reference_events_mostly_covered": 1,
+        "start_error": "within 0.5s",
+        "end_error": "0.5-1s early",
+        "error_class": "correct"
+       },
+       {
+        "pred_index": 1,
+        "pred_start_sec": 5.0,
+        "pred_end_sec": 10.0,
+        "best_iou": 0.51,
+        "matched_at_0.75": false,
+        "reference_events_mostly_covered": 1,
+        "start_error": "0.5-1s early",
+        "end_error": "1-2s late",
+        "error_class": "boundary misaligned"
+       },
+       {
+        "pred_index": 2,
+        "pred_start_sec": 10.0,
+        "pred_end_sec": 15.2,
+        "best_iou": 0.76,
+        "matched_at_0.75": true,
+        "reference_events_mostly_covered": 1,
+        "start_error": "1-2s late",
+        "end_error": "within 0.5s",
+        "error_class": "correct"
+       }
+      ]
+     }
+    }
+   },
+   "task_id": null
+  },
+  "EV-ab30cdbb9c": {
+   "id": "EV-ab30cdbb9c",
+   "tool": "sampling_coverage",
+   "args": {
+    "episode_id": "galaxea_011",
+    "sampling_hz": 1.0
+   },
+   "result": {
+    "episode_id": "galaxea_011",
+    "sampling_hz": 1.0,
+    "n_frames": 30,
+    "frame_spacing_sec": 1.0,
+    "duration_sec": 29.166667,
+    "predicted_segments_shorter_than_2_frames": 30,
+    "n_predicted_segments": 30
+   },
+   "task_id": "TASK-6fd3d95323",
+   "created_at": 1792270511.9969122
+  },
+  "EV-8a5fe29362": {
+   "id": "EV-8a5fe29362",
+   "tool": "episode_predictions",
+   "args": {
+    "episode_id": "galaxea_011"
+   },
+   "result": {
+    "episode_id": "galaxea_011",
+    "instruction": "place the food in the right basket with the right gripper, and place the non food items in the left basket with the left gripper.",
+    "duration_sec": 29.166667,
+    "has_telemetry": true,
+    "sampling": {
+     "sampling_hz": 1.0,
+     "tile_px": 224,
+     "frames_per_sheet": 20,
+     "cols": 5
+    },
+    "predicted_segments": [
+     {
+      "start_sec": 0.0,
+      "end_sec": 1.0,
+      "subtask": "Move left gripper to pick up non-food item."
+     },
+     {
+      "start_sec": 1.0,
+      "end_sec": 2.0,
+      "subtask": "Move left gripper to place non-food item in left basket."
+     },
+     {
+      "start_sec": 2.0,
+      "end_sec": 3.0,
+      "subtask": "Move right gripper to pick up food item."
+     },
+     {
+      "start_sec": 3.0,
+      "end_sec": 4.0,
+      "subtask": "Move right gripper to place food item in right basket."
+     },
+     {
+      "start_sec": 4.0,
+      "end_sec": 5.0,
+      "subtask": "Move left gripper to pick up non-food item."
+     },
+     {
+      "start_sec": 5.0,
+      "end_sec": 6.0,
+      "subtask": "Move left gripper to place non-food item in left basket."
+     },
+     {
+      "start_sec": 6.0,
+      "end_sec": 7.0,
+      "subtask": "Move right gripper to pick up food item."
+     },
+     {
+      "start_sec": 7.0,
+      "end_sec": 8.0,
+      "subtask": "Move right gripper to place food item in right basket."
+     },
+     {
+      "start_sec": 8.0,
+      "end_sec": 9.0,
+      "subtask": "Move left gripper to pick up non-food item."
+     },
+     {
+      "start_sec": 9.0,
+      "end_sec": 10.0,
+      "subtask": "Move left gripper to place non-food item in left basket."
+     },
+     {
+      "start_sec": 10.0,
+      "end_sec": 11.0,
+      "subtask": "Move right gripper to pick up food item."
+     },
+     {
+      "start_sec": 11.0,
+      "end_sec": 12.0,
+      "subtask": "Move right gripper to place food item in right basket."
+     },
+     {
+      "start_sec": 12.0,
+      "end_sec": 13.0,
+      "subtask": "Move left gripper to pick up non-food item."
+     },
+     {
+      "start_sec": 13.0,
+      "end_sec": 14.0,
+      "subtask": "Move left gripper to place non-food item in left basket."
+     },
+     {
+      "start_sec": 14.0,
+      "end_sec": 15.0,
+      "subtask": "Move right gripper to pick up food item."
+     },
+     {
+      "start_sec": 15.0,
+      "end_sec": 16.0,
+      "subtask": "Move right gripper to place food item in right basket."
+     },
+     {
+      "start_sec": 16.0,
+      "end_sec": 17.0,
+      "subtask": "Move left gripper to pick up non-food item."
+     },
+     {
+      "start_sec": 17.0,
+      "end_sec": 18.0,
+      "subtask": "Move left gripper to place non-food item in left basket."
+     },
+     {
+      "start_sec": 18.0,
+      "end_sec": 19.0,
+      "subtask": "Move right gripper to pick up food item."
+     },
+     {
+      "start_sec": 19.0,
+      "end_sec": 20.0,
+      "subtask": "Move right gripper to place food item in right basket."
+     },
+     {
+      "start_sec": 20.0,
+      "end_sec": 21.0,
+      "subtask": "Move left gripper to pick up non-food item."
+     },
+     {
+      "start_sec": 21.0,
+      "end_sec": 22.0,
+      "subtask": "Move left gripper to place non-food item in left basket."
+     },
+     {
+      "start_sec": 22.0,
+      "end_sec": 23.0,
+      "subtask": "Move right gripper to pick up food item."
+     },
+     {
+      "start_sec": 23.0,
+      "end_sec": 24.0,
+      "subtask": "Move right gripper to place food item in right basket."
+     },
+     {
+      "start_sec": 24.0,
+      "end_sec": 25.0,
+      "subtask": "Move left gripper to pick up non-food item."
+     },
+     {
+      "start_sec": 25.0,
+      "end_sec": 26.0,
+      "subtask": "Move left gripper to place non-food item in left basket."
+     },
+     {
+      "start_sec": 26.0,
+      "end_sec": 27.0,
+      "subtask": "Move right gripper to pick up food item."
+     },
+     {
+      "start_sec": 27.0,
+      "end_sec": 28.0,
+      "subtask": "Move right gripper to place food item in right basket."
+     },
+     {
+      "start_sec": 28.0,
+      "end_sec": 29.0,
+      "subtask": "Move left gripper to pick up non-food item."
+     },
+     {
+      "start_sec": 29.0,
+      "end_sec": 29.167,
+      "subtask": "Move left gripper to place non-food item in left basket."
+     }
+    ]
+   },
+   "task_id": "TASK-6fd3d95323",
+   "created_at": 1792270511.9979699
+  },
+  "EV-0f142eb507": {
+   "id": "EV-0f142eb507",
+   "tool": "episode_predictions",
+   "args": {
+    "episode_id": "robointer_droid_000010"
+   },
+   "result": {
+    "episode_id": "robointer_droid_000010",
+    "instruction": "Put the blue object inside the drawer.",
+    "duration_sec": 15.2,
+    "has_telemetry": true,
+    "sampling": {
+     "sampling_hz": 1.0,
+     "tile_px": 224,
+     "frames_per_sheet": 20,
+     "cols": 5
+    },
+    "predicted_segments": [
+     {
+      "start_sec": 0.0,
+      "end_sec": 5.0,
+      "subtask": "Approach the blue object on the table"
+     },
+     {
+      "start_sec": 5.0,
+      "end_sec": 10.0,
+      "subtask": "Grasp the blue object"
+     },
+     {
+      "start_sec": 10.0,
+      "end_sec": 15.2,
+      "subtask": "Move the blue object into the drawer"
+     }
+    ]
+   },
+   "task_id": "TASK-6fd3d95323",
+   "created_at": 1792270548.37419
+  },
+  "EV-5f52cdbf9b": {
+   "id": "EV-5f52cdbf9b",
+   "tool": "telemetry_hints",
+   "args": {
+    "episode_id": "galaxea_011",
+    "signals": [
+     "gripper",
+     "eef_pause"
+    ]
+   },
+   "result": {
+    "episode_id": "galaxea_011",
+    "signals": [
+     "gripper",
+     "eef_pause"
+    ],
+    "n_hints": 10,
+    "n_predicted_boundaries": 29,
+    "hints": [
+     {
+      "t": 2.57,
+      "kind": "gripper_closed",
+      "channel": "gripper_open_scale_state:right_gripper_open_scale",
+      "strength": 1.0,
+      "nearest_predicted_boundary_sec": 3.0,
+      "distance_to_predicted_boundary_sec": 0.43
+     },
+     {
+      "t": 5.3,
+      "kind": "gripper_opened",
+      "channel": "gripper_open_scale_state:right_gripper_open_scale",
+      "strength": 1.0,
+      "nearest_predicted_boundary_sec": 5.0,
+      "distance_to_predicted_boundary_sec": 0.3
+     },
+     {
+      "t": 7.1,
+      "kind": "gripper_closed",
+      "channel": "gripper_open_scale_state:right_gripper_open_scale",
+      "strength": 1.0,
+      "nearest_predicted_boundary_sec": 7.0,
+      "distance_to_predicted_boundary_sec": 0.1
+     },
+     {
+      "t": 9.1,
+      "kind": "gripper_opened",
+      "channel": "gripper_open_scale_state:right_gripper_open_scale",
+      "strength": 1.0,
+      "nearest_predicted_boundary_sec": 9.0,
+      "distance_to_predicted_boundary_sec": 0.1
+     },
+     {
+      "t": 15.9,
+      "kind": "gripper_closed",
+      "channel": "gripper_open_scale_state:left_gripper_open_scale",
+      "strength": 1.0,
+      "nearest_predicted_boundary_sec": 16.0,
+      "distance_to_predicted_boundary_sec": 0.1
+     },
+     {
+      "t": 17.67,
+      "kind": "gripper_opened",
+      "channel": "gripper_open_scale_state:left_gripper_open_scale",
+      "strength": 1.0,
+      "nearest_predicted_boundary_sec": 18.0,
+      "distance_to_predicted_boundary_sec": 0.33
+     },
+     {
+      "t": 20.17,
+      "kind": "gripper_closed",
+      "channel": "gripper_open_scale_state:left_gripper_open_scale",
+      "strength": 1.0,
+      "nearest_predicted_boundary_sec": 20.0,
+      "distance_to_predicted_boundary_sec": 0.17
+     },
+     {
+      "t": 22.27,
+      "kind": "gripper_opened",
+      "channel": "gripper_open_scale_state:left_gripper_open_scale",
+      "strength": 1.0,
+      "nearest_predicted_boundary_sec": 22.0,
+      "distance_to_predicted_boundary_sec": 0.27
+     },
+     {
+      "t": 24.43,
+      "kind": "gripper_closed",
+      "channel": "gripper_open_scale_state:left_gripper_open_scale",
+      "strength": 1.0,
+      "nearest_predicted_boundary_sec": 24.0,
+      "distance_to_predicted_boundary_sec": 0.43
+     },
+     {
+      "t": 26.0,
+      "kind": "gripper_opened",
+      "channel": "gripper_open_scale_state:left_gripper_open_scale",
+      "strength": 1.0,
+      "nearest_predicted_boundary_sec": 26.0,
+      "distance_to_predicted_boundary_sec": 0.0
+     }
+    ]
+   },
+   "task_id": "TASK-b473addfb6",
+   "created_at": 1792270568.700942
+  },
+  "EV-d1790ee080": {
+   "id": "EV-d1790ee080",
+   "tool": "episode_predictions",
+   "args": {
+    "episode_id": "galaxea_011"
+   },
+   "result": {
+    "episode_id": "galaxea_011",
+    "instruction": "place the food in the right basket with the right gripper, and place the non food items in the left basket with the left gripper.",
+    "duration_sec": 29.166667,
+    "has_telemetry": true,
+    "sampling": {
+     "sampling_hz": 1.0,
+     "tile_px": 224,
+     "frames_per_sheet": 20,
+     "cols": 5
+    },
+    "predicted_segments": [
+     {
+      "start_sec": 0.0,
+      "end_sec": 1.0,
+      "subtask": "Move left gripper to pick up non-food item."
+     },
+     {
+      "start_sec": 1.0,
+      "end_sec": 2.0,
+      "subtask": "Move left gripper to place non-food item in left basket."
+     },
+     {
+      "start_sec": 2.0,
+      "end_sec": 3.0,
+      "subtask": "Move right gripper to pick up food item."
+     },
+     {
+      "start_sec": 3.0,
+      "end_sec": 4.0,
+      "subtask": "Move right gripper to place food item in right basket."
+     },
+     {
+      "start_sec": 4.0,
+      "end_sec": 5.0,
+      "subtask": "Move left gripper to pick up non-food item."
+     },
+     {
+      "start_sec": 5.0,
+      "end_sec": 6.0,
+      "subtask": "Move left gripper to place non-food item in left basket."
+     },
+     {
+      "start_sec": 6.0,
+      "end_sec": 7.0,
+      "subtask": "Move right gripper to pick up food item."
+     },
+     {
+      "start_sec": 7.0,
+      "end_sec": 8.0,
+      "subtask": "Move right gripper to place food item in right basket."
+     },
+     {
+      "start_sec": 8.0,
+      "end_sec": 9.0,
+      "subtask": "Move left gripper to pick up non-food item."
+     },
+     {
+      "start_sec": 9.0,
+      "end_sec": 10.0,
+      "subtask": "Move left gripper to place non-food item in left basket."
+     },
+     {
+      "start_sec": 10.0,
+      "end_sec": 11.0,
+      "subtask": "Move right gripper to pick up food item."
+     },
+     {
+      "start_sec": 11.0,
+      "end_sec": 12.0,
+      "subtask": "Move right gripper to place food item in right basket."
+     },
+     {
+      "start_sec": 12.0,
+      "end_sec": 13.0,
+      "subtask": "Move left gripper to pick up non-food item."
+     },
+     {
+      "start_sec": 13.0,
+      "end_sec": 14.0,
+      "subtask": "Move left gripper to place non-food item in left basket."
+     },
+     {
+      "start_sec": 14.0,
+      "end_sec": 15.0,
+      "subtask": "Move right gripper to pick up food item."
+     },
+     {
+      "start_sec": 15.0,
+      "end_sec": 16.0,
+      "subtask": "Move right gripper to place food item in right basket."
+     },
+     {
+      "start_sec": 16.0,
+      "end_sec": 17.0,
+      "subtask": "Move left gripper to pick up non-food item."
+     },
+     {
+      "start_sec": 17.0,
+      "end_sec": 18.0,
+      "subtask": "Move left gripper to place non-food item in left basket."
+     },
+     {
+      "start_sec": 18.0,
+      "end_sec": 19.0,
+      "subtask": "Move right gripper to pick up food item."
+     },
+     {
+      "start_sec": 19.0,
+      "end_sec": 20.0,
+      "subtask": "Move right gripper to place food item in right basket."
+     },
+     {
+      "start_sec": 20.0,
+      "end_sec": 21.0,
+      "subtask": "Move left gripper to pick up non-food item."
+     },
+     {
+      "start_sec": 21.0,
+      "end_sec": 22.0,
+      "subtask": "Move left gripper to place non-food item in left basket."
+     },
+     {
+      "start_sec": 22.0,
+      "end_sec": 23.0,
+      "subtask": "Move right gripper to pick up food item."
+     },
+     {
+      "start_sec": 23.0,
+      "end_sec": 24.0,
+      "subtask": "Move right gripper to place food item in right basket."
+     },
+     {
+      "start_sec": 24.0,
+      "end_sec": 25.0,
+      "subtask": "Move left gripper to pick up non-food item."
+     },
+     {
+      "start_sec": 25.0,
+      "end_sec": 26.0,
+      "subtask": "Move left gripper to place non-food item in left basket."
+     },
+     {
+      "start_sec": 26.0,
+      "end_sec": 27.0,
+      "subtask": "Move right gripper to pick up food item."
+     },
+     {
+      "start_sec": 27.0,
+      "end_sec": 28.0,
+      "subtask": "Move right gripper to place food item in right basket."
+     },
+     {
+      "start_sec": 28.0,
+      "end_sec": 29.0,
+      "subtask": "Move left gripper to pick up non-food item."
+     },
+     {
+      "start_sec": 29.0,
+      "end_sec": 29.167,
+      "subtask": "Move left gripper to place non-food item in left basket."
+     }
+    ]
+   },
+   "task_id": "TASK-b473addfb6",
+   "created_at": 1792270568.702341
+  }
+ },
+ "incumbent_after": "N000",
+ "usage": {
+  "nemotron": {
+   "calls": 13,
+   "cache_hits": 0,
+   "prompt_tokens": 35069,
+   "completion_tokens": 21206,
+   "cost_usd": 0.061415,
+   "model_latency_s": 751.41
+  },
+  "vision": {
+   "calls": 14,
+   "cache_hits": 10,
+   "prompt_tokens": 6970,
+   "completion_tokens": 477,
+   "cost_usd": 0.002964,
+   "model_latency_s": 24.9
+  }
+ }
+}

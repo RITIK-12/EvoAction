@@ -1,0 +1,130 @@
+{
+ "id": "EXP-0002",
+ "parent_version": "N000",
+ "hypothesis": "Increasing the uniform sampling frequency to 2.0 Hz provides sufficient temporal resolution to prevent over\u2011segmentation caused by predicted segments shorter than two frames, and adding a deterministic merge_filter_segments step removes spurious short segments, thereby aligning predicted boundaries with true subtask transitions and improving segment F1@0.75.",
+ "failure_slice": "Episodes where the incumbent predicts many segments shorter than two sampled frames (<2\u202fs at 1\u202fHz) and where predicted boundaries are poorly aligned with robot\u2011state change points (gripper actuation or end\u2011effector pauses) from telemetry.",
+ "evidence_ids": [
+  "EV-332c022143",
+  "EV-5584e1f0d8",
+  "EV-ab30cdbb9c",
+  "EV-0f142eb507",
+  "EV-e9cbb73abb",
+  "EV-6c5bce8463"
+ ],
+ "objective": "Raise validation micro F1@0.75 by at least 0.02 relative to the incumbent while keeping annotation inference cost \u22641.5\u00d7 incumbent.",
+ "candidate_patch": {
+  "insert_nodes": [
+   {
+    "node": {
+     "id": "merge_filter",
+     "operator": "merge_filter_segments",
+     "depends_on": [
+      "annotate"
+     ],
+     "params": {
+      "min_duration_sec": 0.4,
+      "max_gap_sec": 1.0,
+      "tile_full_episode": true,
+      "merge_same_label": false
+     },
+     "when": "always"
+    },
+    "rewire_dependents_of": "annotate"
+   }
+  ],
+  "remove_nodes": [],
+  "set_params": {
+   "sample": {
+    "sampling_hz": 2.0
+   }
+  },
+  "set_when": {},
+  "set_depends_on": {
+   "export": [
+    "merge_filter"
+   ]
+  },
+  "prompt_updates": {}
+ },
+ "expected_outcome": "Validation micro F1@0.75 improves from ~0.077 to \u22650.097, mean annotation cost stays below 0.00084\u202fUSD per episode (\u22641.5\u00d7 incumbent), and \u226550% of validation episodes show non\u2011regressing F1 scores.",
+ "verification_plan": {
+  "metric": "segment_f1_iou075",
+  "split": "validation",
+  "compare_to": "incumbent"
+ },
+ "stop_conditions": [
+  "Annotation inference cost > 1.5\u00d7 incumbent mean cost",
+  "Validation micro F1@0.75 delta < 0.02",
+  "More than 50% of validation episodes show a decrease in F1@0.75 relative to incumbent"
+ ],
+ "authored_by": "nvidia/NVIDIA-Nemotron-3-Super-120B-A12B",
+ "task_ids": [
+  "TASK-5e74ff7aed",
+  "TASK-fe7f4b0fe3",
+  "TASK-6fd3d95323",
+  "TASK-b473addfb6"
+ ],
+ "task_tree": [
+  {
+   "task_id": "TASK-5e74ff7aed",
+   "parent": null,
+   "depth": 1,
+   "question": "Are the incumbent's predicted boundaries temporally aligned with meaningful robot-state change points (gripper actuation or end\u2011effector pauses) as revealed by telemetry hints?",
+   "status": "done",
+   "finding": "Predicted boundaries show some proximity to gripper actuation hints (e.g., all galaxea_011 gripper hints within 0.43\u202fs of a predicted boundary and two of three robointer_droid hints within 0.15\u202fs), but overall alignment is poor: micro\u2011F1 is 0.083, mean boundary MAE is 0.75\u202fs, and error breakdown lists many \u2018boundary misaligned\u2019 cases (18 in galaxea_011, 1 in robointer_droid). Thus the incumbent\u2019s predictions are not consistently temporally aligned with meaningful robot\u2011state change points.",
+   "implication": "Incorporate telemetry hints (gripper/eef_pause) as explicit guidance in the annotation prompt or increase sampling frequency to better capture rapid state changes, thereby reducing boundary misalignment.",
+   "evidence_ids": [
+    "EVAL-e05d4bb044",
+    "EV-e9cbb73abb",
+    "EV-6c5bce8463"
+   ],
+   "dispatch_decision": null
+  },
+  {
+   "task_id": "TASK-fe7f4b0fe3",
+   "parent": null,
+   "depth": 1,
+   "question": "Does over\u2011segmentation arise because many predicted segments are shorter than the temporal resolution of the uniform sampling (i.e., less than two sampled frames), causing the model to hallucinate cuts between adjacent tiles?",
+   "status": "done",
+   "finding": "Over\u2011segmentation in galaxea_011 occurs because every predicted segment (30 segments) is shorter than two sampled frames (1\u202fs each at 1\u202fHz), leading the model to hallucinate cuts between adjacent tiles.",
+   "implication": "Increase the temporal resolution of the uniform sampling (e.g., raise sampling_hz to \u22652\u202fHz or increase frames_per_sheet) so that predicted segments are not systematically shorter than two frames, or modify the model/prompt to encourage longer, more coherent segment predictions.",
+   "evidence_ids": [
+    "EVAL-e05d4bb044",
+    "EV-332c022143",
+    "EV-5584e1f0d8"
+   ],
+   "dispatch_decision": null
+  },
+  {
+   "task_id": "TASK-6fd3d95323",
+   "parent": null,
+   "depth": 1,
+   "question": "What proportion of predicted segments are shorter than the temporal resolution of the current 1\u202fHz sampling (i.e., <2 sampled frames), and are the predicted segments uniformly spaced across the video?",
+   "status": "done",
+   "finding": "90.9% of predicted segments (30 out of 33) are shorter than 2 sampled frames (<2\u202fs at 1\u202fHz). Predicted segments are uniformly spaced across each video: in galaxea_011 they are 1\u2011second intervals covering the video, and in robointer_droid_000010 they are 5\u2011second intervals (with the last segment slightly longer to fill the duration).",
+   "implication": "Consider increasing the sampling rate or applying a post\u2011processing step to merge sub\u2011resolution predictions, as the current 1\u202fHz sampling yields many predicted segments that cannot be resolved.",
+   "evidence_ids": [
+    "EV-ab30cdbb9c",
+    "EV-8a5fe29362",
+    "EV-0f142eb507",
+    "EVAL-1a54ffa356"
+   ],
+   "dispatch_decision": null
+  },
+  {
+   "task_id": "TASK-b473addfb6",
+   "parent": null,
+   "depth": 1,
+   "question": "Do the predicted boundaries align with robot\u2011state change points (gripper/eef_pause) derived from telemetry, or are they largely unrelated to such hints?",
+   "status": "done",
+   "finding": "Predicted boundaries are closely aligned with robot\u2011state change points (gripper/eef_pause) from telemetry; for galaxea_011 each of the 10 telemetry hints lies within 0.5\u202fs of a predicted boundary (distances 0.0\u20130.43\u202fs), and the binned boundary offsets show a large proportion of predictions within 0.5\u202fs of reference boundaries.",
+   "implication": "The current 1\u202fHz sampling already captures robot\u2011state changes adequately; no adjustment to sampling rate, tile size, or prompt is needed.",
+   "evidence_ids": [
+    "EV-5f52cdbf9b",
+    "EV-d1790ee080",
+    "EVAL-1a54ffa356"
+   ],
+   "dispatch_decision": null
+  }
+ ]
+}

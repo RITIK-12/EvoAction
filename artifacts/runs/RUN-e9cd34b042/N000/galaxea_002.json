@@ -1,0 +1,16 @@
+{
+ "episode_id": "galaxea_002",
+ "version_id": "N000",
+ "segments": [
+  {
+   "start_sec": 0.0,
+   "end_sec": 15.0,
+   "subtask": "Move the robot arm to the left side of the word."
+  },
+  {
+   "start_sec": 15.0,
+   "end_sec": 43.0,
+   "subtask": "Rearrange the letters to spell 'brain'."
+  }
+ ]
+}

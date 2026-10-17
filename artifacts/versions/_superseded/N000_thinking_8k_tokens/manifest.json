@@ -1,0 +1,13 @@
+{
+ "id": "N000",
+ "parent_id": null,
+ "status": "incumbent",
+ "frozen": false,
+ "created_at": 1792268723.214237,
+ "workflow_sha256": "6c9fe961eeeba548a2707509a844a852d2980a392ba6937986567f26127b5b77",
+ "files": {
+  "workflow.json": "342f14567d9e4cae6b131172b52167b5b6ba077274ebd2c7e9b8b883a0e2549e",
+  "config.json": "53e574e73406ebc1eca87fbcf0b8e8a6ca099986a8f08b3dcead2bf810f60cd5",
+  "prompt.md": "04c3c82356498849910193e07b3ca59674ba3715f02b6f9fc9ad9805e6f98c32"
+ }
+}

@@ -1,0 +1,13 @@
+{
+ "id": "strong_fixed",
+ "parent_id": null,
+ "status": "fixed_baseline",
+ "frozen": false,
+ "created_at": 1792268723.2180722,
+ "workflow_sha256": "f4f80903071d360e6726c13b44ac66ad18171d260f8aff3319a2297a2169a728",
+ "files": {
+  "workflow.json": "4c70b2e8502956b4ecbebf7fec5d70f29f24a7ce4b0a3721799f457c296ddc29",
+  "config.json": "53e574e73406ebc1eca87fbcf0b8e8a6ca099986a8f08b3dcead2bf810f60cd5",
+  "prompt.md": "d201ce040f2b87d81a238c60f258f61ac3b6ff1acacfec024648c8d5f1190114"
+ }
+}

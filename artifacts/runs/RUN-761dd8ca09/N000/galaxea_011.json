@@ -1,0 +1,36 @@
+{
+ "episode_id": "galaxea_011",
+ "version_id": "N000",
+ "segments": [
+  {
+   "start_sec": 0.0,
+   "end_sec": 10.0,
+   "subtask": "Place blue cup in left basket"
+  },
+  {
+   "start_sec": 10.0,
+   "end_sec": 14.0,
+   "subtask": "Place yellow block in right basket"
+  },
+  {
+   "start_sec": 14.0,
+   "end_sec": 17.0,
+   "subtask": "Place small jar in left basket"
+  },
+  {
+   "start_sec": 18.0,
+   "end_sec": 22.0,
+   "subtask": "Place yellow spoon in left basket"
+  },
+  {
+   "start_sec": 22.0,
+   "end_sec": 28.0,
+   "subtask": "Place blue pen in left basket"
+  },
+  {
+   "start_sec": 28.0,
+   "end_sec": 29.0,
+   "subtask": "Place yellow spoon in left basket"
+  }
+ ]
+}

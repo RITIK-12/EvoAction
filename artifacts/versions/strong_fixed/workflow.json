@@ -1,0 +1,53 @@
+{
+ "nodes": [
+  {
+   "id": "sample",
+   "operator": "sample_contact_sheets",
+   "depends_on": [],
+   "params": {
+    "sampling_hz": 2.0,
+    "tile_px": 224,
+    "frames_per_sheet": 20,
+    "cols": 5
+   },
+   "when": "always"
+  },
+  {
+   "id": "annotate",
+   "operator": "initial_annotate",
+   "depends_on": [
+    "sample"
+   ],
+   "params": {
+    "prompt": "prompt.md",
+    "thinking": false,
+    "max_tokens": 8192
+   },
+   "when": "always"
+  },
+  {
+   "id": "merge",
+   "operator": "merge_filter_segments",
+   "depends_on": [
+    "annotate"
+   ],
+   "params": {
+    "min_duration_sec": 0.4,
+    "max_gap_sec": 1.0,
+    "tile_full_episode": true
+   },
+   "when": "always"
+  },
+  {
+   "id": "export",
+   "operator": "validate_export",
+   "depends_on": [
+    "merge"
+   ],
+   "params": {},
+   "when": "always"
+  }
+ ],
+ "max_calls": 1,
+ "max_wall_seconds": 240
+}

@@ -1,0 +1,21 @@
+{
+ "episode_id": "robointer_droid_000010",
+ "version_id": "N000",
+ "segments": [
+  {
+   "start_sec": 0.0,
+   "end_sec": 8.0,
+   "subtask": "Pick up blue object"
+  },
+  {
+   "start_sec": 8.0,
+   "end_sec": 10.0,
+   "subtask": "Move blue object to drawer"
+  },
+  {
+   "start_sec": 10.0,
+   "end_sec": 12.0,
+   "subtask": "Place blue object in drawer"
+  }
+ ]
+}
