@@ -6,5 +6,6 @@ __pycache__/
 .pytest_cache/
 data/cache/
 data/wgo/
+data/demo_runs/
 artifacts/cache/
 .DS_Store

@@ -1,0 +1,12 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "evoaction-demo",
+      "runtimeExecutable": "uv",
+      "runtimeArgs": ["run", "python", "-m", "evoaction", "demo", "--port", "8765"],
+      "port": 8765,
+      "env": {"REQUEST_TIMEOUT_SECONDS": "600", "MAX_VISION_CALLS": "400", "RESERVED_TEST_VISION_CALLS": "0", "MAX_NEMOTRON_CALLS": "10"}
+    }
+  ]
+}
