@@ -20,7 +20,7 @@ from dataclasses import dataclass, field
 from typing import Any
 
 import httpx
-from openai import OpenAI
+from openai import OpenAI, RateLimitError
 
 from evoaction.config import Settings, get_settings
 from evoaction.persistence import Store, get_store, new_id
@@ -252,7 +252,7 @@ class CrusoeClient:
                     kwargs["response_format"] = {"type": "json_object"}
                 if extra_body:
                     kwargs["extra_body"] = extra_body
-                resp = self.client.chat.completions.create(**kwargs)
+                resp = self._create_with_backoff(kwargs, role, purpose, model)
                 latency = time.time() - t0
                 usage = resp.usage
                 pt = getattr(usage, "prompt_tokens", 0) or 0
@@ -282,6 +282,18 @@ class CrusoeClient:
                 if "429" in str(e) or "rate" in str(e).lower():
                     time.sleep(5 * (attempt + 1))
         raise ModelCallError(f"{purpose}: failed after retries: {last_err}")
+
+    def _create_with_backoff(self, kwargs: dict[str, Any], role: str, purpose: str, model: str, waits: tuple[int, ...] = (5, 10, 20)):
+        """HTTP 429 is provider back-pressure, not a model failure: back off without spending the retry budget."""
+        for i, wait in enumerate((*waits, None)):
+            try:
+                return self.client.chat.completions.create(**kwargs)
+            except RateLimitError as e:
+                self.store.event(self.run_id, "rate_limited", {"role": role, "purpose": purpose, "model": model, "wait_s": wait,
+                                                               "attempt": i + 1, "error": str(e)[:200]})
+                if wait is None:
+                    raise
+                time.sleep(wait)
 
     def _log_call(self, res: ChatResult, role: str, purpose: str, model: str, key: str, status: str,
                   error: str | None, n_images: int, is_est: bool, version_id, episode_id, task_id) -> None:
