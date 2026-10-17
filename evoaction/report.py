@@ -46,10 +46,10 @@ td.num{text-align:right;font-variant-numeric:tabular-nums}pre{white-space:pre-wr
 
 
 def section_sponsor(store, pre) -> str:
-    rows = store.query("SELECT r.kind, m.role, m.model, COUNT(*) n, SUM(m.cache_hit) ch, SUM(CASE WHEN m.status!='ok' THEN 1 ELSE 0 END) failed, "
+    rows = store.query("SELECT COALESCE(r.kind || ' (' || r.status || ')', 'ad-hoc probe (no run id)') kind, m.role, m.model, COUNT(*) n, SUM(m.cache_hit) ch, SUM(CASE WHEN m.status!='ok' THEN 1 ELSE 0 END) failed, "
                        "COALESCE(SUM(m.prompt_tokens),0) pt, COALESCE(SUM(m.completion_tokens),0) ct, COALESCE(SUM(m.cost_usd),0) cost, "
                        "COALESCE(SUM(m.latency_s),0) lat FROM model_calls m LEFT JOIN runs r ON m.run_id = r.id "
-                       "GROUP BY r.kind, m.role, m.model ORDER BY r.kind, m.role")
+                       "GROUP BY 1, m.role, m.model ORDER BY 1, m.role")
     t = "".join(f"<tr><td>{esc(r['kind'])}</td><td>{esc(r['role'])}</td><td><code>{esc(r['model'])}</code></td><td class=num>{r['n']}</td>"
                 f"<td class=num>{r['ch'] or 0}</td><td class=num>{r['failed']}</td><td class=num>{r['pt']:,}</td><td class=num>{r['ct']:,}</td>"
                 f"<td class=num>${r['cost']:.4f}</td><td class=num>{r['lat']:.0f}s</td></tr>" for r in rows)
@@ -63,7 +63,20 @@ Total non-cached calls: {tot['n']}, provider-token cost ${tot['c']:.4f} at liste
 <table><tr><th>run</th><th>role</th><th>model</th><th>calls</th><th>cache hits</th><th>failed attempts</th><th>prompt tok</th><th>completion tok</th><th>cost</th><th>model time</th></tr>{t}</table></div>"""
 
 
-def section_lineage(lin, evo) -> str:
+def _refine_decisions(store, version_dir: str) -> str:
+    vid = version_dir.split("_")[0]
+    rows = store.query("SELECT episode_id, detail_json FROM operator_runs WHERE version_id = ? AND operator = 'refine_intervals'", (vid,))
+    out = []
+    for r in rows:
+        d = json.loads(r["detail_json"] or "{}")
+        if d.get("decisions") is not None:
+            out.append(f"{r['episode_id']}: " + ", ".join(f"{x.get('window')} {x.get('action')}{(' to ' + str(x['to'])) if x.get('to') is not None else ''}" for x in d["decisions"]))
+        elif d.get("skipped"):
+            out.append(f"{r['episode_id']}: skipped ({d['skipped']})")
+    return ("<p class=muted><b>Refine decisions on validation:</b> " + esc("; ".join(out)) + "</p>") if out else ""
+
+
+def section_lineage(lin, evo, store=None) -> str:
     if not lin:
         return "<h2>2. Version lineage</h2><div class=card class=muted>No evolution run yet.</div>"
     items = []
@@ -77,6 +90,7 @@ def section_lineage(lin, evo) -> str:
 <table><tr><th></th><th>val F1@0.75</th><th>val F1@0.5</th><th>short recall</th><th>boundary MAE s</th></tr>
 <tr><td>incumbent</td><td class=num>{fmt(iv.get('micro_f1'))}</td><td class=num>{fmt(iv.get('micro_f1_iou05'))}</td><td class=num>{fmt(iv.get('short_event_recall'))}</td><td class=num>{fmt(iv.get('mean_boundary_mae_sec'),2)}</td></tr>
 <tr><td>candidate</td><td class=num>{fmt(cv.get('micro_f1'))}</td><td class=num>{fmt(cv.get('micro_f1_iou05'))}</td><td class=num>{fmt(cv.get('short_event_recall'))}</td><td class=num>{fmt(cv.get('mean_boundary_mae_sec'),2)}</td></tr></table>
+{_refine_decisions(store, e['version_dir']) if store is not None and e.get('version_dir') else ''}
 {('<p class=muted>Errors: ' + esc(e.get('errors')) + '</p>') if e.get('errors') else ''}</div>""")
     gate_rows = ""
     for it in (evo or {}).get("iterations", []):
@@ -179,7 +193,15 @@ def _timeline_svg(tl: dict[str, Any]) -> str:
     return "".join(svg)
 
 
-def section_final(fin, base) -> str:
+def _overhead_rows(store) -> str:
+    rows = store.query("SELECT r.kind || ' (' || r.status || ')' phase, m.role || ':' || m.model model, COUNT(*) n, "
+                       "COALESCE(SUM(m.completion_tokens),0) ct, COALESCE(SUM(m.cost_usd),0) cost FROM model_calls m JOIN runs r ON m.run_id = r.id "
+                       "WHERE r.kind != 'final_test' GROUP BY 1, 2 ORDER BY 1")
+    return "".join(f"<tr><td>{esc(r['phase'])}</td><td><code>{esc(r['model'])}</code></td><td class=num>{r['n']}</td>"
+                   f"<td class=num>{r['ct']:,}</td><td class=num>${r['cost']:.4f}</td></tr>" for r in rows)
+
+
+def section_final(fin, base, store=None) -> str:
     if not fin:
         btab = ""
         if base:
@@ -201,9 +223,7 @@ def section_final(fin, base) -> str:
     per = "".join(f"<tr><td><code>{esc(e)}</code></td>" + "".join(f"<td class=num>{fmt(sm[k]['per_episode_f1'].get(e))}</td>" for k in "ABC")
                   + f"<td class=num>{fmt(sm['C']['per_episode_f1'].get(e, 0) - sm['B']['per_episode_f1'].get(e, 0))}</td></tr>" for e in eps)
     tls = "".join(f"<h3><code>{esc(e)}</code></h3>{_timeline_svg(tl)}" for e, tl in fin["timelines"].items())
-    ovh = fin.get("optimization_overhead", {})
-    ovh_rows = "".join(f"<tr><td>{esc(kind)}</td><td><code>{esc(m)}</code></td><td class=num>{u['calls']}</td><td class=num>{u['completion_tokens']:,}</td><td class=num>${u['cost_usd']:.4f}</td></tr>"
-                       for kind in ("evolve_runs", "baseline_runs") for m, u in (ovh.get(kind) or {}).items())
+    ovh_rows = _overhead_rows(store) if store is not None else ""
     p = fin["paired"]
     lim = "".join(f"<li>{esc(x)}</li>" for x in fin.get("limitations", []))
     return f"""<h2>5. Sealed held-out scoreboard (run once after freezing)</h2>
@@ -211,7 +231,7 @@ def section_final(fin, base) -> str:
 <table><tr><th>system</th><th>F1@0.75</th><th>F1@0.5</th><th>F1@0.75 outer-snapped</th><th>short recall</th><th>boundary MAE s</th><th>invalid/empty</th><th>vision calls</th><th>completion tok</th><th>annotation cost</th><th>wall</th></tr>{rows}</table></div>
 <div class=card><h3>Paired per-episode F1@0.75</h3><table><tr><th>episode</th><th>A</th><th>B</th><th>C</th><th>C−B</th></tr>{per}</table>
 <p class=muted>C vs A: {p['C_vs_A']['improved']} improved / {p['C_vs_A']['regressed']} regressed · C vs B: {p['C_vs_B']['improved']} improved / {p['C_vs_B']['regressed']} regressed · B vs A: {p['B_vs_A']['improved']} improved / {p['B_vs_A']['regressed']} regressed</p></div>
-<div class=card><h3>Optimization overhead (all supervisor, investigation, experiment and baseline calls)</h3><table><tr><th>phase</th><th>model</th><th>calls</th><th>completion tok</th><th>cost</th></tr>{ovh_rows}</table></div>
+<div class=card><h3>Optimization overhead (every non-test call, by run and run status, including superseded/aborted runs)</h3><table><tr><th>phase (status)</th><th>model</th><th>calls</th><th>completion tok</th><th>cost</th></tr>{ovh_rows}</table></div>
 <div class=card><div class=legend><span><i class=sw style='background:var(--ref)'></i>reference</span><span><i class=sw style='background:var(--A)'></i>A</span><span><i class=sw style='background:var(--B)'></i>B</span><span><i class=sw style='background:var(--C)'></i>C</span></div>{tls}</div>
 <div class=card><h3>Limitations</h3><ul>{lim}</ul></div>"""
 
@@ -228,7 +248,7 @@ def build_report() -> Path:
     body = f"""<main><h1>EvoAction evidence report</h1>
 <p class=muted>A self-evolving, recursively delegated annotation harness for robot manipulation video (WGO-Bench temporal subtask segmentation).
 Every number and agent message on this page comes from persisted real runs in <code>artifacts/</code>. Splits: {esc(split_line)}; splits sha256 <code>{esc((splits or {}).get('splits_sha256', '')[:16])}</code>.</p>
-{section_sponsor(store, pre)}{section_lineage(lin, evo)}{section_tree(evo)}{section_diff(s, lin)}{section_final(fin, base)}</main>"""
+{section_sponsor(store, pre)}{section_lineage(lin, evo, store)}{section_tree(evo)}{section_diff(s, lin)}{section_final(fin, base, store)}</main>"""
     doc = f"<!doctype html><html lang=en><head><meta charset=utf-8><meta name=viewport content='width=device-width,initial-scale=1'><title>EvoAction Evidence Report</title><style>{CSS}</style></head><body>{body}</body></html>"
     out = a / "report.html"
     out.write_text(doc)

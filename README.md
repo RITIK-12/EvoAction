@@ -12,6 +12,32 @@ Robot manipulation subtask annotation is the working environment, because it is 
 
 Nothing is preordained. Promotion, rejection, grandchild spawning and benchmark wins are empirical outcomes, and `artifacts/report.html` shows only what actually happened.
 
+## Results from the live pilot run (all numbers come from `artifacts/`)
+
+**Fixed baselines on the pilot dev and validation episodes:**
+
+| System | dev F1@0.75 | validation F1@0.75 | validation F1@0.5 |
+|---|---|---|---|
+| A (`N000`) | 0.083 | 0.077 | 0.077 |
+| B (`strong_fixed`) | 0.042 | 0.000 | 0.500 |
+
+**Version N → N+1** (run `RUN-e9cd34b042`):
+- The Nemotron supervisor diagnosed that the incumbent produces evenly spaced, roughly 1-second segments. It launched 4 depth-1 investigations backed by real tool evidence: telemetry hints, sampling coverage and predictions.
+- No investigator raised an evidence-backed new question, so the **maximum depth reached was 1**. Child and grandchild spawning is covered by unit tests but did not occur in this live run, and is not shown as if it did.
+- **EXP-0001** was a topology change (`state_hint_detection → inspect_transition_windows → refine_intervals → merge_filter_segments`, at 2 Hz). It was **REJECTED**: validation F1@0.75 changed by −0.008 and cost rose 2.64×. Its refine pass answered "move" to the boundaries' existing times, so it changed nothing.
+- **EXP-0002** (2 Hz plus merge) was **REJECTED**: −0.008, cost 1.71×.
+- The incumbent remains `N000`. Both candidates are frozen as `EXP-000x_rejected`.
+
+**Sealed held-out test** (3 episodes, frozen A/B/C, run once):
+
+| System | F1@0.75 | F1@0.5 | short-event recall | annotation cost |
+|---|---|---|---|---|
+| A · N000 | 0.077 | 0.538 | 0.0 | $0.0017 |
+| B · strong fixed | **0.211** | 0.421 | 0.0 | $0.0022 |
+| C · unchanged incumbent | 0.077 | 0.538 | 0.0 | $0.0017 |
+
+EvoAction discovered and evaluated workflow changes, including a topology change, and correctly rejected both. The strong fixed baseline is still better on this held-out slice at IoU 0.75. With 3 test episodes this is a feasibility result. The full evidence is in `artifacts/report.html`, which includes model usage, the task tree, workflow diffs, per-episode scores and timelines.
+
 ## Quick start
 
 ```bash
