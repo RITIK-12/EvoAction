@@ -330,3 +330,58 @@ def episode_set_ids(name: str = "droid50", settings: Settings | None = None) -> 
 
 def v3_episode_ids(settings: Settings | None = None) -> list[str]:
     return episode_set_ids("droid50", settings)
+
+
+# -- human-in-the-loop protocol: a 10% labeled sample per batch ------------
+
+CALIBRATION_FRACTION = 0.10
+CALIBRATION_SALT = "evoaction-hitl-v1"
+
+
+def write_calibration_set(name: str, settings: Settings | None = None) -> Path:
+    """Pick ~10% of a batch as the human-labeled sample, as whole instruction groups (so no twin of a labeled
+    episode stays in the held-out set), stratified by source with largest-remainder rounding. Seeded and immutable."""
+    s = settings or get_settings()
+    path = s.artifacts_dir / SETS_DIR / f"{name}_calibration.json"
+    if path.exists():
+        raise FileExistsError(f"{path} already exists; the labeled sample is immutable")
+    ids = episode_set_ids(name, s)
+    index = {e["id"]: e for e in build_index(s)}
+    entries = [index[i] for i in ids]
+    groups = instruction_groups(entries)
+    total = round(CALIBRATION_FRACTION * len(ids))
+    by_src: dict[str, list[str]] = {}
+    for e in entries:
+        by_src.setdefault(e["source"], []).append(e["id"])
+    quota = {src: CALIBRATION_FRACTION * len(v) for src, v in sorted(by_src.items())}
+    target = {src: int(q) for src, q in quota.items()}
+    for src in sorted(quota, key=lambda k: (-(quota[k] - int(quota[k])), k))[: total - sum(target.values())]:
+        target[src] += 1
+    key = lambda x: hashlib.sha256(f"{CALIBRATION_SALT}:{x}".encode()).hexdigest()
+    chosen: list[str] = []
+    for src, members in sorted(by_src.items()):
+        src_groups: dict[str, list[str]] = {}
+        for i in members:
+            src_groups.setdefault(groups[i], []).append(i)
+        picked: list[str] = []
+        for g in sorted(src_groups, key=key):
+            if len(picked) + len(src_groups[g]) <= target[src]:
+                picked += src_groups[g]
+            if len(picked) == target[src]:
+                break
+        chosen += picked
+    chosen = sorted(chosen)
+    held = sorted(set(ids) - set(chosen))
+    assert not ({groups[i] for i in chosen} & {groups[i] for i in held}), "instruction group crosses labeled/held-out"
+    body = {"set": name, "fraction": CALIBRATION_FRACTION, "salt": CALIBRATION_SALT, "calibration_ids": chosen, "heldout_ids": held,
+            "calibration_groups": sorted({groups[i] for i in chosen}), "targets": target,
+            "rule": "whole near-duplicate instruction groups, seeded order, stratified by source; chosen before any HITL run"}
+    body["sha256"] = hashlib.sha256(json.dumps(body, sort_keys=True).encode()).hexdigest()
+    path.write_text(json.dumps(body, indent=1, sort_keys=True))
+    return path
+
+
+def calibration_split(name: str, settings: Settings | None = None) -> tuple[list[str], list[str]]:
+    s = settings or get_settings()
+    body = json.loads((s.artifacts_dir / SETS_DIR / f"{name}_calibration.json").read_text())
+    return body["calibration_ids"], body["heldout_ids"]

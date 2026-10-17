@@ -90,6 +90,34 @@ class ProtectedEvaluator:
                 "per_episode": {s.episode_id: {k: v for k, v in s.to_dict().items() if k != "matches"} for s in raw}}
 
     # -- agent-facing views ----------------------------------------------
+    def labeled_sample_feedback(self, preds_by_episode: dict[str, list[dict[str, Any]]], durations: dict[str, float]) -> dict[str, Any]:
+        """Human-in-the-loop view: for the labeled sample only, the human reference segments next to the predictions,
+        each reference's best-overlapping prediction (snapped, as scored), and pooled scores on that sample."""
+        eids = sorted(preds_by_episode)
+        self._require(eids, {"eval"})
+        out = {}
+        for e in eids:
+            refs = self._refs(e)
+            preds, invalid = M.normalize_predictions(preds_by_episode[e], durations.get(e))
+            snapped = M.outer_snap(preds, refs)
+            matched = {j for _, j, _ in M.match(snapped, refs, M.PRIMARY_IOU)}
+            per_ref = []
+            for j, r in enumerate(refs):
+                ious = [M.temporal_iou((q["start_sec"], q["end_sec"]), (r["start_sec"], r["end_sec"])) for q in snapped]
+                k = max(range(len(ious)), key=ious.__getitem__) if ious else None
+                per_ref.append({"reference": [round(r["start_sec"], 2), round(r["end_sec"], 2)], "subtask": r.get("subtask"),
+                                "best_prediction": [round(snapped[k]["start_sec"], 2), round(snapped[k]["end_sec"], 2)] if k is not None else None,
+                                "best_iou": round(ious[k], 3) if k is not None else 0.0, "matched_at_0.75": j in matched})
+            out[e] = {"duration_sec": durations.get(e), "n_reference": len(refs), "n_predicted": len(preds), "invalid_predictions": len(invalid),
+                      "matched_at_0.75": len(matched), "references": per_ref,
+                      "predictions": [[round(q["start_sec"], 2), round(q["end_sec"], 2)] for q in preds]}
+        agg = self.score_split(preds_by_episode, durations)
+        pooled = {"snapped_f1_075": agg["outer_snapped"]["micro_f1"], "raw_f1_075": agg["raw"]["micro_f1"],
+                  "snapped_f1_05": agg["outer_snapped"]["micro_f1_iou05"], "tp_snapped": agg["outer_snapped"]["tp"],
+                  "n_pred": agg["raw"]["n_pred"], "n_ref": agg["raw"]["n_ref"]}
+        return {"episodes": out, "pooled": pooled,
+                "metric": "Segment F1 at temporal IoU >= 0.75, one-to-one matching, first start / last end snapped to the reference span"}
+
     def dev_diagnostics(self, preds_by_episode: dict[str, list[dict[str, Any]]], durations: dict[str, float]) -> dict[str, Any]:
         """Controlled development feedback. No reference timestamps or labels leave this method."""
         eids = sorted(preds_by_episode)

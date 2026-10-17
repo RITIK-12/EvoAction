@@ -202,6 +202,8 @@ def evidence_item(ev_id: str, tool: Any, args: Any, result: Any, per_record: int
     if tool == "self_assessment":
         result = condense_assessment(result)
         per_record = 9000
+    elif tool == "human_labeled_sample":
+        per_record = 12000
     text = json.dumps(result, default=str)
     if len(text) > per_record:
         text = text[:per_record] + "...<truncated>"

@@ -86,6 +86,38 @@ Decide which 1-2 focused investigations to launch FIRST. Each is a specific ques
 Do not propose a fix yet and do not assume any particular fix works. Reply with one JSON object only."""
 
 
+LABELED_CONTEXT = ""  # human-in-the-loop protocol only: the labeled-sample feedback shown to supervisor and strategy
+
+HITL_GOAL = ("Improve the incumbent robot-video temporal subtask annotation workflow (segments that end when a manipulation "
+             "state change completes). Humans labeled a small sample (about 10%) of the episodes; their reference segments for that "
+             "sample, next to the incumbent's predictions, are given to you. Use them to find where the workflow goes wrong, together "
+             "with label-free evidence (telemetry, visual verification) on all episodes. The other ~90% have no labels, so changes must "
+             "generalize rather than memorize the labeled sample. There is no per-episode cost cap; total cost per recursion is recorded.")
+HITL_GATE = ("The controller applies a predeclared gate on the human-labeled sample: pooled Segment F1@0.75 (first start / last end snapped "
+             "to the reference span) on the labeled sample must strictly improve over the incumbent (ties broken by raw F1@0.75), with valid "
+             "outputs on every episode. A separate measurement on the unlabeled ~90%, which you never see, decides whether it generalized. "
+             "Never hard-code timestamps, durations or episode-specific content from the labeled sample.")
+
+
+def configure_labeled_sample(feedback: dict[str, Any] | None, evidence_id: str | None = None) -> None:
+    """Switch the agents to the human-in-the-loop protocol (a ~10% labeled sample is shared) and set its feedback."""
+    global SUPERVISOR_SYSTEM, STRATEGY_SYSTEM, CRITIC_SYSTEM, LABELED_CONTEXT
+    if GOAL in SUPERVISOR_SYSTEM:
+        SUPERVISOR_SYSTEM = SUPERVISOR_SYSTEM.replace(GOAL, HITL_GOAL).replace(
+            "You see the incumbent's label-free self-assessment on development episodes. No reference labels exist for you; reason from frames, telemetry and self-consistency.",
+            "You see the incumbent's label-free self-assessment on all episodes and human reference labels for a small labeled sample (about 10%).")
+        old_gate = STRATEGY_SYSTEM[STRATEGY_SYSTEM.index("and apply a predeclared label-free gate"):STRATEGY_SYSTEM.index("Label-free score definition")]
+        STRATEGY_SYSTEM = STRATEGY_SYSTEM.replace(GOAL, HITL_GOAL).replace(old_gate, "and apply this gate. " + HITL_GATE + "\n").replace(
+            "No reference labels exist; a change must be justified by label-free evidence, and an independent measurement you never see will later check whether it truly helped.",
+            "Justify the change with the labeled-sample errors and label-free evidence on the unlabeled episodes.")
+        CRITIC_SYSTEM = CRITIC_SYSTEM.replace(
+            "Does anything assume access to reference labels (none exist)? Could the change merely game the label-free score without better annotations?",
+            "Does the change overfit the small human-labeled sample (hard-coded timestamps, durations or episode-specific content) instead of fixing a general error?")
+    LABELED_CONTEXT = "" if feedback is None else (
+        f"\nHuman-labeled sample (evidence id {evidence_id}; about 10% of episodes; references are human segments, predictions are the incumbent's):\n"
+        + compact(feedback, 12000) + "\n")
+
+
 def plan_investigations(client: CrusoeClient, ctx: ToolContext, incumbent: Version, val_view: dict[str, Any],
                         history: list[dict[str, Any]], cost_profile: dict[str, Any]) -> dict[str, Any]:
     from evoaction.data.wgo import load_episode
@@ -103,7 +135,7 @@ Label-free self-assessment on dev (evidence id {ctx.incumbent_eval['eval_id']});
 Incumbent label-free score on the full episode set (aggregate): {json.dumps({k: val_view.get(k) for k in ('mean_self_score', 'component_means')})}
 Measured incumbent inference cost profile: {json.dumps(cost_profile)}
 Previous experiments in this lineage: {compact(history, 3000) if history else 'none'}
-
+{LABELED_CONTEXT}
 Tools:
 {chr(10).join('- ' + d for d in TOOL_DOCS.values())}
 
@@ -141,7 +173,7 @@ Investigation findings (task tree, real tool evidence):
 {compact(findings, 14000)}
 Valid evidence ids you may cite: {evidence_ids[-60:]}
 Previous experiments: {compact(history, 3000) if history else 'none'}
-{extra}
+{LABELED_CONTEXT}{extra}
 Return JSON with keys: hypothesis, failure_slice, evidence_ids, objective, candidate_patch (WorkflowPatch), expected_outcome,
 verification_plan (e.g. {{"metric": "segment_f1_iou075", "split": "validation", "compare_to": "incumbent"}}), stop_conditions (list of strings)."""
 

@@ -65,6 +65,7 @@ def main(argv: list[str] | None = None) -> int:
     for name in ("setup", "baseline", "evolve", "report", "run-demo"):
         sp = sub.add_parser(name)
         sp.add_argument("--set", default="droid50", choices=["droid50", "rest50"])
+        sp.add_argument("--hitl", action="store_true", help="human-in-the-loop: agents and gate see a fixed ~10%% labeled sample")
     args = ap.parse_args(argv)
     if args.cmd == "setup":
         return cmd_setup(args)

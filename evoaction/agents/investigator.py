@@ -139,6 +139,15 @@ You answer ONE question using only the tool evidence provided. Rules:
 Reply with a single JSON object only."""
 
 
+def configure_labeled_sample() -> None:
+    """Human-in-the-loop protocol: a ~10% human-labeled sample is available as evidence (tool 'human_labeled_sample')."""
+    global INVESTIGATOR_SYSTEM
+    INVESTIGATOR_SYSTEM = INVESTIGATOR_SYSTEM.replace(
+        "- No reference (ground-truth) annotations exist for you. Judge annotation quality only from frames, robot telemetry, the label-free self-assessment and self-consistency.",
+        "- Human reference segments exist only for a small labeled sample (evidence records with tool 'human_labeled_sample'). Use them to locate "
+        "errors, and judge the unlabeled episodes from frames, robot telemetry, the label-free self-assessment and self-consistency.")
+
+
 def _investigator_prompt(task: InvestigationTask, parent: InvestigationTask | None, evidence_view: list[dict[str, Any]],
                          rounds_left: int, workflow_summary: str) -> str:
     parent_ctx = ""
