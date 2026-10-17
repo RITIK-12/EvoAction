@@ -1,0 +1,110 @@
+{
+ "run_id": "RUN-9bb26b27f6",
+ "pilot": true,
+ "results": [
+  {
+   "version": "N000",
+   "split": "dev",
+   "episodes": 2,
+   "micro_f1@0.75": 0.083,
+   "micro_f1@0.5": 0.292,
+   "outer_snapped_f1@0.75": 0.085,
+   "short_recall": 0.0,
+   "boundary_mae_s": 0.75,
+   "n_pred/n_ref": "33/15",
+   "invalid": 0,
+   "empty": 0,
+   "calls": 2,
+   "usage": {
+    "calls": 2,
+    "cache_hits": 0,
+    "prompt_tokens": 1705,
+    "completion_tokens": 1257,
+    "cost_usd": 0.002812,
+    "model_latency_s": 6.81
+   },
+   "statuses": {
+    "galaxea_011": "ok",
+    "robointer_droid_000010": "ok"
+   }
+  },
+  {
+   "version": "strong_fixed",
+   "split": "dev",
+   "episodes": 2,
+   "micro_f1@0.75": 0.042,
+   "micro_f1@0.5": 0.167,
+   "outer_snapped_f1@0.75": 0.043,
+   "short_recall": 0.0,
+   "boundary_mae_s": 0.75,
+   "n_pred/n_ref": "33/15",
+   "invalid": 0,
+   "empty": 0,
+   "calls": 2,
+   "usage": {
+    "calls": 2,
+    "cache_hits": 0,
+    "prompt_tokens": 3582,
+    "completion_tokens": 1426,
+    "cost_usd": 0.003684,
+    "model_latency_s": 7.01
+   },
+   "statuses": {
+    "galaxea_011": "ok",
+    "robointer_droid_000010": "ok"
+   }
+  },
+  {
+   "version": "N000",
+   "split": "validation",
+   "episodes": 2,
+   "micro_f1@0.75": 0.077,
+   "micro_f1@0.5": 0.077,
+   "outer_snapped_f1@0.75": 0.077,
+   "short_recall": 0.0,
+   "boundary_mae_s": 5.73,
+   "n_pred/n_ref": "4/22",
+   "invalid": 0,
+   "empty": 0,
+   "calls": 2,
+   "usage": {
+    "calls": 4,
+    "cache_hits": 0,
+    "prompt_tokens": 4542,
+    "completion_tokens": 1405,
+    "cost_usd": 0.003934,
+    "model_latency_s": 8.67
+   },
+   "statuses": {
+    "galaxea_002": "ok",
+    "robointer_droid_000045": "ok"
+   }
+  },
+  {
+   "version": "strong_fixed",
+   "split": "validation",
+   "episodes": 2,
+   "micro_f1@0.75": 0.0,
+   "micro_f1@0.5": 0.5,
+   "outer_snapped_f1@0.75": 0.05,
+   "short_recall": 0.0,
+   "boundary_mae_s": 7.17,
+   "n_pred/n_ref": "18/22",
+   "invalid": 0,
+   "empty": 0,
+   "calls": 2,
+   "usage": {
+    "calls": 5,
+    "cache_hits": 0,
+    "prompt_tokens": 12127,
+    "completion_tokens": 10374,
+    "cost_usd": 0.022623,
+    "model_latency_s": 45.52
+   },
+   "statuses": {
+    "galaxea_002": "ok",
+    "robointer_droid_000045": "ok"
+   }
+  }
+ ]
+}

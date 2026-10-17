@@ -33,7 +33,7 @@ class Settings:
     max_retries_per_call: int = field(default_factory=lambda: _int("MAX_RETRIES_PER_CALL", 1))
     max_spend_usd: float = field(default_factory=lambda: _float("MAX_SPEND_USD", 35.0))
     reserved_test_vision_calls: int = field(default_factory=lambda: _int("RESERVED_TEST_VISION_CALLS", 9))
-    request_timeout_seconds: int = field(default_factory=lambda: _int("REQUEST_TIMEOUT_SECONDS", 90))
+    request_timeout_seconds: int = field(default_factory=lambda: _int("REQUEST_TIMEOUT_SECONDS", 180))
 
     artifacts_dir: Path = ROOT / "artifacts"
     cache_dir: Path = ROOT / "data" / "cache"
