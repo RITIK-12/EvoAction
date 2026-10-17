@@ -30,6 +30,14 @@ PARQUET = f"datasets/{REPO}/data/annotations.parquet"
 LIGHT_COLUMNS = ["id", "instruction", "segments", "metadata"]
 
 
+def _open_parquet(s: Settings):
+    """Prefer the fully downloaded local parquet (data/wgo, gitignored); fall back to HF range reads."""
+    local = s.cache_dir.parent / "wgo" / "annotations.parquet"
+    if local.exists():
+        return local.open("rb")
+    return HfFileSystem().open(PARQUET, "rb")
+
+
 def _source(episode_id: str) -> str:
     if episode_id.startswith("robointer_droid"):
         return "droid"
@@ -53,8 +61,7 @@ def build_index(settings: Settings | None = None, refresh: bool = False) -> list
     protected_path = s.protected_dir / "wgo_gold_index.json"
     if public_path.exists() and protected_path.exists() and not refresh:
         return json.loads(public_path.read_text())
-    fs = HfFileSystem()
-    with fs.open(PARQUET, "rb") as f:
+    with _open_parquet(s) as f:
         pf = pq.ParquetFile(f)
         md = pf.metadata
         rows = pf.read(columns=LIGHT_COLUMNS).to_pylist()
@@ -84,8 +91,7 @@ def ingest_episode(episode_id: str, settings: Settings | None = None) -> Path:
     gold_path = s.protected_dir / "gold" / f"{episode_id}.json"
     if video_path.exists() and (ep_dir / "episode.json").exists() and gold_path.exists():
         return ep_dir
-    fs = HfFileSystem()
-    with fs.open(PARQUET, "rb") as f:
+    with _open_parquet(s) as f:
         pf = pq.ParquetFile(f)
         row = pf.read_row_group(entry["row_group"]).to_pylist()[0]
     assert row["id"] == episode_id, (row["id"], episode_id)
@@ -281,3 +287,46 @@ def load_splits(settings: Settings | None = None) -> dict[str, Any]:
 def split_ids(split: str, pilot: bool, settings: Settings | None = None) -> list[str]:
     sp = load_splits(settings)["splits"][split]
     return sp["pilot_episode_ids"] if pilot else sp["episode_ids"]
+
+
+# -- protocol v3: fixed evaluation sets (batches) --------------------------
+
+# Batch 1 is all 50 DROID episodes; batch 2 is the other 50 (Galaxea + HomER). Every version of a
+# lineage runs on exactly its batch; results pool across batches into the full 100-episode benchmark.
+EPISODE_SETS = {"droid50": ("droid",), "rest50": ("galaxea", "homer")}
+SETS_DIR = "episode_sets"
+
+
+def ingest_all(settings: Settings | None = None) -> list[str]:
+    s = settings or get_settings()
+    ids = [e["id"] for e in build_index(s, refresh=True)]
+    for eid in ids:
+        ingest_episode(eid, s)
+    return ids
+
+
+def write_episode_set(name: str, settings: Settings | None = None) -> Path:
+    s = settings or get_settings()
+    path = s.artifacts_dir / SETS_DIR / f"{name}.json"
+    if path.exists():
+        raise FileExistsError(f"{path} already exists; episode sets are immutable")
+    index = build_index(s)
+    ids = sorted(e["id"] for e in index if e["source"] in EPISODE_SETS[name])
+    eps = [load_episode(e, s) for e in ids]
+    body = {"protocol": "v3-macrodata", "set": name, "sources": list(EPISODE_SETS[name]), "episode_ids": ids,
+            "video_sha256": {e["id"]: e["video_sha256"] for e in eps},
+            "instruction_groups": {e["id"]: _norm_instruction(e["instruction"]) for e in eps},
+            "n_episodes": len(ids), "n_unique_instructions": len({_norm_instruction(e["instruction"]) for e in eps})}
+    body["set_sha256"] = hashlib.sha256(json.dumps(body, sort_keys=True).encode()).hexdigest()
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(json.dumps(body, indent=1, sort_keys=True))
+    return path
+
+
+def episode_set_ids(name: str = "droid50", settings: Settings | None = None) -> list[str]:
+    s = settings or get_settings()
+    return json.loads((s.artifacts_dir / SETS_DIR / f"{name}.json").read_text())["episode_ids"]
+
+
+def v3_episode_ids(settings: Settings | None = None) -> list[str]:
+    return episode_set_ids("droid50", settings)

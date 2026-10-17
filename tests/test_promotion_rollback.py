@@ -4,7 +4,7 @@ from evoaction.config import Settings
 from evoaction.experiments.evolution import HISTORY_KEYS, decide
 from evoaction.persistence import Store
 from evoaction.schemas import NodeInsert, WorkflowNode, WorkflowPatch
-from evoaction.workflow.baselines import workflow_a
+from evoaction.workflow.baselines import workflow_n0
 from evoaction.workflow.engine import VersionStore, apply_patch
 
 
@@ -28,8 +28,8 @@ def test_label_free_gate_promotes_and_ignores_gt():
 def test_label_free_gate_rejections():
     inc = result({"a": 0.30, "b": 0.40}, 0.35, 0.01)
     assert decide(result({"a": 0.31, "b": 0.41}, 0.36, 0.01), inc)["decision"] == "REJECTED"  # delta < 0.03
-    d = decide(result({"a": 0.6, "b": 0.6}, 0.6, 0.02), inc)
-    assert d["decision"] == "REJECTED" and not d["checks"]["annotation_cost_ratio"]["pass"]
+    d = decide(result({"a": 0.6, "b": 0.6}, 0.6, 0.05), inc)  # v3: no per-episode cost cap
+    assert d["decision"] == "PROMOTED" and "annotation_cost_ratio" not in d["checks"]
     d = decide(result({"a": 0.6, "b": 0.6}, 0.6, 0.01, statuses={"a": "model_error", "b": "ok"}), inc)
     assert d["decision"] == "REJECTED" and not d["checks"]["valid_outputs"]["pass"]
     d = decide(result({"a": 0.6, "b": 0.6}, 0.6, 0.01, empty=("a",)), inc)
@@ -46,7 +46,7 @@ def test_rejection_preserves_candidate_and_incumbent(tmp_path):
     s = Settings(artifacts_dir=tmp_path / "artifacts", cache_dir=tmp_path / "cache")
     store = Store(tmp_path / "db.sqlite", tmp_path / "events.jsonl")
     vs = VersionStore(s, store)
-    wf, prompts = workflow_a()
+    wf, prompts = workflow_n0()
     inc = vs.create("N000", wf, prompts, {"models": {}}, None, "incumbent")
     patch = WorkflowPatch(insert_nodes=[NodeInsert(node=WorkflowNode(id="merge", operator="merge_filter_segments", depends_on=["annotate"]),
                                                    rewire_dependents_of="annotate")])
@@ -62,7 +62,7 @@ def test_promotion_creates_new_incumbent_copy(tmp_path):
     s = Settings(artifacts_dir=tmp_path / "artifacts", cache_dir=tmp_path / "cache")
     store = Store(tmp_path / "db.sqlite", tmp_path / "events.jsonl")
     vs = VersionStore(s, store)
-    wf, prompts = workflow_a()
+    wf, prompts = workflow_n0()
     vs.create("N000", wf, prompts, {"models": {}}, None, "incumbent")
     cwf, cprompts = apply_patch(wf, prompts, WorkflowPatch(set_params={"sample": {"sampling_hz": 2.0}}))
     vs.create("EXP-0002", cwf, cprompts, {"models": {}}, "N000", "candidate")

@@ -102,7 +102,8 @@ def op_sample_contact_sheets(ctx: EpisodeContext, state: dict, params: dict) -> 
     p = SampleParams(**params)
     ep = state["episode"]
     ts = uniform_timestamps(ep["duration_sec"], p.sampling_hz)
-    sheets = build_sheets(ep["video_path"], ts, tile_px=p.tile_px, frames_per_sheet=p.frames_per_sheet, cols=p.cols)
+    sheets = build_sheets(ep["video_path"], ts, tile_px=p.tile_px, frames_per_sheet=p.frames_per_sheet, cols=p.cols,
+                          badge=p.badge, jpeg_quality=p.jpeg_quality)
     return {"sheets": {"sheets": sheets, "sampling_hz": p.sampling_hz, "n_frames": len(ts)}}, {
         "n_frames": len(ts), "n_sheets": len(sheets), "sheet_sha256": [s.sha256 for s in sheets]}
 

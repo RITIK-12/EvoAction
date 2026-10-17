@@ -10,7 +10,7 @@ from evoaction.clients.crusoe import CrusoeClient
 from evoaction.config import Settings, get_settings
 from evoaction.evaluation.protected import ProtectedEvaluator
 from evoaction.persistence import Store, get_store, new_id
-from evoaction.workflow.baselines import workflow_a, workflow_b
+from evoaction.workflow.baselines import workflow_n0
 from evoaction.workflow.engine import Version, VersionStore, run_version, usage_for
 
 
@@ -18,13 +18,21 @@ def model_config(client: CrusoeClient) -> dict[str, Any]:
     return {"models": {"vision": client.vision_model, "nemotron": client.nemotron_model}, "api_base": client.settings.api_base}
 
 
-def ensure_baselines(client: CrusoeClient, versions: VersionStore) -> tuple[Version, Version]:
-    cfg = model_config(client)
-    wa, pa = workflow_a()
-    wb, pb = workflow_b()
-    a = versions.create("N000", wa, pa, cfg, parent_id=None, status="incumbent")
-    b = versions.create("strong_fixed", wb, pb, cfg, parent_id=None, status="fixed_baseline")
-    return a, b
+def ensure_n0(client: CrusoeClient, versions: VersionStore) -> Version:
+    wf, prompts = workflow_n0()
+    return versions.create("N0", wf, prompts, model_config(client), parent_id=None, status="incumbent")
+
+
+def headline(gt: dict[str, Any] | None) -> dict[str, Any]:
+    """Macrodata headline: pooled Segment F1@0.75 with first start / last end snapped to the reference."""
+    if not gt:
+        return {}
+    raw, snap = gt["raw"], gt["outer_snapped"]
+    return {"snapped_f1_075": snap["micro_f1"], "raw_f1_075": raw["micro_f1"], "snapped_f1_05": snap["micro_f1_iou05"],
+            "raw_f1_05": raw["micro_f1_iou05"], "tp_snapped": snap["tp"], "n_pred": raw["n_pred"], "n_ref": raw["n_ref"],
+            "invalid_items": raw["invalid_items"], "empty_output_episodes": raw["empty_output_episodes"],
+            "mean_boundary_mae_sec": raw["mean_boundary_mae_sec"], "episodes": raw["episodes"],
+            "per_episode_snapped_f1": snap["per_episode_f1"]}
 
 
 def run_and_score(version: Version, split: str, episode_ids: list[str], client: CrusoeClient, evaluator: ProtectedEvaluator,

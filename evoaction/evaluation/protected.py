@@ -68,6 +68,11 @@ class ProtectedEvaluator:
         self.freeze_manifest = freeze_manifest
         self._test_unsealed = True
 
+    @classmethod
+    def for_episode_set(cls, episode_ids: list[str], settings: Settings | None = None) -> "ProtectedEvaluator":
+        """Protocol v3: one fixed evaluation set; every version is scored on all of it."""
+        return cls(settings, splits={"splits": {"eval": {"episode_ids": list(episode_ids)}}})
+
     def _refs(self, episode_id: str) -> list[dict[str, Any]]:
         return json.loads((self._gold_dir / f"{episode_id}.json").read_text())["segments"]
 
@@ -78,7 +83,7 @@ class ProtectedEvaluator:
     def score_split(self, preds_by_episode: dict[str, list[dict[str, Any]]], durations: dict[str, float]) -> dict[str, Any]:
         """Raw + outer-snapped aggregate for any non-sealed split (internal use by controller/report)."""
         eids = sorted(preds_by_episode)
-        self._require(eids, {"dev", "validation", "test"})
+        self._require(eids, {"dev", "validation", "test", "eval"})
         raw = [self._score(e, preds_by_episode[e], durations.get(e)) for e in eids]
         snapped = [self._score(e, preds_by_episode[e], durations.get(e), snap=True) for e in eids]
         return {"protocol": M.PROTOCOL_VERSION, "raw": M.aggregate(raw), "outer_snapped": M.aggregate(snapped),

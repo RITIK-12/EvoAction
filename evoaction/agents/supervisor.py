@@ -16,8 +16,8 @@ from evoaction.workflow.engine import Version, WorkflowValidationError, apply_pa
 
 GOAL = ("Improve the incumbent robot-video temporal subtask annotation workflow (segments that end when a manipulation "
         "state change completes) WITHOUT any reference labels: no ground truth exists for you. Judge quality only from "
-        "label-free evidence (robot telemetry, visual verification of boundaries, structural plausibility), without exceeding "
-        "1.5x the incumbent's annotation inference cost per episode.")
+        "label-free evidence (robot telemetry, visual verification of boundaries, structural plausibility). There is no per-episode cost cap; "
+        "total inference cost per recursion is recorded and reported, so prefer changes whose quality gain justifies their cost.")
 LABEL_FREE_SCORE = json.dumps({k: SCORE_DEFINITION[k] for k in ("components", "weights", "aggregation")})
 
 OPERATOR_DOCS = {
@@ -96,9 +96,9 @@ Incumbent prompt.md:
 
 Dev episodes: {json.dumps(dev_eps)}
 Label-free self-assessment on dev (evidence id {ctx.incumbent_eval['eval_id']}); score definition: {LABEL_FREE_SCORE}
-{compact(condense_assessment(dev_view), 9000)}
+{compact(condense_assessment(dev_view), 16000)}
 
-Incumbent label-free score on held-out validation episodes (aggregate only): {json.dumps({k: val_view.get(k) for k in ('mean_self_score', 'component_means')})}
+Incumbent label-free score on the full episode set (aggregate): {json.dumps({k: val_view.get(k) for k in ('mean_self_score', 'component_means')})}
 Measured incumbent inference cost profile: {json.dumps(cost_profile)}
 Previous experiments in this lineage: {compact(history, 3000) if history else 'none'}
 
@@ -115,8 +115,8 @@ Return JSON: {{"failure_summary": str, "investigations": [{{"question": str, "to
 
 STRATEGY_SYSTEM = f"""You are the strategy agent of EvoAction. Goal: {GOAL}
 Convert the investigation findings into ONE falsifiable experiment: a hypothesis grounded in cited evidence ids plus an executable WorkflowPatch.
-The controller (not you) will run the candidate on held-out validation episodes it never showed you, compare it with the incumbent on the same episodes,
-and apply a predeclared label-free gate: mean label-free self-score delta >= 0.03, >= 50% of validation episodes non-regressing on that score, valid outputs, and annotation inference cost <= 1.5x incumbent.
+The controller (not you) will run the candidate on the same episode set as the incumbent (every version runs on exactly these episodes), compare them,
+and apply a predeclared label-free gate: mean label-free self-score delta >= 0.03, >= 50% of episodes non-regressing on that score, and valid outputs. There is no per-episode cost cap; total cost is recorded.
 Label-free score definition: {LABEL_FREE_SCORE}
 No reference labels exist; a change must be justified by label-free evidence, and an independent measurement you never see will later check whether it truly helped.
 Changing workflow topology (inserting/removing/re-routing operators) is encouraged when the evidence motivates it; parameter- or prompt-only changes are allowed if better justified.
@@ -175,7 +175,7 @@ def _validate_proposal(data: dict[str, Any], incumbent: Version, exp_id: str, va
 
 CRITIC_SYSTEM = """You are a skeptical reviewer of a proposed experiment on an annotation workflow.
 Check: Is the hypothesis falsifiable and specific? Does it follow from the cited evidence? Does the patch actually test the hypothesis?
-Is the cost likely within 1.5x of the incumbent? Does anything assume access to reference labels (none exist)? Could the change merely game the label-free score without better annotations? Reply with one JSON object only."""
+Is the added inference cost justified by the expected gain? Does anything assume access to reference labels (none exist)? Could the change merely game the label-free score without better annotations? Reply with one JSON object only."""
 
 
 def propose_experiment(client: CrusoeClient, store: Store, run_id: str, exp_id: str, findings: list[dict[str, Any]], incumbent: Version,

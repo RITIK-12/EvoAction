@@ -142,7 +142,12 @@ def assess_episode(client: CrusoeClient | None, episode_id: str, segs: list[dict
 
 def assess_run(client: CrusoeClient | None, run_result: dict[str, Any], sampling_hz: float | None, version_id: str,
                verify: bool = True) -> dict[str, Any]:
-    eps = {e: assess_episode(client, e, r["segments"], sampling_hz, version_id, verify) for e, r in run_result["episodes"].items()}
+    from concurrent.futures import ThreadPoolExecutor
+
+    items = list(run_result["episodes"].items())
+    with ThreadPoolExecutor(max_workers=4) as ex:
+        results = list(ex.map(lambda kv: assess_episode(client, kv[0], kv[1]["segments"], sampling_hz, version_id, verify), items))
+    eps = {a["episode_id"]: a for a in results}
     scores = [a["self_score"] for a in eps.values()]
     comp_means = {}
     for k in SCORE_DEFINITION["weights"]:

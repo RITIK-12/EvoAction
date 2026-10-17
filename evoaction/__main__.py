@@ -1,10 +1,11 @@
-"""EvoAction CLI.
+"""EvoAction CLI (protocol v3: all 50 WGO-Bench DROID episodes, Macrodata Refiner protocol replicated on Nemotron).
 
-  python -m evoaction baselines [--full]     run fixed A (N000) and B (strong_fixed) on dev + validation
-  python -m evoaction evolve [--full]        recursive investigation -> experiments -> promotion/rejection
-  python -m evoaction final [--full]         freeze A/B/C and run the sealed held-out evaluation once
-  python -m evoaction report                 build artifacts/report.html from persisted artifacts
-  python -m evoaction run-demo [--full]      all of the above in order
+  python -m evoaction setup                   ingest all 100 episodes from data/wgo, lock batch sets droid50 and rest50
+  python -m evoaction baseline [--set S]      run version N0 on a batch (label-free self-score + GT headline)
+  python -m evoaction evolve [--set S]        N -> N+1 label-free recursive improvement; every version runs on the same batch
+  (S = droid50, batch 1: all 50 DROID episodes [default]; rest50, batch 2: 25 Galaxea + 25 HomER)
+  python -m evoaction report       build artifacts/report.html from persisted artifacts
+  python -m evoaction run-demo     baseline -> evolve -> report
 """
 
 from __future__ import annotations
@@ -16,71 +17,72 @@ import sys
 from evoaction.config import get_settings
 
 
-def cmd_baselines(args: argparse.Namespace) -> int:
+def cmd_setup(args: argparse.Namespace) -> int:
+    from evoaction.data.wgo import EPISODE_SETS, SETS_DIR, ingest_all, write_episode_set
+
+    s = get_settings()
+    ids = ingest_all(s)
+    print(f"ingested {len(ids)} episodes")
+    for name in EPISODE_SETS:
+        if not (s.artifacts_dir / SETS_DIR / f"{name}.json").exists():
+            print(write_episode_set(name, s))
+    return 0
+
+
+def cmd_baseline(args: argparse.Namespace) -> int:
     from evoaction.clients.crusoe import CrusoeClient
-    from evoaction.data.wgo import split_ids
+    from evoaction.data.wgo import episode_set_ids
     from evoaction.evaluation.protected import ProtectedEvaluator
+    from evoaction.experiments.evolution import version_record
     from evoaction.persistence import get_store
-    from evoaction.pipeline import ensure_baselines, run_and_score, summarize
+    from evoaction.pipeline import ensure_n0, run_and_assess
     from evoaction.workflow.engine import VersionStore
 
     s = get_settings()
     store = get_store()
     client = CrusoeClient(s, store)
-    run_id = store.start_run("baselines", {"pilot": not args.full})
+    set_name = args.set or "droid50"
+    ids = episode_set_ids(set_name, s)
+    run_id = store.start_run("baseline_v3", {"episode_set": set_name, "episodes": len(ids)})
     client.run_id = run_id
-    versions = VersionStore(s, store)
-    evaluator = ProtectedEvaluator(s)
-    a, b = ensure_baselines(client, versions)
-    out = {"run_id": run_id, "pilot": not args.full, "results": []}
-    for split in ("dev", "validation"):
-        ids = split_ids(split, pilot=not args.full)
-        for v in (a, b):
-            r = run_and_score(v, split, ids, client, evaluator, run_id, store, s)
-            summ = summarize(r)
-            out["results"].append(summ)
-            print(json.dumps(summ, default=str))
-    (s.artifacts_dir / "baselines.json").write_text(json.dumps(out, indent=1, default=str))
+    n0 = ensure_n0(client, VersionStore(s, store))
+    r = run_and_assess(n0, "eval", ids, client, run_id, evaluator=ProtectedEvaluator.for_episode_set(ids, s), store=store, settings=s)
+    rec = version_record(r)
+    suffix = "" if set_name == "droid50" else f"_{set_name}"
+    (s.artifacts_dir / f"baseline_v3{suffix}.json").write_text(json.dumps({"run_id": run_id, "episode_set": set_name, **rec}, indent=1, default=str))
     store.finish_run(run_id, "ok")
+    h = rec["headline_gt"]
+    print(json.dumps({"version": "N0", "episode_set": set_name, "episodes": rec["episodes"], "snapped_f1@0.75": round(h["snapped_f1_075"], 4),
+                      "raw_f1@0.75": round(h["raw_f1_075"], 4), "snapped_f1@0.5": round(h["snapped_f1_05"], 4),
+                      "pred/ref": f"{h['n_pred']}/{h['n_ref']}", "label_free": rec["label_free_self_score"],
+                      "annotation_cost_usd": rec["annotation_cost_usd_total"], "statuses_not_ok": {e: v for e, v in rec["statuses"].items() if v != "ok"}}))
     return 0
 
 
 def main(argv: list[str] | None = None) -> int:
     ap = argparse.ArgumentParser(prog="evoaction")
     sub = ap.add_subparsers(dest="cmd", required=True)
-    for name in ("baselines", "evolve", "final", "run-demo"):
-        p = sub.add_parser(name)
-        p.add_argument("--full", action="store_true", help="use full splits instead of pilot subsets")
-        if name == "final":
-            p.add_argument("--dry-run", action="store_true", help="verify freeze inputs and budgets without inference or unsealing")
-            p.add_argument("--test-set", choices=["fresh", "pilot", "full"], default="fresh",
-                           help="fresh = never-evaluated full-split test episodes (default); pilot/full for comparison")
-    sub.add_parser("report")
+    for name in ("setup", "baseline", "evolve", "report", "run-demo"):
+        sp = sub.add_parser(name)
+        sp.add_argument("--set", default="droid50", choices=["droid50", "rest50"])
     args = ap.parse_args(argv)
-    if args.cmd == "baselines":
-        return cmd_baselines(args)
+    if args.cmd == "setup":
+        return cmd_setup(args)
+    if args.cmd == "baseline":
+        return cmd_baseline(args)
     if args.cmd == "evolve":
         from evoaction.experiments.evolution import cmd_evolve
 
         return cmd_evolve(args)
-    if args.cmd == "final":
-        from evoaction.experiments.final import cmd_final
-
-        return cmd_final(args)
     if args.cmd == "report":
         from evoaction.report import cmd_report
 
         return cmd_report(args)
     if args.cmd == "run-demo":
-        for fn in (cmd_baselines,):
-            rc = fn(args)
-            if rc:
-                return rc
         from evoaction.experiments.evolution import cmd_evolve
-        from evoaction.experiments.final import cmd_final
         from evoaction.report import cmd_report
 
-        for fn in (cmd_evolve, cmd_final, cmd_report):
+        for fn in (cmd_baseline, cmd_evolve, cmd_report):
             rc = fn(args)
             if rc:
                 return rc

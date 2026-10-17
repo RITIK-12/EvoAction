@@ -6,7 +6,7 @@ from pydantic import ValidationError
 from evoaction.config import Settings
 from evoaction.persistence import Store
 from evoaction.schemas import HarnessWorkflow, NodeInsert, WorkflowNode, WorkflowPatch
-from evoaction.workflow.baselines import workflow_a, workflow_b
+from evoaction.workflow.baselines import workflow_n0
 from evoaction.workflow.engine import VersionStore, WorkflowValidationError, apply_patch, validate_workflow, version_hash
 from evoaction.workflow.operators import EpisodeContext, detect_hints, op_merge_filter_segments
 from evoaction.schemas import HintParams
@@ -24,7 +24,7 @@ P = {"prompt.md": "x", "refine.md": "y"}
 
 
 def test_baselines_validate():
-    for f in (workflow_a, workflow_b):
+    for f in (workflow_n0,):
         wf, prompts = f()
         validate_workflow(wf, prompts)
 
@@ -99,7 +99,7 @@ def test_export_must_be_terminal_and_reachable():
 
 
 def test_topology_patch_inserts_inspect_and_refine():
-    wf, prompts = workflow_a()
+    wf, prompts = workflow_n0()
     patch = WorkflowPatch(insert_nodes=[
         NodeInsert(node=WorkflowNode(id="hints", operator="state_hint_detection", when="has_telemetry")),
         NodeInsert(node=WorkflowNode(id="inspect", operator="inspect_transition_windows", depends_on=["annotate", "hints"],
@@ -120,7 +120,7 @@ def test_topology_patch_inserts_inspect_and_refine():
 
 
 def test_prompt_only_patch_and_bad_prompt_name():
-    wf, prompts = workflow_a()
+    wf, prompts = workflow_n0()
     new_wf, new_prompts = apply_patch(wf, prompts, WorkflowPatch(prompt_updates={"prompt.md": "new $instruction"}))
     assert new_prompts["prompt.md"] == "new $instruction" and not WorkflowPatch(prompt_updates={"prompt.md": "z"}).is_topology_change()
     with pytest.raises(ValidationError):
@@ -128,7 +128,7 @@ def test_prompt_only_patch_and_bad_prompt_name():
 
 
 def test_patch_cannot_remove_into_invalid_graph():
-    wf, prompts = workflow_a()
+    wf, prompts = workflow_n0()
     with pytest.raises(WorkflowValidationError):
         apply_patch(wf, prompts, WorkflowPatch(remove_nodes=["annotate"]))
 
@@ -137,7 +137,7 @@ def test_version_store_immutability(tmp_path):
     s = Settings(artifacts_dir=tmp_path / "artifacts", cache_dir=tmp_path / "cache")
     store = Store(tmp_path / "db.sqlite", tmp_path / "events.jsonl")
     vs = VersionStore(s, store)
-    wf, prompts = workflow_a()
+    wf, prompts = workflow_n0()
     v = vs.create("N000", wf, prompts, {"models": {"vision": "m"}}, None, "incumbent")
     assert v.workflow_sha256 == version_hash(wf, prompts, {"models": {"vision": "m"}})
     assert vs.create("N000", wf, prompts, {"models": {"vision": "m"}}, None, "incumbent").workflow_sha256 == v.workflow_sha256

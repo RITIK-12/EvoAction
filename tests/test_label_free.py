@@ -89,12 +89,12 @@ def test_no_ground_truth_reaches_any_agent_prompt(tmp_path, monkeypatch):
     from evoaction.agents.tools import ToolContext
     from evoaction.experiments.evolution import HISTORY_KEYS
     from evoaction.persistence import Store
-    from evoaction.workflow.baselines import workflow_a
+    from evoaction.workflow.baselines import workflow_n0
     from evoaction.workflow.engine import Version
 
     monkeypatch.setattr("evoaction.data.wgo.load_episode",
                         lambda e: {"id": e, "has_telemetry": True, "duration_sec": 12.0, "source": "droid", "instruction": "x"})
-    wf, prompts = workflow_a()
+    wf, prompts = workflow_n0()
     inc = Version("N000", tmp_path, wf, prompts, {"models": {}}, {"workflow_sha256": "h"})
     gt = {"raw": {"micro_f1": SENTINEL_F1, "per_episode_f1": {"d1": SENTINEL_F1}}, "reference": [seg(0, SENTINEL_TIME, SENTINEL_LABEL)]}
     assessment = {"mean_self_score": 0.4, "per_episode_self_score": {"d1": 0.4}, "component_means": {},

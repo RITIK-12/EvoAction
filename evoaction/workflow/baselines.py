@@ -1,35 +1,26 @@
-"""Fixed systems A (N000) and B (strong_fixed), plus the default refinement playbook."""
+"""Version N0 (Macrodata Refiner replica on Nemotron) and the default refinement playbook."""
 
 from __future__ import annotations
 
 from evoaction.schemas import HarnessWorkflow, WorkflowNode
 
-PROMPT_A = """You are annotating a robot manipulation video.
-The images are contact sheets of frames sampled uniformly at $sampling_hz Hz from a $duration_sec-second video, in time order (left to right, top to bottom). Each tile shows its timestamp in seconds in yellow.
+# Verbatim from macrodata-labs/refiner src/refiner/robotics/subtask_annotation/segmentation.py
+# (_DEFAULT_SUBTASK_ANNOTATION_PROMPT_TEMPLATE), with Refiner's "Episode instruction:" suffix.
+MACRODATA_SEGMENTATION_PROMPT = """Reconstruct the sequence of manipulation events in this robot video from the timestamped contact sheets.
 
-Task instruction: "$instruction"
+Return only JSON with this shape:
+{"segments":[{"start_sec":0.0,"end_sec":1.0,"subtask":"short action description"}]}
 
-Split the video into the sequence of completed manipulation subtasks the robot performs.
-Return only JSON: {"segments": [{"start_sec": <float>, "end_sec": <float>, "subtask": "<short description>"}]}
-"""
+Rules:
+- Segment only completed robot manipulation events, not every visible movement.
+- Good boundaries happen when a held object changes, an object is placed or released, a tool starts/stops changing a surface, a container/door/lid opens or closes, or contents move between containers.
+- Do not split approach, grasp adjustment, small repositioning, and retreat unless the world state changes.
+- Do not merge separate pick/place/open/close/pour/wipe events when they complete different states.
+- Most segments should be 2-10 seconds. Shorter segments are okay only for fast pick, place, open, close, or release events.
+- Use the visible timestamps for start_sec and end_sec.
+- Ignore label wording quality; prioritize temporally correct boundaries.
 
-PROMPT_B = """You are an expert annotator of robot demonstration videos.
-The images are $sheet_count contact sheet(s) with $frame_count frames sampled uniformly at $sampling_hz Hz from a $duration_sec-second video, in time order (left to right, top to bottom). Each tile shows its timestamp in seconds in yellow.
-
-Task instruction: "$instruction"
-
-Annotation policy - completed world-state changes:
-- One segment = one completed manipulation event that changes the state of the world: an object is picked up (grasped and lifted), placed (released at its destination), a drawer/lid/door is opened or closed, contents are poured, an object is pushed or moved to a new place.
-- A segment ENDS at the first moment its state change is complete and visible (e.g. the object rests at its destination and the gripper has released it). The next segment starts exactly there.
-- Do not create segments for small pose adjustments, pure approach motions, or pauses; fold the approach/reach into the event it serves.
-- Segments are contiguous and cover the whole video: the first starts at 0.0, each start equals the previous end, the last ends at $duration_sec.
-- Use the printed timestamps. A boundary may fall between two sampled frames; estimate it to 0.1 s.
-- Short events (under 2 s) are common for quick grasps and releases; never merge two distinct state changes into one segment.
-- For two-armed robots, a completed change by either arm is an event.
-- Labels are short imperative phrases grounded in what is visible, e.g. "pick up the red cup from the table".
-- confidence = your probability (0-1) that this segment's end boundary is within 0.5 s of the true moment.
-
-Return only JSON: {"segments": [{"start_sec": <float>, "end_sec": <float>, "subtask": "<label>", "confidence": <float>}]}
+Episode instruction: $instruction
 """
 
 DEFAULT_REFINE_PROMPT = """You are refining the temporal boundaries of a robot manipulation video annotation.
@@ -50,21 +41,18 @@ Return only JSON: {"windows": [{"window_id": "W1", "action": "keep|move|delete|i
 """
 
 
-def workflow_a() -> tuple[HarnessWorkflow, dict[str, str]]:
+def workflow_n0() -> tuple[HarnessWorkflow, dict[str, str]]:
+    """Version N0 (protocol v3): Macrodata Refiner contact-sheet segmentation replicated on Nemotron.
+
+    0.5 s sampling, 224 px tiles, 20 frames/sheet in 5 columns, Refiner timestamp badge, JPEG q95, all sheets in
+    one call, temperature 0.1, no post-processing beyond schema validation. Deviation: thinking off (Nemotron Omni
+    thinking-on multi-image calls exhausted the token cap without JSON in 31/42 attempts).
+    """
     wf = HarnessWorkflow(nodes=[
-        WorkflowNode(id="sample", operator="sample_contact_sheets", params={"sampling_hz": 1.0, "tile_px": 224, "frames_per_sheet": 20, "cols": 5}),
-        WorkflowNode(id="annotate", operator="initial_annotate", depends_on=["sample"], params={"prompt": "prompt.md", "thinking": False, "max_tokens": 8192}),
+        WorkflowNode(id="sample", operator="sample_contact_sheets",
+                     params={"sampling_hz": 2.0, "tile_px": 224, "frames_per_sheet": 20, "cols": 5, "badge": "macrodata", "jpeg_quality": 95}),
+        WorkflowNode(id="annotate", operator="initial_annotate", depends_on=["sample"],
+                     params={"prompt": "prompt.md", "thinking": False, "max_tokens": 8192, "temperature": 0.1}),
         WorkflowNode(id="export", operator="validate_export", depends_on=["annotate"]),
-    ], max_calls=1, max_wall_seconds=240)
-    return wf, {"prompt.md": PROMPT_A}
-
-
-def workflow_b() -> tuple[HarnessWorkflow, dict[str, str]]:
-    wf = HarnessWorkflow(nodes=[
-        WorkflowNode(id="sample", operator="sample_contact_sheets", params={"sampling_hz": 2.0, "tile_px": 224, "frames_per_sheet": 20, "cols": 5}),
-        WorkflowNode(id="annotate", operator="initial_annotate", depends_on=["sample"], params={"prompt": "prompt.md", "thinking": False, "max_tokens": 8192}),
-        WorkflowNode(id="merge", operator="merge_filter_segments", depends_on=["annotate"],
-                     params={"min_duration_sec": 0.4, "max_gap_sec": 1.0, "tile_full_episode": True}),
-        WorkflowNode(id="export", operator="validate_export", depends_on=["merge"]),
-    ], max_calls=1, max_wall_seconds=240)
-    return wf, {"prompt.md": PROMPT_B}
+    ], max_calls=1, max_wall_seconds=300)
+    return wf, {"prompt.md": MACRODATA_SEGMENTATION_PROMPT}

@@ -37,6 +37,8 @@ class SampleParams(_Params):
     tile_px: int = Field(224, ge=128, le=448)
     frames_per_sheet: int = Field(20, ge=4, le=30)
     cols: int = Field(5, ge=2, le=8)
+    badge: Literal["default", "macrodata"] = "default"
+    jpeg_quality: int = Field(85, ge=50, le=95)
 
 
 class AnnotateParams(_Params):

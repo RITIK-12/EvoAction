@@ -248,3 +248,10 @@
 {"ts": 1792272619.4248168, "run_id": "RUN-3a3da6fafa", "kind": "self_assessment", "eval_id": "SELF-0c161a619a", "version_id": "strong_fixed", "split": "test", "episodes": ["galaxea_037", "robointer_droid_000036", "galaxea_049"], "mean_self_score": 0.4201, "per_episode_self_score": {"galaxea_037": 0.641, "robointer_droid_000036": 0.2308, "galaxea_049": 0.3884}, "component_means": {"telemetry_agreement": 0.1111, "visual_verification": null, "duration_variability": 0.561, "temporal_resolution": 1.0}}
 {"ts": 1792272619.4279838, "run_id": "RUN-3a3da6fafa", "kind": "gt_measurement_hidden_from_agents", "version_id": "strong_fixed", "split": "test", "micro_f1": 0.2105263157894737, "micro_f1_iou05": 0.4210526315789474}
 {"ts": 1792272619.430497, "run_id": "RUN-3a3da6fafa", "kind": "run_finished", "status": "ok"}
+{"ts": 1792274880.5306618, "run_id": "RUN-53c0a94f36", "kind": "smoke_v3", "episodes": ["robointer_droid_000001"]}
+{"ts": 1792274882.233833, "run_id": null, "kind": "version_created", "version_id": "N0", "parent_id": null, "status": "incumbent", "workflow_sha256": "ea4dbe7caf484a06bed9f2cb7cd6c3f0c063fbec22aae5e821638b2e78625e39"}
+{"ts": 1792274882.2408051, "run_id": "RUN-53c0a94f36", "kind": "version_run_started", "version_id": "N0", "episodes": ["robointer_droid_000001"]}
+{"ts": 1792274886.130075, "run_id": "RUN-53c0a94f36", "kind": "version_run_finished", "version_id": "N0", "statuses": {"robointer_droid_000001": "ok"}, "calls": 1}
+{"ts": 1792274888.180555, "run_id": "RUN-53c0a94f36", "kind": "self_assessment", "eval_id": "SELF-ad00fb2fc2", "version_id": "N0", "split": "eval", "episodes": ["robointer_droid_000001"], "mean_self_score": 0.25, "per_episode_self_score": {"robointer_droid_000001": 0.25}, "component_means": {"telemetry_agreement": 0.2857, "visual_verification": 0.0, "duration_variability": 0.0, "temporal_resolution": 1.0}}
+{"ts": 1792274888.186593, "run_id": "RUN-53c0a94f36", "kind": "gt_measurement_hidden_from_agents", "version_id": "N0", "split": "eval", "micro_f1": 0.0, "micro_f1_iou05": 0.0}
+{"ts": 1792274888.188542, "run_id": "RUN-53c0a94f36", "kind": "run_finished", "status": "ok"}

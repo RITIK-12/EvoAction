@@ -3,8 +3,8 @@
 Agents never receive anything derived from reference labels. Tools expose only the
 incumbent's own predictions, video frames, robot telemetry, sampling metadata and
 the predeclared label-free self-assessment. Every result is persisted as an
-evidence record with an ID that proposals must cite. Tools are restricted to dev
-episodes; the sealed test split is unreachable.
+evidence record with an ID that proposals must cite. Tools are restricted to the
+protocol's episode set.
 """
 
 from __future__ import annotations
@@ -24,12 +24,11 @@ from evoaction.workflow.engine import Version, WorkflowValidationError, apply_pa
 from evoaction.workflow.operators import detect_hints
 
 TOOL_DOCS = {
-    "self_assessment": "self_assessment() -> the incumbent's label-free self-assessment on dev episodes: telemetry agreement, visual verification of each boundary, segment-duration variability, temporal resolution, predicted boundaries and gripper events. No reference labels exist for you.",
-    "episode_predictions": "episode_predictions(episode_id) -> the incumbent's own predicted segments for a DEV episode plus its sampling metadata.",
-    "telemetry_hints": "telemetry_hints(episode_id, signals=['gripper'|'eef_pause']) -> deterministic robot-state change points for a DEV episode, each with distance to the nearest predicted boundary.",
+    "self_assessment": "self_assessment() -> the incumbent's label-free self-assessment on all episodes in the set (scores, plus details for the lowest-scoring ones): telemetry agreement, visual verification of each boundary, segment-duration variability, temporal resolution, predicted boundaries and gripper events. No reference labels exist for you.",
+    "episode_predictions": "episode_predictions(episode_id) -> the incumbent's own predicted segments for an episode in the set plus its sampling metadata.",
+    "telemetry_hints": "telemetry_hints(episode_id, signals=['gripper'|'eef_pause']) -> deterministic robot-state change points for an episode in the set, each with distance to the nearest predicted boundary.",
     "sampling_coverage": "sampling_coverage(episode_id, sampling_hz) -> frame count/spacing for a uniform sampling rate and how many predicted segments are shorter than two sampled frames.",
-    "inspect_frames": "inspect_frames(episode_id, center_sec, window_sec<=4, local_hz<=5, question) -> a Crusoe vision model's structured description of a close-up frame strip of a DEV episode. Costs one vision call.",
-    "trial_patch_on_dev": "trial_patch_on_dev(patch) -> run a candidate WorkflowPatch on the dev episodes and return its label-free self-assessment next to the incumbent's. Costs vision calls; at most twice per run.",
+    "inspect_frames": "inspect_frames(episode_id, center_sec, window_sec<=4, local_hz<=5, question) -> a Crusoe vision model's structured description of a close-up frame strip of an episode in the set. Costs one vision call.",
 }
 
 
@@ -146,7 +145,6 @@ TOOLS: dict[str, Callable[..., Any]] = {
     "telemetry_hints": t_telemetry_hints,
     "sampling_coverage": t_sampling_coverage,
     "inspect_frames": t_inspect_frames,
-    "trial_patch_on_dev": t_trial_patch_on_dev,
 }
 
 
@@ -174,21 +172,26 @@ def compact(obj: Any, limit: int = 6000) -> str:
     return text if len(text) <= limit else text[:limit] + "...<truncated>"
 
 
-def condense_assessment(a: dict[str, Any]) -> dict[str, Any]:
-    """Shorter label-free view for prompts: per-episode scores/components without verbose sub-records."""
+def condense_assessment(a: dict[str, Any], detailed: int = 15) -> dict[str, Any]:
+    """Prompt-sized label-free view: aggregates, every episode's score, and details for the lowest-scoring episodes."""
     if not isinstance(a, dict) or "episodes" not in a:
         return a
-    eps = {}
-    for e, d in a["episodes"].items():
+    ranked = sorted(a["episodes"].items(), key=lambda kv: kv[1]["self_score"])
+    details = {}
+    for e, d in ranked[:detailed]:
         vv = d["components"].get("visual_verification") or {}
         ta = d["components"].get("telemetry_agreement") or {}
-        eps[e] = {"self_score": d["self_score"], "component_values": d["component_values"], "n_segments": d["n_segments"],
-                  "predicted_boundaries": d["predicted_boundaries"][:20], "gripper_events": d["gripper_events"][:20],
-                  "telemetry_precision_recall": [ta.get("precision"), ta.get("recall")] if ta else None,
-                  "visually_confirmed": f"{vv.get('confirmed')}/{vv.get('checked')}" if vv else None,
-                  "duration_cv": d["components"]["duration_variability"].get("cv"),
-                  "sub_resolution_segments": d["components"]["temporal_resolution"].get("sub_resolution_segments")}
-    return {k: v for k, v in a.items() if k != "episodes"} | {"episodes": eps}
+        details[e] = {"self_score": d["self_score"], "component_values": d["component_values"], "n_segments": d["n_segments"],
+                      "predicted_boundaries": d["predicted_boundaries"][:12], "gripper_events": d["gripper_events"][:12],
+                      "telemetry_precision_recall": [ta.get("precision"), ta.get("recall")] if ta else None,
+                      "visually_confirmed": f"{vv.get('confirmed')}/{vv.get('checked')}" if vv else None,
+                      "duration_cv": d["components"]["duration_variability"].get("cv")}
+    seg_counts = [d["n_segments"] for d in a["episodes"].values()]
+    return {"definition": a.get("definition"), "mean_self_score": a.get("mean_self_score"), "component_means": a.get("component_means"),
+            "episodes_total": len(a["episodes"]), "predicted_segments_per_episode": {"min": min(seg_counts, default=0),
+            "max": max(seg_counts, default=0), "mean": round(sum(seg_counts) / max(1, len(seg_counts)), 2)},
+            "per_episode_self_score": {e: d["self_score"] for e, d in ranked},
+            f"lowest_{detailed}_episodes_detail": details}
 
 
 # Backwards-compatible name used by investigator/supervisor for profile-like records.
@@ -198,6 +201,7 @@ condense_profile = condense_assessment
 def evidence_item(ev_id: str, tool: Any, args: Any, result: Any, per_record: int = 3500) -> dict[str, Any]:
     if tool == "self_assessment":
         result = condense_assessment(result)
+        per_record = 9000
     text = json.dumps(result, default=str)
     if len(text) > per_record:
         text = text[:per_record] + "...<truncated>"
