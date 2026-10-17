@@ -1,0 +1,171 @@
+{
+ "id": "rest50-EXP-0002",
+ "parent_version": "N0",
+ "hypothesis": "Adding a telemetry\u2011guided refinement pipeline (state_hint_detection \u2192 inspect_transition_windows \u2192 refine_intervals) with thinking=False, limited inspection windows (max_windows=4, window_sec=1.5, local_hz=3.0) and a refine pass that returns the input segments when no hints are present will steer the model to place boundaries at actual gripper open/close events, improving telemetry agreement and visual verification components of the label\u2011free self\u2011score by at least 0.03 while keeping inference cost growth under 100%.",
+ "failure_slice": "episodes that contain gripper telemetry signals (i.e., has_telemetry is true)",
+ "evidence_ids": [
+  "SELF-a86a935a32",
+  "EV-d9cc42cb7a",
+  "EV-838a9327bb",
+  "SELF-bbc9f8389f",
+  "EV-ad042113d6",
+  "EV-e7fc3ea54d",
+  "EV-341ef4755d",
+  "EV-9b7f60bf79",
+  "EV-b64a7657fc"
+ ],
+ "objective": "Raise the mean label\u2011free self\u2011score from ~0.493 to \u22650.523 (an increase of \u22650.03).",
+ "candidate_patch": {
+  "insert_nodes": [
+   {
+    "node": {
+     "id": "state_hint",
+     "operator": "state_hint_detection",
+     "depends_on": [
+      "sample"
+     ],
+     "params": {
+      "signals": [
+       "gripper"
+      ],
+      "min_gap_sec": 0.8,
+      "pause_speed_quantile": 0.15,
+      "min_pause_sec": 0.3
+     },
+     "when": "has_telemetry"
+    },
+    "rewire_dependents_of": null
+   },
+   {
+    "node": {
+     "id": "inspect_win",
+     "operator": "inspect_transition_windows",
+     "depends_on": [
+      "annotate",
+      "state_hint"
+     ],
+     "params": {
+      "select": "all_boundaries",
+      "window_sec": 1.5,
+      "local_hz": 3.0,
+      "max_windows": 4,
+      "include_unmatched_hints": false,
+      "tile_px": 224,
+      "confidence_threshold": 0.7
+     },
+     "when": "always"
+    },
+    "rewire_dependents_of": null
+   },
+   {
+    "node": {
+     "id": "refine_seg",
+     "operator": "refine_intervals",
+     "depends_on": [
+      "annotate",
+      "inspect_win"
+     ],
+     "params": {
+      "prompt": "refine.md",
+      "thinking": false,
+      "max_tokens": 4096,
+      "temperature": 0.2,
+      "allow_insert": true,
+      "allow_delete": true
+     },
+     "when": "always"
+    },
+    "rewire_dependents_of": null
+   }
+  ],
+  "remove_nodes": [],
+  "set_params": {},
+  "set_when": {},
+  "set_depends_on": {
+   "export": [
+    "refine_seg"
+   ]
+  },
+  "prompt_updates": {}
+ },
+ "expected_outcome": "Mean label\u2011free self\u2011score increases by \u22650.03, with notable gains in the telemetry_agreement and visual_verification components (each improving by ~0.02). Duration_variability remains stable or improves slightly, and temporal_resolution stays unchanged because the refinement does not alter the overall sampling rate.",
+ "verification_plan": {
+  "metric": "label_free_self_score",
+  "split": "all_episodes",
+  "compare_to": "incumbent"
+ },
+ "stop_conditions": [
+  "total inference cost increase > 100% relative to incumbent",
+  "after two consecutive evaluations the score delta vs incumbent is < 0.01"
+ ],
+ "authored_by": "nvidia/NVIDIA-Nemotron-3-Super-120B-A12B",
+ "task_ids": [
+  "TASK-0043b93845",
+  "TASK-712512d87b",
+  "TASK-e515cba4b9",
+  "TASK-5ddfe6341b"
+ ],
+ "protocol": "v3-macrodata",
+ "task_tree": [
+  {
+   "task_id": "TASK-0043b93845",
+   "parent": null,
+   "depth": 1,
+   "question": "Why does the model predict uniform boundaries instead of aligning with gripper open/close events in galaxea_033?",
+   "status": "done",
+   "finding": "The model predicts uniform 1\u2011second boundaries up to 11\u202fs because its self\u2011assessment shows near\u2011zero visual verification and low telemetry agreement, causing it to fall back to a default uniform segmentation rather than aligning with gripper events at 4.0, 16.37, 20.0, and 32.6\u202fs.",
+   "implication": "Modify the annotation prompt or add a telemetry\u2011conditioning step so the model is explicitly encouraged to place boundaries at gripper open/close events (e.g., include gripper state in the prompt or increase telemetry weight in the loss).",
+   "evidence_ids": [
+    "SELF-a86a935a32",
+    "EV-d9cc42cb7a",
+    "EV-838a9327bb"
+   ],
+   "dispatch_decision": null
+  },
+  {
+   "task_id": "TASK-712512d87b",
+   "parent": null,
+   "depth": 1,
+   "question": "What does the vision model observe at a predicted boundary (e.g., 2.0 sec) in galaxea_033 that leads to zero visual verification?",
+   "status": "done",
+   "finding": "At the predicted boundary of 2.0\u202fsec in galaxea_033, the vision model observes no manipulation state change; the only detected changes are a gripper close at 2.6\u202fsec and an open/release at 3.0\u202fsec, resulting in zero visual verification.",
+   "implication": "Adjust boundary prediction to align with actual visual change times (e.g., incorporate telemetry/gripper events or increase temporal resolution) to improve visual verification scores.",
+   "evidence_ids": [
+    "SELF-a86a935a32",
+    "EV-2a70fec88d"
+   ],
+   "dispatch_decision": null
+  },
+  {
+   "task_id": "TASK-e515cba4b9",
+   "parent": null,
+   "depth": 1,
+   "question": "Are the predicted boundaries merely artifacts of the uniform sampling rate (\u22480.5\u202fs per frame) rather than driven by actual changes in the video?",
+   "status": "done",
+   "finding": "Predicted boundaries align with the uniform 0.5\u202fs sampling grid (integer\u2011second marks) and lack visual or telemetry confirmation, indicating they are sampling artifacts rather than driven by actual video changes.",
+   "implication": "Replace uniform fixed\u2011interval sampling with adaptive segmentation that responds to telemetry or visual change points, or adjust the prompt to discourage regular\u2011interval subtask generation.",
+   "evidence_ids": [
+    "SELF-bbc9f8389f",
+    "EV-ad042113d6",
+    "EV-e7fc3ea54d",
+    "EV-341ef4755d"
+   ],
+   "dispatch_decision": null
+  },
+  {
+   "task_id": "TASK-5ddfe6341b",
+   "parent": null,
+   "depth": 1,
+   "question": "For a sample of predicted interior boundaries in low\u2011scoring episodes, does a close\u2011up visual inspection confirm a manipulation state change?",
+   "status": "done",
+   "finding": "Close-up visual inspection confirms manipulation state changes for predicted interior boundaries in low-scoring episodes (e.g., galaxea_033 shows grasp/release at 5.0\u202fs within the predicted boundary window).",
+   "implication": "Increase visual verification sampling around predicted boundaries (higher local_hz or tighter windows) or refine the prompt to better detect grasp/release events, to improve low visual_verification scores.",
+   "evidence_ids": [
+    "SELF-bbc9f8389f",
+    "EV-9b7f60bf79",
+    "EV-b64a7657fc"
+   ],
+   "dispatch_decision": null
+  }
+ ]
+}

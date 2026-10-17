@@ -1,0 +1,41 @@
+{
+ "episode_id": "galaxea_050",
+ "version_id": "rest50-EXP-0001",
+ "segments": [
+  {
+   "start_sec": 0.0,
+   "end_sec": 1.0,
+   "subtask": "The robot arm approaches the cup."
+  },
+  {
+   "start_sec": 1.0,
+   "end_sec": 3.0,
+   "subtask": "The robot arm grasps the cup."
+  },
+  {
+   "start_sec": 3.0,
+   "end_sec": 5.0,
+   "subtask": "The robot arm lifts the cup."
+  },
+  {
+   "start_sec": 5.0,
+   "end_sec": 7.0,
+   "subtask": "The robot arm moves the cup over the bowl."
+  },
+  {
+   "start_sec": 7.0,
+   "end_sec": 9.0,
+   "subtask": "The robot arm pours the solid from the cup into the bowl."
+  },
+  {
+   "start_sec": 9.0,
+   "end_sec": 10.0,
+   "subtask": "The robot arm places the cup back on the surface."
+  },
+  {
+   "start_sec": 10.0,
+   "end_sec": 12.5,
+   "subtask": "The robot arm moves away from the bowl."
+  }
+ ]
+}

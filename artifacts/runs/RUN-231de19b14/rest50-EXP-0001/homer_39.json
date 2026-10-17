@@ -1,0 +1,21 @@
+{
+ "episode_id": "homer_39",
+ "version_id": "rest50-EXP-0001",
+ "segments": [
+  {
+   "start_sec": 0.0,
+   "end_sec": 1.0,
+   "subtask": "Spray and wipe countertop"
+  },
+  {
+   "start_sec": 1.0,
+   "end_sec": 10.0,
+   "subtask": "Clean stovetop"
+  },
+  {
+   "start_sec": 10.0,
+   "end_sec": 19.5,
+   "subtask": "Wipe dining table"
+  }
+ ]
+}

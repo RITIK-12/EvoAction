@@ -2,148 +2,204 @@
 
 **A self-evolving, recursively delegated agent harness, built for the Crusoe × Cerebral Valley Recursive Agents Hackathon (Track 3: Version N+1).**
 
-Robot manipulation subtask annotation is the working environment, because it is hard and can be scored objectively. Given a robot demonstration video, the task is to output timestamped segments, one per completed world-state change, in the style of WGO-Bench. Starting from a one-line goal and an incumbent annotation workflow, EvoAction:
+The working environment is robot-video temporal subtask segmentation on [WGO-Bench](https://huggingface.co/datasets/macrodata/WGO-Bench), scored with **Macrodata's own evaluation protocol** so the results sit next to their published model sweep. Everything runs on NVIDIA Nemotron models served by Crusoe Managed Inference.
 
-1. Runs the incumbent on real robot episodes using a Crusoe-hosted NVIDIA Nemotron vision model.
-2. Has a **Nemotron supervisor** read the incumbent's **label-free self-assessment** and launch focused **investigation agents**. Agents **never see ground truth**. An investigator that finds a distinct, unresolved sub-problem can request a child investigation. The dispatcher spawns it only if it passes novelty, cycle, depth, fan-out, budget and evidence-citation checks.
-3. Turns findings into a falsifiable **`ExperimentProposal`** with a typed **workflow patch** that can change topology, parameters or prompts. A Nemotron critic reviews it, and invalid patches get one bounded repair.
-4. Runs the candidate on held-out validation episodes. The **controller** then applies a predeclared **label-free** promotion rule and **promotes or rejects** the candidate. Ground truth is used only for a shadow measurement recorded after the decision. Rejected versions are frozen and kept; the incumbent is reloaded from its immutable artifacts.
-5. Freezes **A** (incumbent `N000`), **B** (a strong fixed pipeline with no agents) and **C** (the best evolved harness, or the unchanged incumbent if nothing was promoted). All three run **once** on a sealed held-out split, and the run reports quality, inference cost and optimization overhead.
+1. **Version N0** replicates Macrodata's Refiner annotation protocol on `Nemotron-3-Nano-Omni-30B-A3B`: their prompt word for word, 0.5 s sampling, 224 px tiles, 20 frames per sheet, their timestamp badge, all sheets in one call, and no post-processing.
+2. **N → N+1 without ground truth.** A Nemotron-3-Super-120B supervisor reads N's **label-free self-assessment**. It launches investigation agents that work from robot telemetry, close-up frames and the system's own predictions, and an investigator can spawn child investigations through a gated dispatcher. A strategy agent writes a typed, executable `WorkflowPatch`, which a critic reviews. The controller runs the candidate on **the same episodes** and applies a predeclared label-free gate. Ground truth is never shown to agents or used by the gate.
+3. **Measurement.** The protected evaluator scores every version against the human labels afterwards, for this README and the report only.
+4. **Batches.** The 100 benchmark episodes are evaluated in two batches of 50, each with its own lineage, and pooled per recursion level into the full benchmark.
 
-Nothing is preordained. Promotion, rejection, grandchild spawning and benchmark wins are empirical outcomes, and `artifacts/report.html` shows only what actually happened.
+Every number below comes from persisted runs in `artifacts/` and was re-scored by an independent script (`linear_sum_assignment` matching), which gave identical true-positive counts.
 
-## Results (v2 no-ground-truth protocol; every number comes from `artifacts/`)
+## Results
 
-**Version N** (`N000`, scored against ground truth by the experimenters only):
+Metric (Macrodata's): **Segment F1 at temporal IoU ≥ 0.75**, pooled over episodes, one-to-one matching, with the first predicted start and last predicted end snapped to the human episode boundaries. Labels are ignored. Raw (unsnapped) F1@0.75 and snapped F1@0.5 are reported alongside.
 
-| | dev (5 episodes) | validation (4 episodes) |
+### Full benchmark: 100 episodes, pooled per recursion level
+
+| Recursion | Versions (batch 1 + batch 2) | Snapped F1@0.75 | Raw F1@0.75 | Snapped F1@0.5 | Pred / ref | Annotation cost (100 ep) |
+|---|---|---|---|---|---|---|
+| 0 | N0 + N0 | **0.036** | 0.021 | 0.162 | 1498 / 743 | $0.203 |
+| 1 | N001 + N0 | **0.035** | 0.027 | 0.162 | 1498 / 743 | $0.220 |
+| 2 | N001 + N0 | **0.035** | 0.027 | 0.162 | 1498 / 743 | $0.220 |
+
+The comparison below is Macrodata's original model sweep: Segment F1 at tIoU ≥ 0.75 on the full 100-episode benchmark, contact-sheet setup, before their final prompt optimization. Nemotron was not in their sweep.
+
+| # | System | Predicted segments | Segment F1@0.75 |
+|---|---|---|---|
+| 1 | Gemini 3.5 Flash | 645 | 0.290 |
+| 2 | Gemini Robotics ER 1.6 | 556 | 0.245 |
+| 3 | GPT-5.5 (low) | 602 | 0.233 |
+| 4 | GPT-5.4 (low) | 529 | 0.233 |
+| 5 | Gemini 3.1 Pro Preview | 586 | 0.232 |
+| 6 | Gemini 3 Flash Preview | 685 | 0.210 |
+| 7 | Claude Opus 4.8 | 733 | 0.168 |
+| 8 | Claude Sonnet 4.6 | 698 | 0.146 |
+| 9 | Gemini 2.5 Pro | 662 | 0.145 |
+| 10 | Qwen 3.5 Plus | 763 | 0.141 |
+| 11 | Claude Haiku 4.5 | 570 | 0.128 |
+| 12 | Gemini 3.1 Flash Lite | 757 | 0.119 |
+| 13 | Qwen 3.6 Flash | 715 | 0.110 |
+| 14 | GPT-5.4 mini | 317 | 0.106 |
+| 15 | Gemini 2.5 Flash | 855 | 0.059 |
+| 16 | Gemma 4 26B | 1080 | 0.057 |
+| 17 | **EvoAction recursion 0** (N0, Nemotron-3-Nano-Omni-30B-A3B) | 1498 | **0.036** |
+| 18 | **EvoAction recursion 1–2** (N001 + N0, same model) | 1498 | **0.035** |
+
+### Batch 1: all 50 DROID episodes (150 reference segments)
+
+| Recursion | Version | Snapped F1@0.75 | Raw F1@0.75 | Snapped F1@0.5 | Pred | Label-free score (gate) | Gate | Annotation cost (50 ep) | Recursion cost |
+|---|---|---|---|---|---|---|---|---|---|
+| 0 | **N0** (Macrodata protocol on Nemotron Omni) | **0.081** | 0.013 | 0.179 | 320 | 0.336 | baseline | $0.056 | – |
+| 1 | EXP-0001: telemetry hints → close-up windows → refine → merge | 0.077 | **0.043** | 0.179 | 320 | **0.418** | **PROMOTED → N001** | $0.074 | $0.057 |
+| 2 | EXP-0002: 30 frames per sheet, 5 Hz windows, denser hints | 0.074 | 0.052 | 0.195 | 311 | 0.393 | REJECTED | $0.071 | $0.144 |
+| final | **N001** | 0.077 | 0.043 | 0.179 | 320 | 0.418 | incumbent | $0.074 | |
+
+### Batch 2: 25 Galaxea + 25 HomER (593 reference segments)
+
+| Recursion | Version | Snapped F1@0.75 | Raw F1@0.75 | Snapped F1@0.5 | Pred | Label-free score (gate) | Gate | Annotation cost (50 ep) | Recursion cost |
+|---|---|---|---|---|---|---|---|---|---|
+| 0 | **N0** (Macrodata protocol on Nemotron Omni) | **0.024** | 0.023 | 0.157 | 1178 | 0.493 | baseline | $0.147 | – |
+| 1 | rest50-EXP-0001: telemetry hints → windows → conditional refine | 0.024 | 0.023 | 0.157 | 1178 | 0.491 | REJECTED | $0.159 | $0.069 |
+| 2 | rest50-EXP-0002: same with tighter windows (4 × 1.5 s at 3 Hz) | 0.023 | 0.021 | 0.157 | 1178 | 0.497 | REJECTED (+0.003 < 0.03) | $0.201 | $0.088 |
+| final | **N0** | 0.024 | 0.023 | 0.157 | 1178 | 0.493 | incumbent | $0.147 | |
+
+## Why Nemotron N0 scores below every model in the sweep
+
+The pipeline was checked end to end, and the shortfall comes from what the model outputs, not from the harness:
+- **Frames:** all frames reach the model. The longest DROID episode produces 215 frames on 11 sheets, sent in one call, and the model correctly reports 11 images spanning 000.00 s to 107.00 s.
+- **Prompt:** identical to Macrodata's.
+- **Scores:** re-scored independently, with identical results.
+
+Measured on N0's own outputs:
+
+| Dataset | Predicted / reference segments | Median predicted segment | Median reference segment | Predicted segments ≤ 2 s | Predicted segments exactly 1.0 s | Median coverage (last predicted end ÷ reference end) | Episodes with < 50% coverage |
+|---|---|---|---|---|---|---|---|
+| DROID | 320 / 150 (2.1×) | 1.0 s | 7.9 s | 87% | 184 | 0.55 | 23 of 50 |
+| Galaxea | 188 / 123 (1.5×) | 1.2 s | 2.9 s | 80% | 88 | 1.08 | 6 of 25 |
+| HomER | 994 / 470 (2.1×) | 1.0 s | 2.9 s | 93% | 915 | 1.00 | 7 of 25 |
+
+Counts are raw model output. Four HomER items were invalid and dropped by the evaluator, so 1,498 segments were scored.
+
+1. **It captions the sampling grid instead of segmenting events.** 79% of all predicted segments last exactly 1.0 s, which is two frames at the 0.5 s sampling rate. The prompt explicitly asks for "2-10 seconds", but the model emits one segment per frame pair. As a result, 1,498 predictions face 743 reference segments, more than any model in the sweep (Gemma 4 26B predicted 1,080 and scored 0.057).
+2. **That makes IoU ≥ 0.75 nearly unreachable.** A 1.0 s segment can only reach IoU 0.75 against a reference segment shorter than 1.33 s. DROID's shortest reference segment is 2.3 s, so raw DROID F1@0.75 is 0.013.
+3. **On DROID it stops early.** In 23 of 50 episodes, predictions end before half the annotated span; on the 107 s episode they end at 17 s. The snapped headline of 0.081 is mostly snapping stretching the last predicted segment to the episode end. Raw F1 is 0.013.
+4. **Likely model-side causes:**
+   - **Thinking off.** It's off because thinking-on multi-image calls exhausted the token cap and returned no JSON in 31 of 42 attempts.
+   - **A small model.** It has 3B active parameters (MoE).
+   - **Little visual detail per frame.** About 570 prompt tokens per 20-frame sheet on this provider, or about 28 tokens per frame. Gemma 4 26B, the closest open model in the sweep, shows the same pattern: the most predicted segments and the lowest score.
+
+**What the agents saw without labels.**
+- The DROID supervisor diagnosed "uniformly spaced early boundaries (approximately 1-second intervals)". Investigators confirmed that predictions stop after the first sheet and sit on a 1-second grid.
+- Their patches added a telemetry-guided refinement stage. On DROID that moved boundaries within the predicted span: raw F1@0.75 rose 3.3×, from 3 to 10 exact matches.
+- It did not change granularity or coverage, which are what limit the score.
+
+**Note on further fixes.** Any fix designed now (for example per-sheet calls stitched together, or fewer frames per sheet) would be informed by this ground-truth analysis. It would have to be reported as a human-designed baseline variant, not as an agent-found N+1.
+
+## What the N+1 loop did (no ground truth)
+
+- **Batch 1, recursion 1.** EXP-0001 inserted a telemetry-guided refinement stage, a **topology change** from 3 nodes to 7. It was promoted on the label-free gate: +0.082, with 96% of episodes non-regressing. Measured afterwards, raw F1@0.75 went from 0.013 to 0.043, while the snapped headline lost one match (19 → 18).
+- **Batch 1, recursion 2.** EXP-0002 changed sampling parameters only, and the label-free score fell. The candidate was rejected, then frozen and kept. Measured afterwards, it had the best raw F1@0.75 (0.052) and F1@0.5 (0.195) of any DROID version.
+- **Batch 2.** Both candidates were telemetry-guided refinement variants, and both were rejected. The label-free deltas were −0.002 and +0.003, against a +0.03 threshold. Ground truth confirmed neither helped.
+- **Honest reading.**
+  - The label-free score rewarded EXP-0001 mostly through segment-duration variability (0.33 → 0.91). Telemetry agreement stayed at 0.188.
+  - The proxy tracks raw boundary accuracy but not the snapped headline.
+  - With 150 or 593 reference segments, one-match changes are noise.
+  - Investigation depth reached 1 in both batches: no investigator raised an evidence-backed follow-up question that passed the dispatcher's gates.
+
+## Protocol
+
+- **Same episodes for every version.** Batch sets are immutable and hashed (`artifacts/episode_sets/{droid50,rest50}.json`). There are no dev/validation/test splits, because nothing is trained. All N, N+1, N+2 numbers in a table come from the same episodes.
+- **What agents see:**
+  - the incumbent's predictions
+  - video frames, through the Crusoe vision model
+  - robot telemetry
+  - sampling metadata
+  - a predeclared **label-free self-score** (`evoaction/selfcheck/label_free.py`), which combines:
+    - F1 between predicted boundaries and gripper open/close events (0.35)
+    - vision-model confirmation that a state change completes at each boundary (0.35)
+    - segment-duration variability (0.15)
+    - temporal resolution (0.15)
+- **Promotion gate (controller only):** label-free score +0.03 or more, at least 50% of episodes non-regressing, and valid outputs. There is no per-episode cost cap. **Total cost per recursion** (agents plus candidate run) and per version is recorded and reported.
+- **Ground truth** is read only by `evoaction/evaluation/protected.py`. Guards:
+  - tests plant sentinel ground-truth values and check they never appear in an agent prompt
+  - a static test checks that agents and self-check code never touch the protected store
+  - a post-run scan of all 24 cached agent responses from both batches found no ground-truth vocabulary; the only "f1" in agent inputs is the label-free `telemetry_agreement.f1`
+
+## Faithfulness to Macrodata's setup, and deviations
+
+| | Macrodata (published Refiner code and post) | EvoAction N0 |
 |---|---|---|
-| F1@0.75 | 0.081 | 0.098 |
-| label-free self-score | 0.543 | 0.511 |
+| Prompt | Refiner segmentation prompt | identical, plus the episode instruction line |
+| Sampling | 0.5 s, 224 px tiles, 20 per sheet, 5 columns, all sheets in one call | identical |
+| Timestamp badge | black box top-left, white `000.00s`, 17 pt | identical |
+| JPEG / temperature | quality 95, subsampling 2 / 0.1 | identical |
+| Post-processing | drop invalid, clamp, sort | identical |
+| Scoring | snapped pooled Segment F1@0.75 | identical (raw also reported) |
+| Model | 16 VLMs (sweep above) | Nemotron-3-Nano-Omni-30B-A3B, `thinking=false` |
 
-**N+1 loop** (`RUN-83d7bcb960`, agents saw no ground truth):
-- The Nemotron supervisor diagnosed evenly spaced ~1 s boundaries with no visual confirmation and poor telemetry alignment. It worked from label-free evidence only.
-- It launched 4 depth-1 investigations. No investigator raised an evidence-backed follow-up question, so the maximum depth reached was 1.
-- Ground-truth vocabulary appears 0 times in agent-written text.
-
-| Experiment | Change | Label-free score (gate) | Decision | Shadow GT F1@0.75 (measured afterwards) |
-|---|---|---|---|---|
-| EXP-0001 | prompt: longer subtasks | 0.511 → 0.366 | REJECTED (score fell) | 0.098 → 0.098 (F1@0.5 0.098 → 0.341) |
-| EXP-0002 | topology: 2 Hz + gripper hints → windows → refine → merge | 0.511 → 0.602 | REJECTED (cost 2.56× > 1.5×) | 0.098 → 0.140 |
-
-**Sealed held-out test:** the 3 episodes never evaluated before (`robointer_droid_000038, galaxea_033, galaxea_039`). A, B and C were frozen first and the test ran once.
-
-| System | F1@0.75 | F1@0.5 | Label-free self-score | Annotation cost |
-|---|---|---|---|---|
-| A · N000 | 0.037 | 0.222 | 0.241 | $0.0040 |
-| B · strong fixed | 0.000 | 0.091 | 0.316 | $0.0031 |
-| C · unchanged incumbent (no candidate promoted) | 0.037 | 0.222 | 0.241 | $0.0040 |
-
-Continuity check on the v1 pilot test episodes, which were already scored once: A 0.077, B 0.211, C 0.077 (F1@0.75).
-
-**What this shows, honestly:**
-- EvoAction ran a real N → N+1 loop with no ground truth. EXP-0002 changed the topology using robot telemetry, improved the label-free score, and, measured afterwards, also improved validation F1@0.75 (0.098 → 0.140). The predeclared 1.5× cost cap rejected it anyway, so C is the unchanged incumbent.
-- The label-free proxy is informative but imperfect. It agreed with ground truth on EXP-0002 and disagreed on EXP-0001 and on the A-vs-B ranking of the fresh test.
-- B vs A flips between test sets: B wins on the pilot test, A wins on the fresh test. With 3–4 episodes per split, sample variance dominates and nothing is statistically established.
-
-## No-ground-truth protocol (v2)
-
-N+1 must improve the workflow **without ever looking at ground truth**. Version N's annotations are scored against the WGO-Bench labels, but those metrics are for the experimenters only.
-
-- **What agents see:** their own predictions, video frames (through the Crusoe vision model), robot telemetry, sampling metadata, and a predeclared **label-free self-score** (`evoaction/selfcheck/label_free.py`). The score combines:
-  - agreement between predicted boundaries and gripper open/close events (0.35)
-  - Crusoe vision-model confirmation that a state change completes at each boundary (0.35)
-  - variability of segment durations, since evenly spaced segments are an artifact of tiled sampling (0.15)
-  - temporal resolution: no segments shorter than two sampled frames (0.15)
-- **Promotion rule:** label-free self-score improves by at least 0.03, at least 50% of validation episodes do not regress on that score, outputs are valid, and annotation cost is at most 1.5×.
-- **Ground truth** is read only by `evoaction/evaluation/protected.py`. It produces a **shadow measurement** after each decision, which goes to the report only, and the sealed final test. That answers the real question: did the label-free self-improvement actually improve accuracy?
-- **Guards:**
-  - A test plants sentinel ground-truth values and checks they never appear in any agent prompt.
-  - A static test checks that `agents/` and `selfcheck/` never reference the protected store.
-  - The history agents see excludes shadow measurements.
-- **Superseded run:** an earlier run in which agents saw ground-truth-derived development summaries (`v1`) is archived in `artifacts/superseded/v1_gt_feedback/`, with an explanation.
+Deviations, recorded honestly:
+- **Thinking off.** With thinking on, 31 of 42 multi-image calls exhausted the token cap while reasoning and returned no JSON.
+- **Prompt version.** The Refiner prompt includes Macrodata's duration prior ("Most segments should be 2-10 seconds"). The sweep above was run before their final prompt optimization, so if anything N0 uses the stronger prompt.
+- **Context tokens.** Prompt tokens grow linearly at about 570 per sheet: 1, 2, 4 and 11 sheets give 601, 1173, 2307 and 6138 tokens. Agents are told this measured fact, and `frames_per_sheet` is a parameter they can change.
+- **Matching.** We use maximum-cardinality bipartite matching at IoU ≥ 0.75; the post doesn't specify the matcher. Our snapping drops a segment if snapping inverts it. That affects 17 batch-2 episodes and no DROID episode. True-positive counts are identical either way.
+- **Failed calls are not cached.** In the standalone baseline files, one episode per batch failed with invalid JSON on both attempts. When each lineage re-ran N0 as recursion 0, it succeeded, so the lineage N0 rows (every episode OK) are the reference.
+- **In-sample selection.** The gate selects on the same episodes it reports. It is label-free, so no labels leak, but improvements are not a held-out generalization claim.
+- **DROID's 50 episodes cover 26 tasks**, mostly in twin pairs with the same instruction and duration.
 
 ## Quick start
 
 ```bash
 uv sync --python 3.12
-cp .env.example .env   # add CRUSOE_API_KEY
-uv run python scripts/preflight.py          # live model discovery + Nemotron JSON + multimodal checks
-uv run python -m evoaction run-demo         # baselines -> evolve -> sealed final test -> report
-open artifacts/report.html
+cp .env.example .env                                 # add CRUSOE_API_KEY
+mkdir -p data/wgo                                    # full WGO-Bench parquet (1.4 GB, gitignored)
+curl -L -o data/wgo/annotations.parquet https://huggingface.co/datasets/macrodata/WGO-Bench/resolve/main/data/annotations.parquet
+uv run python -m evoaction setup                     # ingest all 100 episodes, lock droid50 and rest50
+uv run python -m evoaction baseline --set droid50    # N0 on batch 1
+uv run python -m evoaction evolve --set droid50      # label-free N -> N+1 -> N+2 on batch 1
+uv run python -m evoaction evolve --set rest50       # same for batch 2
+uv run python -m evoaction report                    # artifacts/report.html
 ```
 
-Individual stages: `python -m evoaction baselines | evolve | final | report` (add `--full` to use the full splits instead of the pilot subsets). Tests: `uv run --group dev pytest -q`.
+Runs used `MAX_VISION_CALLS=1000–1200 RESERVED_TEST_VISION_CALLS=0 MAX_NEMOTRON_CALLS=80 WORKERS=8`. Tests: `uv run --group dev pytest -q`.
 
 ## Models (Crusoe Managed Inference, confirmed live via `GET /v1/models`)
 
 | Role | Model |
 |---|---|
 | Supervisor, investigators, strategy, critic | `nvidia/NVIDIA-Nemotron-3-Super-120B-A12B` |
-| Visual annotation, boundary refinement, frame inspection | `nvidia/Nemotron-3-Nano-Omni-Reasoning-30B-A3B` |
+| Annotation, refinement, frame inspection, label-free verification | `nvidia/Nemotron-3-Nano-Omni-Reasoning-30B-A3B` |
 
-Near-miss IDs in `.env` are resolved to the live ID; for example, `nvidia/Nemotron-3-Super-120B-A12B` resolves to `nvidia/NVIDIA-Nemotron-3-Super-120B-A12B`. `nvidia/NVIDIA-Nemotron-3.5-Super-VL` was also probed, but it accepts at most one image per request, so it cannot take multi-sheet input.
-
-## Data and splits
-
-- [WGO-Bench](https://huggingface.co/datasets/macrodata/WGO-Bench) (CC-BY-NC-SA-4.0). The parquet holds one episode per row group, so episodes are range-read individually instead of downloading the full ~1.4 GB file.
-- Ingest separates **agent-visible** media, instructions and robot telemetry (`data/cache/episodes/`) from **evaluator-only** reference labels (`data/cache/protected/`). Only `evoaction/evaluation/protected.py` reads the protected directory.
-- `artifacts/splits.json` is immutable and hashed: robot episodes only (DROID + Galaxea, which have telemetry), at most 60 s and 30 MB each, at least 3 reference subtasks. Near-duplicate instructions are grouped so a group never crosses splits. The full splits are 5 dev / 4 validation / 6 test; the pilots are 2 / 2 / 3. Each split and each pilot contains both robot sources and events shorter than 2 s. The seed rule was chosen from episode composition only, before any inference on these splits.
-
-## Evaluation protocol (`evoaction-temporal-v1`)
-
-- Temporal IoU with **maximum-cardinality one-to-one bipartite matching** on the IoU ≥ 0.75 adjacency (`scipy.sparse.csgraph.maximum_bipartite_matching`). It is neither greedy nor max-IoU-then-threshold.
-- Primary metric: **micro Segment F1@0.75**, plus paired per-episode F1, short-event recall (reference subtasks under 2 s), and invalid/empty output rates.
-- Report-only metrics: F1@0.5, mean boundary error in seconds, and an evaluator-only **outer-boundary-snapped** variant. The raw score is always reported separately. Snapped predictions are never written back.
-- Temporal F1 measures boundaries only. **It does not assess whether subtask labels are semantically correct.**
-- **Access policy (v2):** agents receive nothing derived from labels on any split. The evaluator scores dev and validation only for shadow measurement. The test split stays sealed until A/B/C are frozen with checksums, then is evaluated exactly once, on the 3 test episodes never evaluated before.
+`nvidia/NVIDIA-Nemotron-3.5-Super-VL` was also probed. It accepts at most one image per request, so it cannot take multi-sheet input.
 
 ## Workflow graph (the thing that evolves)
 
-The operator allowlist is Pydantic-validated, and agents can only submit typed `WorkflowPatch` objects. No generated code is ever executed.
+Agents submit typed, Pydantic-validated `WorkflowPatch` objects over an operator allowlist. No generated code is executed.
 
 | Operator | Behaviour |
 |---|---|
-| `sample_contact_sheets` | Uniform frames, tiled into timestamped contact sheets |
-| `initial_annotate` | One Crusoe multimodal call over all sheets, using the versioned `prompt.md` |
-| `state_hint_detection` | Deterministic gripper and end-effector change points from robot telemetry |
-| `inspect_transition_windows` | Close-up frame strips around selected boundaries or hints |
-| `refine_intervals` | One Crusoe multimodal call that keeps, moves, deletes or inserts boundaries, using `refine.md` |
-| `merge_filter_segments` | Deterministic overlap and gap repair, minimum duration, full-episode tiling |
-| `validate_export` | Schema and monotonicity checks, then export (the single terminal node) |
+| `sample_contact_sheets` | Uniform frames tiled into timestamped contact sheets |
+| `initial_annotate` | One multimodal call over all sheets with the versioned `prompt.md` |
+| `state_hint_detection` | Deterministic gripper and end-effector change points from telemetry |
+| `inspect_transition_windows` | Close-up frame strips around boundaries or hints |
+| `refine_intervals` | One multimodal call that keeps, moves, deletes or inserts boundaries (`refine.md`) |
+| `merge_filter_segments` | Deterministic overlap and gap repair, minimum duration |
+| `validate_export` | Schema and monotonicity checks, then export (single terminal node) |
 
-The validator enforces: at most 8 nodes, no cycles, exactly one annotate node, at most 2 multimodal passes per interval, every input produced upstream, and a single terminal export. Each version directory under `artifacts/versions/` contains `workflow.json`, `prompt.md`, an optional `refine.md`, `config.json`, `manifest.json` with SHA-256 hashes, and, once evaluated, `experiment.json` and `validation_report.json`. Version files are frozen after evaluation.
-
-## Promotion rule (applied by the controller, never by an agent)
-
-The rule is label-free (see the protocol above) and predeclared before the v2 run. It is an operational heuristic, not statistical significance.
-
-## Budgets and safety
-
-Call, spend and time budgets are set in `.env`: `MAX_NEMOTRON_CALLS`, `MAX_VISION_CALLS`, `MAX_SPEND_USD`, `RESERVED_TEST_VISION_CALLS` and others. They are checked before every request, and denials are persisted as budget decisions. Recursion is bounded at depth 3, 2 children per parent and 12 tasks, with at most one like-for-like retry. Results are cached on model, full input, prompt and node configuration, so identical upstream calls are reused and candidates are compared on common inputs. Credentials are never logged.
-
-## Decisions and deviations, recorded honestly
-
-- **Fixed baselines use `thinking=false`.** With thinking on, 31 of 42 thinking-length multi-image vision calls ran out of tokens while reasoning and never produced JSON. Setting `reasoning_effort` low or medium did not limit this, and these calls took 40–170 s. Thinking-off calls returned valid JSON in 2–11 s but tend toward evenly spaced boundaries. Two earlier baseline configurations (8k and 16k token caps with thinking on) are archived under `artifacts/versions/_superseded/` and marked superseded. They were retired before any agent optimization or validation-based selection. `thinking` remains an operator parameter the agents can change, and they are told this measured trade-off.
-- Default `REQUEST_TIMEOUT_SECONDS` is 180, because reasoning calls can exceed 90 s.
-- WGO-Bench's official scorer could not be verified, so the outer-snapped score is labeled as an evaluator-only variant.
-- The pilot splits are small, so results are **feasibility evidence**, not established generalization.
-- The v2 evolve run used `MAX_VISION_CALLS=96` because label-free visual verification adds one vision call per assessed episode. Total spend stays around $1–2 of the $35 cap.
-- I stopped at the predeclared 2 experiments. A third was allowed by budget, but I had already seen the shadow ground-truth measurements, and running more experiments because of them would let ground truth steer the process.
+Version directories in `artifacts/versions/` are immutable and SHA-256 hashed. Rejected candidates are frozen and kept, and promotion copies the candidate to a new `N00k` directory. Recursion is bounded at depth 3, 2 children per parent and 12 tasks. Inference is cached on model, full input and parameters, so re-running an unchanged version is free and every candidate is compared on identical upstream outputs.
 
 ## Layout
 
 ```
-scripts/preflight.py          live Crusoe + data preflight -> artifacts/preflight.json
-evoaction/clients/crusoe.py   model discovery, budgets, cache, usage
-evoaction/data/wgo.py         WGO ingest with gold separation, locked splits
-evoaction/media/              deterministic contact sheets
-evoaction/evaluation/         pure metrics + protected evaluator (only gold reader)
-evoaction/workflow/           operators, graph validation/execution, version store, A/B baselines
-evoaction/agents/             tools, recursive investigator task graph, Nemotron supervisor/strategy/critic
-evoaction/experiments/        evolution controller (gate, promotion, rollback), sealed final evaluation
-evoaction/report.py           static HTML evidence report
-artifacts/                    preflight, splits, versions, lineage, evolution, final_test, report.html
+evoaction/data/wgo.py          WGO ingest (agent-visible media vs evaluator-only labels), batch episode sets
+evoaction/media/               deterministic contact sheets (Macrodata badge)
+evoaction/evaluation/          pure metrics + protected evaluator (only gold reader)
+evoaction/selfcheck/           label-free self-assessment
+evoaction/workflow/            operators, graph validation/execution, version store, N0
+evoaction/agents/              tools, recursive investigator task graph, supervisor/strategy/critic
+evoaction/experiments/         evolution controller (label-free gate, promotion, rollback, per-recursion cost)
+evoaction/report.py            static HTML evidence report
+artifacts/                     episode sets, baselines, lineage*, evolution*, versions, runs, events, SQLite DB, report.html
 ```
 
-Apache-2.0. WGO-Bench data is CC-BY-NC-SA-4.0 and is not redistributed here.
+Apache-2.0. WGO-Bench data is CC-BY-NC-SA-4.0 and is not redistributed here (`data/` is gitignored).

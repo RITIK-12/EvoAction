@@ -1,0 +1,26 @@
+{
+ "episode_id": "galaxea_062",
+ "version_id": "rest50-EXP-0001",
+ "segments": [
+  {
+   "start_sec": 0.0,
+   "end_sec": 3.0,
+   "subtask": "approach and grasp the banana"
+  },
+  {
+   "start_sec": 3.0,
+   "end_sec": 6.0,
+   "subtask": "lift the banana and move it to the dish"
+  },
+  {
+   "start_sec": 6.0,
+   "end_sec": 8.25,
+   "subtask": "place the banana on the dish"
+  },
+  {
+   "start_sec": 8.25,
+   "end_sec": 10.5,
+   "subtask": "release the banana and retract the gripper"
+  }
+ ]
+}

@@ -1,0 +1,101 @@
+{
+ "episode_id": "homer_38",
+ "version_id": "rest50-EXP-0001",
+ "segments": [
+  {
+   "start_sec": 0.0,
+   "end_sec": 2.5,
+   "subtask": "Pick up a stack of plates from the counter"
+  },
+  {
+   "start_sec": 2.5,
+   "end_sec": 7.5,
+   "subtask": "Carry the stack of plates to the table"
+  },
+  {
+   "start_sec": 7.5,
+   "end_sec": 10.0,
+   "subtask": "Place the stack of plates on the table"
+  },
+  {
+   "start_sec": 10.0,
+   "end_sec": 17.5,
+   "subtask": "Pick up a plate from the stack and place it on the table"
+  },
+  {
+   "start_sec": 17.5,
+   "end_sec": 22.5,
+   "subtask": "Pick up a glass from the table"
+  },
+  {
+   "start_sec": 22.5,
+   "end_sec": 27.5,
+   "subtask": "Carry the glass to the table"
+  },
+  {
+   "start_sec": 27.5,
+   "end_sec": 30.0,
+   "subtask": "Place the glass on the table"
+  },
+  {
+   "start_sec": 30.0,
+   "end_sec": 39.5,
+   "subtask": "Pick up a fork and knife from the drawer"
+  },
+  {
+   "start_sec": 39.5,
+   "end_sec": 45.0,
+   "subtask": "Carry the fork and knife to the table"
+  },
+  {
+   "start_sec": 45.0,
+   "end_sec": 50.0,
+   "subtask": "Place the fork and knife on the table"
+  },
+  {
+   "start_sec": 50.0,
+   "end_sec": 55.0,
+   "subtask": "Pick up a napkin from the drawer"
+  },
+  {
+   "start_sec": 55.0,
+   "end_sec": 60.0,
+   "subtask": "Carry the napkin to the table"
+  },
+  {
+   "start_sec": 60.0,
+   "end_sec": 65.0,
+   "subtask": "Place the napkin on the table"
+  },
+  {
+   "start_sec": 65.0,
+   "end_sec": 70.0,
+   "subtask": "Pick up a plate from the stack"
+  },
+  {
+   "start_sec": 70.0,
+   "end_sec": 75.0,
+   "subtask": "Carry the plate to the table"
+  },
+  {
+   "start_sec": 75.0,
+   "end_sec": 80.0,
+   "subtask": "Place the plate on the table"
+  },
+  {
+   "start_sec": 80.0,
+   "end_sec": 85.0,
+   "subtask": "Pick up a glass from the table"
+  },
+  {
+   "start_sec": 85.0,
+   "end_sec": 90.0,
+   "subtask": "Carry the glass to the table"
+  },
+  {
+   "start_sec": 90.0,
+   "end_sec": 90.794,
+   "subtask": "Place the glass on the table"
+  }
+ ]
+}

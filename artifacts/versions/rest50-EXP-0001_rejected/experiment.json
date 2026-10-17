@@ -1,0 +1,134 @@
+{
+ "id": "rest50-EXP-0001",
+ "parent_version": "N0",
+ "hypothesis": "Adding a telemetry\u2011guided hint pipeline (state_hint_detection \u2192 inspect_transition_windows \u2192 refine_intervals) with limited inspection windows and a conditional refine step will steer the model to place boundaries at gripper open/close events, raising telemetry agreement and visual verification components of the label\u2011free self\u2011score while keeping inference cost growth modest.",
+ "failure_slice": "Episodes where the incumbent produced uniform 1\u2011second boundaries despite clear gripper transitions (e.g., galaxea_033), as evidenced by near\u2011zero visual verification and low telemetry agreement (SELF-a86a935a32, EV-d9cc42cb7a, EV-838a9327bb, EV-2a70fec88d).",
+ "evidence_ids": [
+  "SELF-a86a935a32",
+  "EV-d9cc42cb7a",
+  "EV-838a9327bb",
+  "EV-2a70fec88d"
+ ],
+ "objective": "Increase the label\u2011free self\u2011score (weighted mean of telemetry_agreement, visual_verification, duration_variability, temporal_resolution) by \u22650.03 on average, with \u226550% of episodes showing non\u2011negative delta relative to incumbent.",
+ "candidate_patch": {
+  "insert_nodes": [
+   {
+    "node": {
+     "id": "state_hint",
+     "operator": "state_hint_detection",
+     "depends_on": [
+      "sample"
+     ],
+     "params": {
+      "signals": [
+       "gripper"
+      ],
+      "min_gap_sec": 0.8,
+      "pause_speed_quantile": 0.15,
+      "min_pause_sec": 0.3
+     },
+     "when": "has_telemetry"
+    },
+    "rewire_dependents_of": null
+   },
+   {
+    "node": {
+     "id": "inspect_win",
+     "operator": "inspect_transition_windows",
+     "depends_on": [
+      "annotate",
+      "state_hint"
+     ],
+     "params": {
+      "select": "near_hints",
+      "window_sec": 1.5,
+      "local_hz": 3.0,
+      "max_windows": 3,
+      "include_unmatched_hints": false,
+      "tile_px": 224,
+      "confidence_threshold": 0.7
+     },
+     "when": "always"
+    },
+    "rewire_dependents_of": null
+   },
+   {
+    "node": {
+     "id": "refine_seg",
+     "operator": "refine_intervals",
+     "depends_on": [
+      "annotate",
+      "inspect_win"
+     ],
+     "params": {
+      "prompt": "refine.md",
+      "thinking": false,
+      "max_tokens": 16384,
+      "temperature": 0.2,
+      "allow_insert": true,
+      "allow_delete": true
+     },
+     "when": "has_hints"
+    },
+    "rewire_dependents_of": null
+   }
+  ],
+  "remove_nodes": [],
+  "set_params": {},
+  "set_when": {},
+  "set_depends_on": {
+   "export": [
+    "annotate",
+    "refine_seg"
+   ]
+  },
+  "prompt_updates": {}
+ },
+ "expected_outcome": "Mean label\u2011free self\u2011score delta \u2265 0.03 and \u226550% of episodes show non\u2011negative delta relative to incumbent.",
+ "verification_plan": {
+  "metric": "label_free_self_score",
+  "split": "all",
+  "compare_to": "incumbent"
+ },
+ "stop_conditions": [
+  "Mean label\u2011free self\u2011score delta < 0.01",
+  "Total inference cost per episode rises >100% without achieving the score threshold"
+ ],
+ "authored_by": "nvidia/NVIDIA-Nemotron-3-Super-120B-A12B",
+ "task_ids": [
+  "TASK-0043b93845",
+  "TASK-712512d87b"
+ ],
+ "protocol": "v3-macrodata",
+ "task_tree": [
+  {
+   "task_id": "TASK-0043b93845",
+   "parent": null,
+   "depth": 1,
+   "question": "Why does the model predict uniform boundaries instead of aligning with gripper open/close events in galaxea_033?",
+   "status": "done",
+   "finding": "The model predicts uniform 1\u2011second boundaries up to 11\u202fs because its self\u2011assessment shows near\u2011zero visual verification and low telemetry agreement, causing it to fall back to a default uniform segmentation rather than aligning with gripper events at 4.0, 16.37, 20.0, and 32.6\u202fs.",
+   "implication": "Modify the annotation prompt or add a telemetry\u2011conditioning step so the model is explicitly encouraged to place boundaries at gripper open/close events (e.g., include gripper state in the prompt or increase telemetry weight in the loss).",
+   "evidence_ids": [
+    "SELF-a86a935a32",
+    "EV-d9cc42cb7a",
+    "EV-838a9327bb"
+   ],
+   "dispatch_decision": null
+  },
+  {
+   "task_id": "TASK-712512d87b",
+   "parent": null,
+   "depth": 1,
+   "question": "What does the vision model observe at a predicted boundary (e.g., 2.0 sec) in galaxea_033 that leads to zero visual verification?",
+   "status": "done",
+   "finding": "At the predicted boundary of 2.0\u202fsec in galaxea_033, the vision model observes no manipulation state change; the only detected changes are a gripper close at 2.6\u202fsec and an open/release at 3.0\u202fsec, resulting in zero visual verification.",
+   "implication": "Adjust boundary prediction to align with actual visual change times (e.g., incorporate telemetry/gripper events or increase temporal resolution) to improve visual verification scores.",
+   "evidence_ids": [
+    "SELF-a86a935a32",
+    "EV-2a70fec88d"
+   ],
+   "dispatch_decision": null
+  }
+ ]
+}

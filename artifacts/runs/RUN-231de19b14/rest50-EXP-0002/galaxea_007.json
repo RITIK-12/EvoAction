@@ -1,0 +1,76 @@
+{
+ "episode_id": "galaxea_007",
+ "version_id": "rest50-EXP-0002",
+ "segments": [
+  {
+   "start_sec": 0.0,
+   "end_sec": 2.0,
+   "subtask": "The robot arm approaches the green mat with food items and a blue-handled tool."
+  },
+  {
+   "start_sec": 2.0,
+   "end_sec": 5.0,
+   "subtask": "The robot arm grasps the blue-handled tool with its right gripper."
+  },
+  {
+   "start_sec": 5.0,
+   "end_sec": 7.0,
+   "subtask": "The robot arm lifts the blue-handled tool from the green mat."
+  },
+  {
+   "start_sec": 7.0,
+   "end_sec": 10.0,
+   "subtask": "The robot arm moves the blue-handled tool towards the right basket."
+  },
+  {
+   "start_sec": 10.0,
+   "end_sec": 12.0,
+   "subtask": "The robot arm places the blue-handled tool into the right basket."
+  },
+  {
+   "start_sec": 12.0,
+   "end_sec": 15.0,
+   "subtask": "The robot arm moves back to the green mat to grasp the food item."
+  },
+  {
+   "start_sec": 15.0,
+   "end_sec": 18.0,
+   "subtask": "The robot arm grasps the food item with its right gripper."
+  },
+  {
+   "start_sec": 18.0,
+   "end_sec": 22.0,
+   "subtask": "The robot arm lifts the food item from the green mat."
+  },
+  {
+   "start_sec": 22.0,
+   "end_sec": 25.0,
+   "subtask": "The robot arm moves the food item towards the right basket."
+  },
+  {
+   "start_sec": 25.0,
+   "end_sec": 28.0,
+   "subtask": "The robot arm places the food item into the right basket."
+  },
+  {
+   "start_sec": 28.0,
+   "end_sec": 30.0,
+   "subtask": "The robot arm moves back to the green mat to grasp the non-food item."
+  },
+  {
+   "start_sec": 30.0,
+   "end_sec": 33.0,
+   "subtask": "The robot arm grasps the non-food item with its left gripper."
+  },
+  {
+   "start_sec": 33.0,
+   "end_sec": 35.533,
+   "subtask": "The robot arm lifts the non-food item from the green mat."
+  },
+  {
+   "start_sec": 36.0,
+   "end_sec": 35.533,
+   "subtask": "The robot arm moves the non-food item towards the left basket."
+  }
+ ]
+}

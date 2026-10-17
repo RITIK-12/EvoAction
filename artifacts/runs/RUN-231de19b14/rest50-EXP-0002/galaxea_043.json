@@ -1,0 +1,31 @@
+{
+ "episode_id": "galaxea_043",
+ "version_id": "rest50-EXP-0002",
+ "segments": [
+  {
+   "start_sec": 0.0,
+   "end_sec": 2.5,
+   "subtask": "approach the mouse with the left gripper"
+  },
+  {
+   "start_sec": 2.5,
+   "end_sec": 4.5,
+   "subtask": "grasp the mouse"
+  },
+  {
+   "start_sec": 4.5,
+   "end_sec": 7.0,
+   "subtask": "lift and move the mouse to the mouse pad"
+  },
+  {
+   "start_sec": 7.0,
+   "end_sec": 8.5,
+   "subtask": "place the mouse on the mouse pad"
+  },
+  {
+   "start_sec": 8.5,
+   "end_sec": 9.167,
+   "subtask": "release the mouse and retract"
+  }
+ ]
+}

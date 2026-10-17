@@ -1,0 +1,36 @@
+{
+ "episode_id": "galaxea_052",
+ "version_id": "rest50-EXP-0001",
+ "segments": [
+  {
+   "start_sec": 0.0,
+   "end_sec": 2.1,
+   "subtask": "The robot arm approaches the cup with water."
+  },
+  {
+   "start_sec": 2.1,
+   "end_sec": 5.0,
+   "subtask": "The robot arm grasps the cup with water."
+  },
+  {
+   "start_sec": 5.0,
+   "end_sec": 7.5,
+   "subtask": "The robot arm lifts the cup with water and moves it to the blue cup."
+  },
+  {
+   "start_sec": 7.5,
+   "end_sec": 10.0,
+   "subtask": "The robot arm pours water from the cup into the blue cup."
+  },
+  {
+   "start_sec": 10.0,
+   "end_sec": 12.5,
+   "subtask": "The robot arm moves the cup with water to the light blue cup."
+  },
+  {
+   "start_sec": 12.5,
+   "end_sec": 13.5,
+   "subtask": "The robot arm pours water from the cup into the light blue cup."
+  }
+ ]
+}

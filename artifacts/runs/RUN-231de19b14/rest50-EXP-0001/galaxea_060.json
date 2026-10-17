@@ -1,0 +1,26 @@
+{
+ "episode_id": "galaxea_060",
+ "version_id": "rest50-EXP-0001",
+ "segments": [
+  {
+   "start_sec": 0.0,
+   "end_sec": 2.0,
+   "subtask": "Approach the banana on the table with the gripper"
+  },
+  {
+   "start_sec": 2.0,
+   "end_sec": 5.5,
+   "subtask": "Grasp the banana with the gripper"
+  },
+  {
+   "start_sec": 5.5,
+   "end_sec": 6.5,
+   "subtask": "Lift the banana and move it to the brown plate"
+  },
+  {
+   "start_sec": 7.0,
+   "end_sec": 6.5,
+   "subtask": "Place the banana on the brown plate"
+  }
+ ]
+}

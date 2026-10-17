@@ -1,0 +1,56 @@
+{
+ "episode_id": "galaxea_011",
+ "version_id": "rest50-EXP-0001",
+ "segments": [
+  {
+   "start_sec": 0.0,
+   "end_sec": 1.0,
+   "subtask": "The robot arm is positioned over the table, preparing to interact with the objects."
+  },
+  {
+   "start_sec": 1.0,
+   "end_sec": 2.25,
+   "subtask": "The robot arm moves towards the left side of the table where the non-food items are located."
+  },
+  {
+   "start_sec": 2.25,
+   "end_sec": 3.0,
+   "subtask": "The robot arm grasps a non-food item from the left side of the table."
+  },
+  {
+   "start_sec": 3.0,
+   "end_sec": 4.0,
+   "subtask": "The robot arm moves the non-food item towards the left basket."
+  },
+  {
+   "start_sec": 4.0,
+   "end_sec": 5.0,
+   "subtask": "The robot arm places the non-food item into the left basket."
+  },
+  {
+   "start_sec": 5.0,
+   "end_sec": 6.0,
+   "subtask": "The robot arm moves back towards the center of the table to pick up a food item."
+  },
+  {
+   "start_sec": 6.0,
+   "end_sec": 7.0,
+   "subtask": "The robot arm grasps a food item from the center of the table."
+  },
+  {
+   "start_sec": 7.0,
+   "end_sec": 8.0,
+   "subtask": "The robot arm moves the food item towards the right basket."
+  },
+  {
+   "start_sec": 8.0,
+   "end_sec": 9.0,
+   "subtask": "The robot arm places the food item into the right basket."
+  },
+  {
+   "start_sec": 9.0,
+   "end_sec": 10.0,
+   "subtask": "The robot arm retracts and prepares for the next action."
+  }
+ ]
+}

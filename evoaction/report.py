@@ -64,24 +64,21 @@ Total non-cached calls: {tot['n']}, provider-token cost ${tot['c']:.4f} at liste
 
 
 SETS = (("droid50", "Batch 1 · 50 DROID"), ("rest50", "Batch 2 · 25 Galaxea + 25 HomER"))
-# Published references from Macrodata's WGO-Bench post (same metric and episodes, contact-sheet setup).
-MACRODATA_REFERENCE = [("Gemini 3.5 Flash, final recipe (Macrodata, published): DROID 48/150 matched", "droid50", 0.292),
-                       ("Gemini 3.5 Flash, final recipe (Macrodata, published): Galaxea only", "rest50", 0.589),
-                       ("Gemini 3.5 Flash, final recipe (Macrodata, published): HomER only", "rest50", 0.227)]
-# Macrodata's 16-model sweep on all 100 episodes (overall Segment F1, predicted segment count); final recipe 0.306.
-MACRODATA_SWEEP_100 = [("Gemini 3.5 Flash (final recipe, after GEPA)", 550, 0.306), ("Gemini 3.5 Flash", 645, 0.290),
-                       ("Gemini Robotics ER 1.6", 556, 0.245), ("GPT-5.5 low", 602, 0.233), ("GPT-5.4 low", 529, 0.233),
-                       ("Gemini 3.1 Pro Preview", 586, 0.232), ("Gemini 3 Flash Preview", 685, 0.210), ("Claude Opus 4.8", 733, 0.168),
-                       ("Claude Sonnet 4.6", 698, 0.146), ("Gemini 2.5 Pro", 662, 0.145), ("Qwen 3.5 Plus", 763, 0.141),
-                       ("Claude Haiku 4.5", 570, 0.128), ("Gemini 3.1 Flash Lite", 757, 0.119), ("Qwen 3.6 Flash", 715, 0.110),
-                       ("GPT-5.4 mini", 317, 0.106), ("Gemini 2.5 Flash", 855, 0.059), ("Gemma 4 26B", 1080, 0.057)]
+# Comparison uses only Macrodata's original model sweep (Segment F1 at tIoU >= 0.75, full 100-episode benchmark,
+# contact-sheet setup, before their final prompt optimization). Predicted-segment counts are from the same post.
+MACRODATA_REFERENCE: list[tuple[str, str, float]] = []
+MACRODATA_SWEEP_100 = [("Gemini 3.5 Flash", 645, 0.290), ("Gemini Robotics ER 1.6", 556, 0.245), ("GPT-5.5 (low)", 602, 0.233),
+                       ("GPT-5.4 (low)", 529, 0.233), ("Gemini 3.1 Pro Preview", 586, 0.232), ("Gemini 3 Flash Preview", 685, 0.210),
+                       ("Claude Opus 4.8", 733, 0.168), ("Claude Sonnet 4.6", 698, 0.146), ("Gemini 2.5 Pro", 662, 0.145),
+                       ("Qwen 3.5 Plus", 763, 0.141), ("Claude Haiku 4.5", 570, 0.128), ("Gemini 3.1 Flash Lite", 757, 0.119),
+                       ("Qwen 3.6 Flash", 715, 0.110), ("GPT-5.4 mini", 317, 0.106), ("Gemini 2.5 Flash", 855, 0.059), ("Gemma 4 26B", 1080, 0.057)]
 
 
 def _sfx(name: str) -> str:
     return "" if name == "droid50" else f"_{name}"
 
 
-def recursion_levels(lin: dict[str, Any] | None, base: dict[str, Any] | None) -> list[dict[str, Any]]:
+def recursion_levels(lin: dict[str, Any] | None, base: dict[str, Any] | None, set_name: str = "droid50") -> list[dict[str, Any]]:
     """Level 0 = N0; level k = state after the k-th experiment (incumbent after the gate, plus the candidate tried)."""
     if not lin and not base:
         return []
@@ -89,11 +86,13 @@ def recursion_levels(lin: dict[str, Any] | None, base: dict[str, Any] | None) ->
     n0 = versions.get("N0") or base
     levels = [{"level": 0, "incumbent_id": "N0", "incumbent": n0, "candidate_id": None, "candidate": None, "decision": "baseline",
                "recursion_cost": None}]
-    inc_id, inc = "N0", n0
+    inc_id, inc, promoted = "N0", n0, 0
+    prefix = "" if set_name == "droid50" else f"{set_name}-"
     for e in (lin or {}).get("experiments", []):
         cand = versions.get(e.get("version_dir") or "")
         if e.get("decision") == "PROMOTED":
-            inc_id, inc = e.get("version_dir"), cand
+            promoted += 1
+            inc_id, inc = f"{prefix}N{promoted:03d}", cand
         levels.append({"level": len(levels), "incumbent_id": inc_id, "incumbent": inc, "candidate_id": e.get("version_dir") or e["id"],
                        "candidate": cand, "decision": e.get("decision"), "recursion_cost": e.get("recursion_cost"),
                        "hypothesis": e.get("hypothesis")})
@@ -135,7 +134,7 @@ def section_results(a: Path) -> str:
     for name, title in SETS:
         lin, base = _load(a / f"lineage{_sfx(name)}.json"), _load(a / f"baseline_v3{_sfx(name)}.json")
         es = _load(a / "episode_sets" / f"{name}.json")
-        levels = recursion_levels(lin, base)
+        levels = recursion_levels(lin, base, name)
         if not levels:
             continue
         refs = "".join(f"<tr class=muted><td>{esc(lbl)}</td><td class=num>{v:.3f}</td><td colspan=6>reference; not run here</td></tr>"
@@ -152,8 +151,8 @@ def section_results(a: Path) -> str:
             rows += _row(f"recursion {L['level']} · candidate <code>{esc(L['candidate_id'])}</code>", L["candidate"],
                          f"<td><span class='pill {cls}'>{esc(dec)}</span></td><td class=num>{('$' + format(rc, '.4f')) if rc is not None else '–'}</td>")
             rows += _row(f"recursion {L['level']} · incumbent <code>{esc(L['incumbent_id'])}</code>", L["incumbent"], "<td>incumbent</td><td></td>", bold=True)
-            combined.setdefault(L["level"], {})[name] = L["incumbent"]
-        combined.setdefault(0, {})[name] = levels[0]["incumbent"]
+            combined.setdefault(L["level"], {})[name] = (L["incumbent_id"], L["incumbent"])
+        combined.setdefault(0, {})[name] = ("N0", levels[0]["incumbent"])
         n_ep = (es or {}).get("n_episodes")
         out.append(f"""<div class=card><h3>{esc(title)} ({esc(n_ep)} episodes; set sha256 <code>{esc((es or {}).get('set_sha256', '')[:16])}</code>)</h3>
 <table>{RESULT_HEAD}<th>gate decision</th><th>recursion cost (agents + candidate run)</th></tr>{refs}{rows}</table></div>""")
@@ -162,19 +161,19 @@ def section_results(a: Path) -> str:
     for lvl in sorted(combined):
         got = combined[lvl]
         if len(got) == len(SETS):
-            pc = _pooled([got[n] for n, _ in SETS])
+            pc = _pooled([got[n][1] for n, _ in SETS])
             if pc:
-                ids = " + ".join(f"<code>{esc((got[n] or {}).get('version_id'))}</code>" for n, _ in SETS)
+                ids = " + ".join(f"<code>{esc(got[n][0])}</code>" for n, _ in SETS)
                 comb_rows += (f"<tr><td>recursion {lvl} · {ids}</td><td class=num><b>{fmt(pc['snapped_f1_075'])}</b></td><td class=num>{fmt(pc['raw_f1_075'])}</td>"
                               f"<td class=num>{fmt(pc['snapped_f1_05'])}</td><td class=num>{pc['n_pred']}/{pc['n_ref']}</td><td class=num>{pc['episodes']}</td>"
                               f"<td class=num>${pc['cost']:.4f}</td></tr>")
-                ranked.append((f"EvoAction recursion {lvl} (Nemotron Omni 30B-A3B)", pc["n_pred"], pc["snapped_f1_075"] or 0.0, True))
+                ranked.append((f"EvoAction recursion {lvl}: {' + '.join(got[n][0] for n, _ in SETS)} (Nemotron Omni 30B-A3B)", pc["n_pred"], pc["snapped_f1_075"] or 0.0, True))
     comb = (f"""<div class=card><h3>Full benchmark (pooled over both batches)</h3><table><tr><th>recursion level</th><th>Segment F1@0.75 snapped</th>
 <th>F1@0.75 raw</th><th>F1@0.5 snapped</th><th>pred/ref</th><th>episodes</th><th>annotation cost</th></tr>{comb_rows}</table>
 <p class=muted>Pooled micro F1 = 2·TP / (pred + ref) summed over both batches; each batch keeps its own lineage.</p></div>
 <div class=card><h3>Against Macrodata's published 100-episode model sweep</h3><table><tr><th>#</th><th>system</th><th>predicted segments</th><th>Segment F1@0.75</th></tr>
 {''.join(f"<tr><td>{i + 1}</td><td>{'<b>' + esc(m) + '</b>' if ours else esc(m)}</td><td class=num>{fmt(n)}</td><td class=num>{'<b>' + fmt(f) + '</b>' if ours else fmt(f)}</td></tr>" for i, (m, n, f, ours) in enumerate(sorted(ranked, key=lambda x: -x[2])))}</table>
-<p class=muted>Published rows are copied from Macrodata's post (all 743 reference segments); Nemotron was not in their sweep.</p></div>""" if comb_rows else
+<p class=muted>Published rows: Macrodata's original model sweep (Segment F1 at tIoU ≥ 0.75, full 100-episode benchmark, contact-sheet setup, before their final prompt optimization). Nemotron was not in their sweep.</p></div>""" if comb_rows else
             "<div class=card class=muted>Full-benchmark pooling appears once both batches have results.</div>")
     return f"""<h2>1. Results: Macrodata's metric on the same episodes for every version</h2>
 <p class=muted>Headline metric follows Macrodata's WGO-Bench evaluation: temporal IoU ≥ 0.75, one-to-one maximum matching, pooled over episodes, with the first predicted
@@ -232,7 +231,7 @@ def section_per_episode(a: Path) -> str:
     blocks = []
     for name, title in SETS:
         lin = _load(a / f"lineage{_sfx(name)}.json")
-        levels = recursion_levels(lin, _load(a / f"baseline_v3{_sfx(name)}.json"))
+        levels = recursion_levels(lin, _load(a / f"baseline_v3{_sfx(name)}.json"), name)
         if not levels:
             continue
         first, last = levels[0]["incumbent"], levels[-1]["incumbent"]
@@ -325,8 +324,7 @@ def build_report() -> Path:
         trees = section_tree({"task_tree": [], "iterations": []}).split("<div class=card>")[0] + trees
     body = f"""<main><h1>EvoAction evidence report</h1>
 <p class=muted>A self-evolving, recursively delegated annotation harness for robot manipulation video, evaluated on WGO-Bench temporal subtask segmentation
-with Macrodata's protocol. Every number and agent message on this page comes from persisted real runs in <code>artifacts/</code>. Earlier protocols
-(v1: agents saw GT-derived feedback; v2: mixed episode counts) are archived in <code>artifacts/superseded/</code>.</p>
+with Macrodata's protocol. Every number and agent message on this page comes from persisted real runs in <code>artifacts/</code>.</p>
 {section_results(a)}{section_lineage(a)}{trees or section_tree(None)}{section_diff(s)}{section_per_episode(a)}{section_sponsor(store, pre)}</main>"""
     doc = f"<!doctype html><html lang=en><head><meta charset=utf-8><meta name=viewport content='width=device-width,initial-scale=1'><title>EvoAction Evidence Report</title><style>{CSS}</style></head><body>{body}</body></html>"
     out = a / "report.html"

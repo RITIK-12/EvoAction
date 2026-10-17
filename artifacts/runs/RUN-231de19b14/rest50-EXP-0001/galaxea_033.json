@@ -1,0 +1,66 @@
+{
+ "episode_id": "galaxea_033",
+ "version_id": "rest50-EXP-0001",
+ "segments": [
+  {
+   "start_sec": 0.0,
+   "end_sec": 1.0,
+   "subtask": "The robot arm approaches the test tubes on the table."
+  },
+  {
+   "start_sec": 1.0,
+   "end_sec": 2.0,
+   "subtask": "The robot arm grasps the test tube with red pigment."
+  },
+  {
+   "start_sec": 2.0,
+   "end_sec": 3.0,
+   "subtask": "The robot arm lifts the test tube with red pigment."
+  },
+  {
+   "start_sec": 3.0,
+   "end_sec": 4.0,
+   "subtask": "The robot arm moves the test tube with red pigment towards the container."
+  },
+  {
+   "start_sec": 4.0,
+   "end_sec": 5.0,
+   "subtask": "The robot arm pours the red pigment into the container."
+  },
+  {
+   "start_sec": 5.0,
+   "end_sec": 6.0,
+   "subtask": "The robot arm places the test tube with red pigment back on the table."
+  },
+  {
+   "start_sec": 6.0,
+   "end_sec": 7.0,
+   "subtask": "The robot arm grasps the test tube with blue pigment."
+  },
+  {
+   "start_sec": 7.0,
+   "end_sec": 8.0,
+   "subtask": "The robot arm lifts the test tube with blue pigment."
+  },
+  {
+   "start_sec": 8.0,
+   "end_sec": 9.0,
+   "subtask": "The robot arm moves the test tube with blue pigment towards the container."
+  },
+  {
+   "start_sec": 9.0,
+   "end_sec": 10.0,
+   "subtask": "The robot arm pours the blue pigment into the container."
+  },
+  {
+   "start_sec": 10.0,
+   "end_sec": 11.0,
+   "subtask": "The robot arm places the test tube with blue pigment back on the table."
+  },
+  {
+   "start_sec": 11.0,
+   "end_sec": 12.0,
+   "subtask": "The robot arm moves away from the container."
+  }
+ ]
+}

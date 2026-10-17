@@ -1,0 +1,18 @@
+{
+ "id": "rest50-EXP-0001_rejected",
+ "parent_id": "N0",
+ "status": "REJECTED",
+ "frozen": true,
+ "created_at": 1792276409.68115,
+ "workflow_sha256": "d4a4741131592069fc741af0c8b64ec6666124ef769d06aa121472634fee4772",
+ "files": {
+  "workflow.json": "fa4f98cde478ea9c4b4f1225462fe669e131bdcf6bb5f8f6d814db384a75bd94",
+  "config.json": "53e574e73406ebc1eca87fbcf0b8e8a6ca099986a8f08b3dcead2bf810f60cd5",
+  "prompt.md": "4d8af6bfb619f1858738fd9924718e5d9d3207d790f7d1950a0352606b71683e",
+  "refine.md": "f478372773f8a0131d0ff6188feb5e649b2fa6a6cde4379fa9a918b370f4df3b",
+  "experiment.json": "cdc2ac6358c6014f26386e1506e1d706014a14865ed579c144d2ba547eb12e2b",
+  "validation_report.json": "047fe1cac3c86dad0e13271f57e25c867b11749ebb8204bd425d1ceaf43c30ae"
+ },
+ "frozen_at": 1792276416.971454,
+ "original_id": "rest50-EXP-0001"
+}

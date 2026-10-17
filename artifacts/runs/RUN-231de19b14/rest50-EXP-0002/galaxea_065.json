@@ -1,0 +1,16 @@
+{
+ "episode_id": "galaxea_065",
+ "version_id": "rest50-EXP-0002",
+ "segments": [
+  {
+   "start_sec": 0.0,
+   "end_sec": 2.75,
+   "subtask": "approach and grasp the banana"
+  },
+  {
+   "start_sec": 2.75,
+   "end_sec": 4.0,
+   "subtask": "lift and place the banana on the gray plate"
+  }
+ ]
+}

@@ -1,0 +1,21 @@
+{
+ "episode_id": "homer_1",
+ "version_id": "rest50-EXP-0001",
+ "segments": [
+  {
+   "start_sec": 0.0,
+   "end_sec": 10.0,
+   "subtask": "Open the lid of the pitcher"
+  },
+  {
+   "start_sec": 10.0,
+   "end_sec": 160.0,
+   "subtask": "Pour water from the pitcher into the tall glass and wine glass"
+  },
+  {
+   "start_sec": 160.0,
+   "end_sec": 161.0,
+   "subtask": "Close the lid of the pitcher"
+  }
+ ]
+}
