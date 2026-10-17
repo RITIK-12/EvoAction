@@ -15,7 +15,7 @@ import time
 from collections import deque
 from typing import Any
 
-from evoaction.agents.tools import TOOL_DOCS, ToolContext, compact, run_tool
+from evoaction.agents.tools import TOOL_DOCS, ToolContext, compact, evidence_item, run_tool
 from evoaction.clients.crusoe import ROLE_NEMOTRON, BudgetExceeded, ModelCallError
 from evoaction.persistence import Store, new_id
 from evoaction.schemas import InvestigationTask
@@ -149,8 +149,8 @@ def _investigator_prompt(task: InvestigationTask, parent: InvestigationTask | No
 {parent_ctx}
 Incumbent workflow: {workflow_summary}
 
-Evidence records:
-{compact(evidence_view, 9000)}
+Evidence records (each record's result is JSON, individually capped):
+{compact(evidence_view, 24000)}
 
 Tools you may request ({rounds_left} tool round(s) left):
 {tools}
@@ -171,11 +171,11 @@ def run_task(task: InvestigationTask, graph: TaskGraph, ctx: ToolContext, workfl
     for ev_id in task.evidence_ids:
         if ev_id in ctx.evidence:
             e = ctx.evidence[ev_id]
-            evidence_view.append({"id": ev_id, "tool": e["tool"], "args": e["args"], "result": e["result"]})
+            evidence_view.append(evidence_item(ev_id, e["tool"], e["args"], e["result"]))
     for req in task.budget.get("tool_requests", []):
         ev_id, res = run_tool(ctx, str(req.get("tool")), req.get("args") or {}, task.id, task.tools_allowed)
         task.evidence_ids.append(ev_id)
-        evidence_view.append({"id": ev_id, "tool": req.get("tool"), "args": req.get("args"), "result": res})
+        evidence_view.append(evidence_item(ev_id, req.get("tool"), req.get("args"), res))
     parent = graph.tasks.get(task.parent_task_id) if task.parent_task_id else None
     result: dict[str, Any] | None = None
     attempts = 0
@@ -202,7 +202,7 @@ def run_task(task: InvestigationTask, graph: TaskGraph, ctx: ToolContext, workfl
             for req in data["tool_requests"][:MAX_TOOLS_PER_ROUND]:
                 ev_id, out = run_tool(ctx, str(req.get("tool")), req.get("args") or {}, task.id, task.tools_allowed)
                 task.evidence_ids.append(ev_id)
-                evidence_view.append({"id": ev_id, "tool": req.get("tool"), "args": req.get("args"), "result": out})
+                evidence_view.append(evidence_item(ev_id, req.get("tool"), req.get("args"), out))
             continue
         result = {k: data.get(k) for k in ("finding", "evidence_ids", "confidence", "implication_for_workflow")}
         result["call_id"] = res.call_id

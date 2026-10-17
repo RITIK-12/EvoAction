@@ -7,7 +7,7 @@ from typing import Any
 
 from pydantic import ValidationError
 
-from evoaction.agents.tools import TOOL_DOCS, ToolContext, compact
+from evoaction.agents.tools import TOOL_DOCS, ToolContext, compact, condense_profile
 from evoaction.clients.crusoe import ROLE_NEMOTRON, CrusoeClient
 from evoaction.persistence import Store
 from evoaction.schemas import PARAM_MODELS, ExperimentProposal, WorkflowPatch
@@ -93,7 +93,7 @@ Incumbent prompt.md:
 
 Dev episodes: {json.dumps(dev_eps)}
 Dev failure profile (evidence id {ctx.incumbent_dev['eval_id']}):
-{compact(dev_view, 7000)}
+{compact(condense_profile(dev_view), 9000)}
 
 Validation aggregate for the incumbent (aggregate only): {json.dumps({k: val_view.get(k) for k in ('micro_f1', 'micro_f1_iou05', 'short_event_recall', 'mean_boundary_mae_sec', 'invalid_items', 'empty_output_episodes')})}
 Measured incumbent inference cost profile: {json.dumps(cost_profile)}
@@ -131,7 +131,7 @@ Operator library:
 {PATCH_DOC}
 
 Investigation findings (task tree, real tool evidence):
-{compact(findings, 9000)}
+{compact(findings, 14000)}
 Valid evidence ids you may cite: {evidence_ids[-60:]}
 Previous experiments: {compact(history, 3000) if history else 'none'}
 {extra}

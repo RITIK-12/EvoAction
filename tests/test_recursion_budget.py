@@ -141,3 +141,14 @@ def test_persistence_identifies_unfinished_after_restart(tmp_path):
     store2 = Store(tmp_path / "db.sqlite", tmp_path / "events.jsonl")  # simulated restart
     st = unfinished_tasks(store2, "RUN-test")
     assert a.id in st["finished"] and b.id in st["unfinished"]
+
+
+def test_large_profile_cannot_hide_later_evidence():
+    from evoaction.agents.tools import compact, evidence_item
+
+    huge = {"episodes": {"d1": {"n_pred": 30, "predictions": [{"error_class": "spurious or badly placed", "start_error": ">2s late",
+                                                              "pad": "x" * 200} for _ in range(300)]}}}
+    view = [evidence_item("EV-1", "dev_failure_profile", {}, huge), evidence_item("EV-2", "telemetry_hints", {}, {"hints": [{"t": 3.1}]})]
+    text = compact(view, 24000)
+    assert "EV-2" in text and '\\"t\\": 3.1' in text
+    assert "prediction_error_classes" in view[0]["result_json"]

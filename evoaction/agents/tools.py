@@ -173,3 +173,31 @@ def run_tool(ctx: ToolContext, name: str, args: dict[str, Any], task_id: str | N
 def compact(obj: Any, limit: int = 6000) -> str:
     text = json.dumps(obj, default=str)
     return text if len(text) <= limit else text[:limit] + "...<truncated>"
+
+
+def condense_profile(view: dict[str, Any]) -> dict[str, Any]:
+    """Dev failure profile without per-prediction lists (those stay available via episode_predictions)."""
+    if not isinstance(view, dict) or "episodes" not in view:
+        return view
+    eps = {}
+    for e, d in view["episodes"].items():
+        classes: dict[str, int] = {}
+        for p in d.get("predictions", []):
+            classes[p.get("error_class", "?")] = classes.get(p.get("error_class", "?"), 0) + 1
+        offsets: dict[str, int] = {}
+        for p in d.get("predictions", []):
+            for k in ("start_error", "end_error"):
+                if p.get(k):
+                    offsets[p[k]] = offsets.get(p[k], 0) + 1
+        eps[e] = {**{k: v for k, v in d.items() if k != "predictions"}, "prediction_error_classes": classes,
+                  "binned_boundary_offsets": offsets}
+    return {**{k: v for k, v in view.items() if k != "episodes"}, "episodes": eps}
+
+
+def evidence_item(ev_id: str, tool: Any, args: Any, result: Any, per_record: int = 3500) -> dict[str, Any]:
+    if tool == "dev_failure_profile":
+        result = condense_profile(result)
+    text = json.dumps(result, default=str)
+    if len(text) > per_record:
+        text = text[:per_record] + "...<truncated>"
+    return {"id": ev_id, "tool": tool, "args": args, "result_json": text}
