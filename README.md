@@ -1,8 +1,10 @@
 # EvoAction
 
-**Self-improving agentic harness for data annotation.** Built for the Crusoe × Cerebral Valley Recursive Agents Hackathon (Track 3: Version N+1). Runs entirely on NVIDIA Nemotron models served by Crusoe Managed Inference.
 
 ![EvoAction architecture](assets/architecture.png)
+
+**Self-improving agentic harness for data annotation.** Built for the Crusoe × Cerebral Valley Recursive Agents Hackathon (Track 3: Version N+1). Runs entirely on NVIDIA Nemotron models served by Crusoe Managed Inference.
+
 
 ## Problem
 
