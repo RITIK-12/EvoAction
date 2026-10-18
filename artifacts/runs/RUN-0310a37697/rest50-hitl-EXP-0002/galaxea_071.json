@@ -1,0 +1,16 @@
+{
+ "episode_id": "galaxea_071",
+ "version_id": "rest50-hitl-EXP-0002",
+ "segments": [
+  {
+   "start_sec": 0.0,
+   "end_sec": 2.5,
+   "subtask": "robot picks up the banana"
+  },
+  {
+   "start_sec": 2.5,
+   "end_sec": 4.333,
+   "subtask": "robot places the banana in the yellow basket"
+  }
+ ]
+}

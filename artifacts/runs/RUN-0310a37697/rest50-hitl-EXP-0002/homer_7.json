@@ -1,0 +1,66 @@
+{
+ "episode_id": "homer_7",
+ "version_id": "rest50-hitl-EXP-0002",
+ "segments": [
+  {
+   "start_sec": 0.0,
+   "end_sec": 5.0,
+   "subtask": "The hand positions the pencil over the paper, preparing to draw."
+  },
+  {
+   "start_sec": 5.0,
+   "end_sec": 10.0,
+   "subtask": "The hand draws a circle, which appears to be the sun."
+  },
+  {
+   "start_sec": 10.0,
+   "end_sec": 20.0,
+   "subtask": "The hand draws rays extending from the circle and begins drawing wavy lines below it, suggesting water."
+  },
+  {
+   "start_sec": 20.0,
+   "end_sec": 30.0,
+   "subtask": "The hand draws clouds above the sun and continues the wavy lines for the ocean."
+  },
+  {
+   "start_sec": 30.0,
+   "end_sec": 40.0,
+   "subtask": "The hand refines the sun rays and adds more cloud details."
+  },
+  {
+   "start_sec": 40.0,
+   "end_sec": 50.0,
+   "subtask": "The hand draws lines representing sand or the ground."
+  },
+  {
+   "start_sec": 50.0,
+   "end_sec": 60.0,
+   "subtask": "The hand adds more details to the sky and clouds."
+  },
+  {
+   "start_sec": 60.0,
+   "end_sec": 70.0,
+   "subtask": "The hand draws more wavy lines, possibly representing distant waves or water texture."
+  },
+  {
+   "start_sec": 70.0,
+   "end_sec": 80.0,
+   "subtask": "The hand adds details to the upper part of the drawing, perhaps more clouds or sky."
+  },
+  {
+   "start_sec": 80.0,
+   "end_sec": 90.0,
+   "subtask": "The hand draws palm trees on the right side of the paper."
+  },
+  {
+   "start_sec": 90.0,
+   "end_sec": 100.0,
+   "subtask": "The hand refines the palm trees and other elements."
+  },
+  {
+   "start_sec": 100.0,
+   "end_sec": 143.815,
+   "subtask": "The hand makes final touches to complete the scene."
+  }
+ ]
+}

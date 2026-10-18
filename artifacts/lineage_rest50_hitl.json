@@ -1,0 +1,2217 @@
+{
+ "protocol": "v3-macrodata",
+ "episode_set": "rest50",
+ "incumbent": "N0",
+ "next_experiment": 3,
+ "next_version": 1,
+ "experiments": [
+  {
+   "id": "rest50-hitl-EXP-0001",
+   "parent_version": "N0",
+   "version_dir": "rest50-hitl-EXP-0001_rejected",
+   "hypothesis": "Adding deliberate thinking, a telemetry\u2011hint detection stage, an inspection\u2011refinement loop, and a merge/filter step\u2014while increasing temporal resolution of the contact sheets and revising the prompt to discourage unit\u2011length bias\u2014will yield fewer, longer segments that align with true manipulation events, raising IoU and F1.",
+   "patch_summary": {
+    "insert_nodes": [
+     {
+      "node": {
+       "id": "hints",
+       "operator": "state_hint_detection",
+       "depends_on": [
+        "sample"
+       ],
+       "params": {
+        "signals": [
+         "gripper",
+         "eef_pause"
+        ],
+        "min_gap_sec": 0.8,
+        "pause_speed_quantile": 0.15,
+        "min_pause_sec": 0.3
+       },
+       "when": "always"
+      },
+      "rewire_dependents_of": null
+     },
+     {
+      "node": {
+       "id": "inspect",
+       "operator": "inspect_transition_windows",
+       "depends_on": [
+        "annotate",
+        "hints"
+       ],
+       "params": {
+        "select": "near_hints",
+        "window_sec": 2.0,
+        "local_hz": 4.0,
+        "max_windows": 8,
+        "include_unmatched_hints": true,
+        "tile_px": 224,
+        "confidence_threshold": 0.7
+       },
+       "when": "always"
+      },
+      "rewire_dependents_of": null
+     },
+     {
+      "node": {
+       "id": "refine",
+       "operator": "refine_intervals",
+       "depends_on": [
+        "inspect"
+       ],
+       "params": {
+        "prompt": "refine.md",
+        "thinking": true,
+        "max_tokens": 16384,
+        "temperature": 0.2,
+        "allow_insert": true,
+        "allow_delete": true
+       },
+       "when": "always"
+      },
+      "rewire_dependents_of": null
+     },
+     {
+      "node": {
+       "id": "merge",
+       "operator": "merge_filter_segments",
+       "depends_on": [
+        "refine"
+       ],
+       "params": {
+        "min_duration_sec": 0.8,
+        "max_gap_sec": 0.5,
+        "tile_full_episode": true,
+        "merge_same_label": false
+       },
+       "when": "always"
+      },
+      "rewire_dependents_of": null
+     }
+    ],
+    "set_params": {
+     "sample": {
+      "sampling_hz": 5.0,
+      "frames_per_sheet": 10
+     },
+     "annotate": {
+      "thinking": true
+     }
+    },
+    "set_depends_on": {
+     "annotate": [
+      "sample",
+      "hints"
+     ],
+     "export": [
+      "merge"
+     ]
+    },
+    "prompt_updates": {
+     "prompt.md": "Reconstruct the sequence of manipulation events in this robot video from the timestamped contact sheets.\n\nReturn only JSON with this shape:\n{\"segments\":[{\"start_sec\":0.0,\"end_sec\":1.0,\"subtask\":\"short action description\"}]}\n\nRules:\n- Segment only completed robot manipulation events, not every visible movement.\n- Good boundaries happen when a held object changes, an object is placed or released, a tool starts/stops changing a surface, a container/door/lid opens or closes, or contents move between containers.\n- Do not split approach, grasp adjustment, small repositioning, and retreat unless the world state changes.\n- Do not merge separate pick/place/open/close/pour/wipe events when they complete different states.\n- Segment duration should reflect the actual manipulation; most are 2\u201110 seconds. Shorter segments are okay only for fast pick, place, open, close, or release events.\n- Use the visible timestamps for start_sec and end_sec.\n- Ignore label wording quality; prioritize temporally correct boundaries.\n\nEpisode instruction: $instruction"
+    }
+   },
+   "decision": "REJECTED",
+   "label_free": {
+    "candidate_self_score": 0.2569,
+    "incumbent_self_score": 0.4934,
+    "candidate_components": {
+     "telemetry_agreement": 0.2371,
+     "visual_verification": 0.7111,
+     "duration_variability": 0.2449,
+     "temporal_resolution": 0.36
+    },
+    "incumbent_components": {
+     "telemetry_agreement": 0.3813,
+     "visual_verification": 0.3498,
+     "duration_variability": 0.4064,
+     "temporal_resolution": 0.9766
+    }
+   },
+   "labeled_sample": {
+    "candidate": {
+     "snapped_f1_075": 0.07079646017699116,
+     "raw_f1_075": 0.05217391304347825,
+     "snapped_f1_05": 0.08849557522123892,
+     "tp_snapped": 4,
+     "n_pred": 10,
+     "n_ref": 105
+    },
+    "incumbent": {
+     "snapped_f1_075": 0.010582010582010581,
+     "raw_f1_075": 0.010554089709762534,
+     "snapped_f1_05": 0.1904761904761905,
+     "tp_snapped": 2,
+     "n_pred": 274,
+     "n_ref": 105
+    }
+   },
+   "topology_change": true,
+   "root_causes": [
+    {
+     "cause": "Prompt bias toward 1\u2011second segments",
+     "evidence": "predicted_segments_exactly_1s_fraction=0.945, median predicted segment 1.0\u202fs vs reference median 2.37\u202fs"
+    },
+    {
+     "cause": "Lack of deliberate thinking (thinking=false) producing uniformly spaced boundaries",
+     "evidence": "thinking=false returns valid JSON quickly but tends toward evenly spaced segment boundaries; predicted_segments_le_2s_fraction=0.993"
+    },
+    {
+     "cause": "No telemetry\u2011guided hint detection or refinement to align boundaries with manipulation events",
+     "evidence": "mean_best_iou_per_reference=0.439, references_with_best_iou_below_0.5=69/105, only 2 references matched at IoU\u22650.75"
+    },
+    {
+     "cause": "Absence of post\u2011processing merge/filter to remove spurious short segments and ensure full\u2011video coverage",
+     "evidence": "predicted_segments_le_2s_fraction=0.993 vs reference 0.429; episodes_with_predictions_ending_before_half_the_video=14"
+    }
+   ],
+   "selected_round": 3,
+   "trials": [
+    {
+     "round": 1,
+     "hypothesis": "Enabling deliberate thinking (thinking=true), removing the misleading 1\u2011second example, and adding a hint\u2011guided refinement loop will produce fewer, longer segments that align with actual manipulation events, raising IoU and F1.",
+     "error": "invalid patch: 24 validation errors for WorkflowPatch\ninsert_nodes.0.node\n  Field required [type=missing, input_value={'id': 'hints', 'operator...re_dependents_of': None}, input_type=dict]\n    For further information visit https://errors.pydantic.dev/2.14/v/missing\ninsert_nodes.0.id\n  Extra inputs are not permitted [type=extra_forbidden, input_value='hints', input_type=str]\n    For further information visit https://errors.pydantic.dev/2.14/v/extra_forbidden\ninsert_nodes.0.operator\n  Extra inputs are not permitted [type=extra_forbidden, input_value='state_hint_detection', input_type=str]\n    For further infor"
+    },
+    {
+     "round": 2,
+     "hypothesis": "Adding deliberate thinking (thinking=true), a telemetry\u2011hint detection stage, an inspection\u2011and\u2011refinement loop, and a post\u2011processing merge step will produce fewer, longer segments that align with true manipulation events, raise IoU and F1, and ensure full\u2011video coverage.",
+     "error": "invalid patch: node windows (inspect_transition_windows) params: ('select',): Input should be 'all_boundaries', 'low_confidence', 'near_hints', 'hint_disagreement' or 'short_segments'"
+    },
+    {
+     "round": 3,
+     "hypothesis": "Adding deliberate thinking, a telemetry\u2011hint detection stage, an inspection\u2011refinement loop, and a merge/filter step\u2014while increasing temporal resolution of the contact sheets and revising the prompt to discourage unit\u2011length bias\u2014will yield fewer, longer segments that align with true manipulation events, raising IoU and F1.",
+     "root_causes": [
+      {
+       "cause": "Prompt bias toward 1\u2011second segments",
+       "evidence": "predicted_segments_exactly_1s_fraction=0.945, median predicted segment 1.0\u202fs vs reference median 2.37\u202fs"
+      },
+      {
+       "cause": "Lack of deliberate thinking (thinking=false) producing uniformly spaced boundaries",
+       "evidence": "thinking=false returns valid JSON quickly but tends toward evenly spaced segment boundaries; predicted_segments_le_2s_fraction=0.993"
+      },
+      {
+       "cause": "No telemetry\u2011guided hint detection or refinement to align boundaries with manipulation events",
+       "evidence": "mean_best_iou_per_reference=0.439, references_with_best_iou_below_0.5=69/105, only 2 references matched at IoU\u22650.75"
+      },
+      {
+       "cause": "Absence of post\u2011processing merge/filter to remove spurious short segments and ensure full\u2011video coverage",
+       "evidence": "predicted_segments_le_2s_fraction=0.993 vs reference 0.429; episodes_with_predictions_ending_before_half_the_video=14"
+      }
+     ],
+     "patch": {
+      "insert_nodes": [
+       {
+        "node": {
+         "id": "hints",
+         "operator": "state_hint_detection",
+         "depends_on": [
+          "sample"
+         ],
+         "params": {
+          "signals": [
+           "gripper",
+           "eef_pause"
+          ],
+          "min_gap_sec": 0.8,
+          "pause_speed_quantile": 0.15,
+          "min_pause_sec": 0.3
+         },
+         "when": "always"
+        },
+        "rewire_dependents_of": null
+       },
+       {
+        "node": {
+         "id": "inspect",
+         "operator": "inspect_transition_windows",
+         "depends_on": [
+          "annotate",
+          "hints"
+         ],
+         "params": {
+          "select": "near_hints",
+          "window_sec": 2.0,
+          "local_hz": 4.0,
+          "max_windows": 8,
+          "include_unmatched_hints": true,
+          "tile_px": 224,
+          "confidence_threshold": 0.7
+         },
+         "when": "always"
+        },
+        "rewire_dependents_of": null
+       },
+       {
+        "node": {
+         "id": "refine",
+         "operator": "refine_intervals",
+         "depends_on": [
+          "inspect"
+         ],
+         "params": {
+          "prompt": "refine.md",
+          "thinking": true,
+          "max_tokens": 16384,
+          "temperature": 0.2,
+          "allow_insert": true,
+          "allow_delete": true
+         },
+         "when": "always"
+        },
+        "rewire_dependents_of": null
+       },
+       {
+        "node": {
+         "id": "merge",
+         "operator": "merge_filter_segments",
+         "depends_on": [
+          "refine"
+         ],
+         "params": {
+          "min_duration_sec": 0.8,
+          "max_gap_sec": 0.5,
+          "tile_full_episode": true,
+          "merge_same_label": false
+         },
+         "when": "always"
+        },
+        "rewire_dependents_of": null
+       }
+      ],
+      "set_params": {
+       "sample": {
+        "sampling_hz": 5.0,
+        "frames_per_sheet": 10
+       },
+       "annotate": {
+        "thinking": true
+       }
+      },
+      "set_depends_on": {
+       "annotate": [
+        "sample",
+        "hints"
+       ],
+       "export": [
+        "merge"
+       ]
+      },
+      "prompt_updates": {
+       "prompt.md": "Reconstruct the sequence of manipulation events in this robot video from the timestamped contact sheets.\n\nReturn only JSON with this shape:\n{\"segments\":[{\"start_sec\":0.0,\"end_sec\":1.0,\"subtask\":\"short action description\"}]}\n\nRules:\n- Segment only completed robot manipulation events, not every visible movement.\n- Good boundaries happen when a held object changes, an object is placed or released, a tool starts/stops changing a surface, a container/door/lid opens or closes, or contents move between containers.\n- Do not split approach, grasp adjustment, small repositioning, and retreat unless the world state changes.\n- Do not merge separate pick/place/open/close/pour/wipe events when they complete different states.\n- Segment duration should reflect the actual manipulation; most are 2\u201110 seconds. Shorter segments are okay only for fast pick, place, open, close, or release events.\n- Use the visible timestamps for start_sec and end_sec.\n- Ignore label wording quality; prioritize temporally correct boundaries.\n\nEpisode instruction: $instruction"
+      }
+     },
+     "labeled_scores": {
+      "snapped_f1_075": 0.07079646017699116,
+      "raw_f1_075": 0.05217391304347825,
+      "snapped_f1_05": 0.08849557522123892,
+      "tp_snapped": 4,
+      "n_pred": 10,
+      "n_ref": 105
+     },
+     "root_cause_stats_labeled": {
+      "predicted_vs_reference_segments": [
+       10,
+       105
+      ],
+      "median_predicted_segment_sec": 3.0,
+      "median_reference_segment_sec": 2.37,
+      "predicted_segments_le_2s_fraction": 0.2,
+      "reference_segments_le_2s_fraction": 0.429,
+      "predicted_segments_exactly_1s_fraction": 0.0,
+      "median_coverage_last_predicted_end_over_reference_end": 1.15,
+      "episodes_with_coverage_below_50pct": 2,
+      "references_matched_at_iou075": 4,
+      "mean_best_iou_per_reference": 0.043,
+      "references_with_best_iou_below_0.5": 100,
+      "pooled_scores": {
+       "snapped_f1_075": 0.07079646017699116,
+       "raw_f1_075": 0.05217391304347825,
+       "snapped_f1_05": 0.08849557522123892,
+       "tp_snapped": 4,
+       "n_pred": 10,
+       "n_ref": 105
+      }
+     }
+    }
+   ],
+   "shadow_gt": {
+    "candidate": {
+     "snapped_f1_075": 0.05454545454545454,
+     "raw_f1_075": 0.04216867469879517,
+     "snapped_f1_05": 0.09999999999999999,
+     "raw_f1_05": 0.09036144578313253,
+     "tp_snapped": 18,
+     "tp_raw": 14,
+     "tp05_snapped": 33,
+     "tp05_raw": 30,
+     "n_pred": 71,
+     "n_pred_snapped": 67,
+     "n_ref": 593,
+     "invalid_items": 0,
+     "empty_output_episodes": 32,
+     "mean_boundary_mae_sec": 2.387400903174603,
+     "episodes": 50,
+     "per_episode_snapped_f1": {
+      "galaxea_002": 0.0,
+      "galaxea_007": 0.0,
+      "galaxea_009": 0.0,
+      "galaxea_011": 0.0,
+      "galaxea_013": 0.0,
+      "galaxea_028": 0.0,
+      "galaxea_033": 0.0,
+      "galaxea_037": 0.0,
+      "galaxea_039": 0.0,
+      "galaxea_041": 0.0,
+      "galaxea_043": 0.5,
+      "galaxea_045": 1.0,
+      "galaxea_047": 0.8571428571428571,
+      "galaxea_049": 0.0,
+      "galaxea_050": 0.0,
+      "galaxea_052": 0.0,
+      "galaxea_058": 0.0,
+      "galaxea_060": 0.0,
+      "galaxea_062": 0.4,
+      "galaxea_065": 0.0,
+      "galaxea_067": 0.0,
+      "galaxea_069": 0.4,
+      "galaxea_071": 0.4,
+      "galaxea_073": 1.0,
+      "galaxea_075": 0.3333333333333333,
+      "homer_1": 0.0,
+      "homer_10": 0.0,
+      "homer_11": 0.0,
+      "homer_12": 0.0,
+      "homer_15": 0.0,
+      "homer_2": 0.0,
+      "homer_29": 0.0,
+      "homer_3": 0.46153846153846156,
+      "homer_33": 0.0,
+      "homer_37": 0.0,
+      "homer_38": 0.0,
+      "homer_39": 0.046511627906976744,
+      "homer_4": 0.0,
+      "homer_40": 0.125,
+      "homer_41": 0.0,
+      "homer_48": 0.0,
+      "homer_5": 0.0,
+      "homer_50": 0.0,
+      "homer_52": 0.0,
+      "homer_53": 0.0,
+      "homer_56": 0.0,
+      "homer_59": 0.0,
+      "homer_60": 0.0,
+      "homer_7": 0.0,
+      "homer_9": 0.0
+     }
+    },
+    "incumbent": {
+     "snapped_f1_075": 0.023958927552766688,
+     "raw_f1_075": 0.02258610954263128,
+     "snapped_f1_05": 0.15744438106103822,
+     "raw_f1_05": 0.1535855448898927,
+     "tp_snapped": 21,
+     "tp_raw": 20,
+     "tp05_snapped": 138,
+     "tp05_raw": 136,
+     "n_pred": 1178,
+     "n_pred_snapped": 1160,
+     "n_ref": 593,
+     "invalid_items": 4,
+     "empty_output_episodes": 0,
+     "mean_boundary_mae_sec": 7.35147718094754,
+     "episodes": 50,
+     "per_episode_snapped_f1": {
+      "galaxea_002": 0.14814814814814817,
+      "galaxea_007": 0.1,
+      "galaxea_009": 0.08,
+      "galaxea_011": 0.0,
+      "galaxea_013": 0.0,
+      "galaxea_028": 0.0,
+      "galaxea_033": 0.0,
+      "galaxea_037": 0.0,
+      "galaxea_039": 0.0,
+      "galaxea_041": 0.0,
+      "galaxea_043": 0.0,
+      "galaxea_045": 0.2222222222222222,
+      "galaxea_047": 0.2222222222222222,
+      "galaxea_049": 0.0,
+      "galaxea_050": 0.0,
+      "galaxea_052": 0.2,
+      "galaxea_058": 0.0,
+      "galaxea_060": 0.0,
+      "galaxea_062": 0.0,
+      "galaxea_065": 0.5,
+      "galaxea_067": 0.5,
+      "galaxea_069": 0.4,
+      "galaxea_071": 0.0,
+      "galaxea_073": 0.0,
+      "galaxea_075": 0.0,
+      "homer_1": 0.08695652173913045,
+      "homer_10": 0.0,
+      "homer_11": 0.011560693641618497,
+      "homer_12": 0.01092896174863388,
+      "homer_15": 0.0,
+      "homer_2": 0.010869565217391304,
+      "homer_29": 0.0,
+      "homer_3": 0.19999999999999998,
+      "homer_33": 0.0,
+      "homer_37": 0.0,
+      "homer_38": 0.10526315789473684,
+      "homer_39": 0.0,
+      "homer_4": 0.0,
+      "homer_40": 0.02702702702702703,
+      "homer_41": 0.0,
+      "homer_48": 0.0,
+      "homer_5": 0.0,
+      "homer_50": 0.0,
+      "homer_52": 0.0,
+      "homer_53": 0.0,
+      "homer_56": 0.23529411764705882,
+      "homer_59": 0.0,
+      "homer_60": 0.0,
+      "homer_7": 0.08,
+      "homer_9": 0.0
+     }
+    }
+   },
+   "shadow_gt_heldout": {
+    "candidate": {
+     "snapped_f1_075": 0.05118829981718464,
+     "raw_f1_075": 0.0400728597449909,
+     "snapped_f1_05": 0.10237659963436928,
+     "raw_f1_05": 0.09107468123861566,
+     "tp_snapped": 14,
+     "tp_raw": 11,
+     "tp05_snapped": 28,
+     "tp05_raw": 25,
+     "n_pred": 61,
+     "n_pred_snapped": 59,
+     "n_ref": 488,
+     "invalid_items": 0,
+     "empty_output_episodes": 30,
+     "mean_boundary_mae_sec": 2.732347750476191,
+     "episodes": 45,
+     "per_episode_snapped_f1": {
+      "galaxea_002": 0.0,
+      "galaxea_007": 0.0,
+      "galaxea_009": 0.0,
+      "galaxea_011": 0.0,
+      "galaxea_013": 0.0,
+      "galaxea_028": 0.0,
+      "galaxea_033": 0.0,
+      "galaxea_037": 0.0,
+      "galaxea_039": 0.0,
+      "galaxea_041": 0.0,
+      "galaxea_045": 1.0,
+      "galaxea_047": 0.8571428571428571,
+      "galaxea_049": 0.0,
+      "galaxea_050": 0.0,
+      "galaxea_052": 0.0,
+      "galaxea_058": 0.0,
+      "galaxea_060": 0.0,
+      "galaxea_062": 0.4,
+      "galaxea_065": 0.0,
+      "galaxea_067": 0.0,
+      "galaxea_069": 0.4,
+      "galaxea_071": 0.4,
+      "homer_1": 0.0,
+      "homer_10": 0.0,
+      "homer_15": 0.0,
+      "homer_2": 0.0,
+      "homer_29": 0.0,
+      "homer_3": 0.46153846153846156,
+      "homer_33": 0.0,
+      "homer_37": 0.0,
+      "homer_38": 0.0,
+      "homer_39": 0.046511627906976744,
+      "homer_4": 0.0,
+      "homer_40": 0.125,
+      "homer_41": 0.0,
+      "homer_48": 0.0,
+      "homer_5": 0.0,
+      "homer_50": 0.0,
+      "homer_52": 0.0,
+      "homer_53": 0.0,
+      "homer_56": 0.0,
+      "homer_59": 0.0,
+      "homer_60": 0.0,
+      "homer_7": 0.0,
+      "homer_9": 0.0
+     }
+    },
+    "incumbent": {
+     "snapped_f1_075": 0.027636363636363636,
+     "raw_f1_075": 0.025862068965517238,
+     "snapped_f1_05": 0.14836363636363636,
+     "raw_f1_05": 0.14511494252873564,
+     "tp_snapped": 19,
+     "tp_raw": 18,
+     "tp05_snapped": 102,
+     "tp05_raw": 101,
+     "n_pred": 904,
+     "n_pred_snapped": 887,
+     "n_ref": 488,
+     "invalid_items": 3,
+     "empty_output_episodes": 0,
+     "mean_boundary_mae_sec": 8.123574353099606,
+     "episodes": 45,
+     "per_episode_snapped_f1": {
+      "galaxea_002": 0.14814814814814817,
+      "galaxea_007": 0.1,
+      "galaxea_009": 0.08,
+      "galaxea_011": 0.0,
+      "galaxea_013": 0.0,
+      "galaxea_028": 0.0,
+      "galaxea_033": 0.0,
+      "galaxea_037": 0.0,
+      "galaxea_039": 0.0,
+      "galaxea_041": 0.0,
+      "galaxea_045": 0.2222222222222222,
+      "galaxea_047": 0.2222222222222222,
+      "galaxea_049": 0.0,
+      "galaxea_050": 0.0,
+      "galaxea_052": 0.2,
+      "galaxea_058": 0.0,
+      "galaxea_060": 0.0,
+      "galaxea_062": 0.0,
+      "galaxea_065": 0.5,
+      "galaxea_067": 0.5,
+      "galaxea_069": 0.4,
+      "galaxea_071": 0.0,
+      "homer_1": 0.08695652173913045,
+      "homer_10": 0.0,
+      "homer_15": 0.0,
+      "homer_2": 0.010869565217391304,
+      "homer_29": 0.0,
+      "homer_3": 0.19999999999999998,
+      "homer_33": 0.0,
+      "homer_37": 0.0,
+      "homer_38": 0.10526315789473684,
+      "homer_39": 0.0,
+      "homer_4": 0.0,
+      "homer_40": 0.02702702702702703,
+      "homer_41": 0.0,
+      "homer_48": 0.0,
+      "homer_5": 0.0,
+      "homer_50": 0.0,
+      "homer_52": 0.0,
+      "homer_53": 0.0,
+      "homer_56": 0.23529411764705882,
+      "homer_59": 0.0,
+      "homer_60": 0.0,
+      "homer_7": 0.08,
+      "homer_9": 0.0
+     }
+    }
+   },
+   "recursion_cost": {
+    "by_role": {
+     "nemotron": {
+      "calls": 3,
+      "cache_hits": 3,
+      "cost_usd": 0.0,
+      "prompt_tokens": 0,
+      "completion_tokens": 0
+     },
+     "vision": {
+      "calls": 221,
+      "cache_hits": 138,
+      "cost_usd": 1.478657,
+      "prompt_tokens": 975930,
+      "completion_tokens": 648021
+     }
+    },
+    "total_cost_usd": 1.478657
+   }
+  },
+  {
+   "id": "rest50-hitl-EXP-0002",
+   "parent_version": "N0",
+   "version_dir": "rest50-hitl-EXP-0002_rejected",
+   "hypothesis": "By using deliberate thinking (thinking=true) in the initial annotation, adding telemetry-based hint detection, refining segments around those hints, and merging short segments, we will reduce over-segmentation and improve boundary alignment, leading to higher Segment F1 at IoU>=0.75.",
+   "patch_summary": {
+    "insert_nodes": [
+     {
+      "node": {
+       "id": "hints",
+       "operator": "state_hint_detection",
+       "depends_on": [
+        "sample"
+       ],
+       "params": {
+        "signals": [
+         "gripper",
+         "eef_pause"
+        ],
+        "min_gap_sec": 0.8,
+        "pause_speed_quantile": 0.15,
+        "min_pause_sec": 0.3
+       },
+       "when": "always"
+      },
+      "rewire_dependents_of": null
+     },
+     {
+      "node": {
+       "id": "inspect",
+       "operator": "inspect_transition_windows",
+       "depends_on": [
+        "annotate",
+        "hints"
+       ],
+       "params": {
+        "select": "near_hints",
+        "window_sec": 2.0,
+        "local_hz": 4.0,
+        "max_windows": 8,
+        "include_unmatched_hints": true,
+        "tile_px": 224,
+        "confidence_threshold": 0.7
+       },
+       "when": "always"
+      },
+      "rewire_dependents_of": null
+     },
+     {
+      "node": {
+       "id": "refine",
+       "operator": "refine_intervals",
+       "depends_on": [
+        "inspect"
+       ],
+       "params": {
+        "prompt": "refine.md",
+        "thinking": true,
+        "max_tokens": 16384,
+        "temperature": 0.2,
+        "allow_insert": true,
+        "allow_delete": true
+       },
+       "when": "always"
+      },
+      "rewire_dependents_of": null
+     },
+     {
+      "node": {
+       "id": "merge",
+       "operator": "merge_filter_segments",
+       "depends_on": [
+        "refine"
+       ],
+       "params": {
+        "min_duration_sec": 0.8,
+        "max_gap_sec": 0.5,
+        "tile_full_episode": true,
+        "merge_same_label": false
+       },
+       "when": "always"
+      },
+      "rewire_dependents_of": null
+     }
+    ],
+    "set_params": {
+     "annotate": {
+      "thinking": true
+     }
+    },
+    "set_depends_on": {
+     "annotate": [
+      "sample",
+      "hints"
+     ],
+     "export": [
+      "merge"
+     ]
+    },
+    "prompt_updates": {
+     "prompt.md": "Reconstruct the sequence of manipulation events in this robot video from the timestamped contact sheets.\n\nReturn only JSON with this shape:\n{\"segments\":[{\"start_sec\":0.0,\"end_sec\":1.0,\"subtask\":\"short action description\"}]}\n\nRules:\n- Segment only completed robot manipulation events, not every visible movement.\n- Good boundaries happen when a held object changes, an object is placed or released, a tool starts/stops changing a surface, a container/door/lid opens or closes, or contents move between containers.\n- Do not split approach, grasp adjustment, small repositioning, and retreat unless the world state changes.\n- Do not merge separate pick/place/open/close/pour/wipe events when they complete different states.\n- Most segments should be 2-10 seconds. Shorter segments are okay only for fast pick, place, open, close, or release events under 2 seconds.\n- Avoid predicting segments of exactly 1.0 second unless the action is known to be sub-second.\n- Do not output evenly spaced segments; boundaries must coincide with visible state changes.\n- Use the visible timestamps for start_sec and end_sec.\n- Ignore label wording quality; prioritize temporally correct boundaries.\n- If you are unsure about a boundary, prefer to merge with a neighboring segment rather than split unnecessarily.\n- The output must cover the entire video from start to end without gaps or overlaps.\n\nEpisode instruction: $instruction"
+    }
+   },
+   "decision": "REJECTED",
+   "label_free": {
+    "candidate_self_score": 0.1745,
+    "incumbent_self_score": 0.4934,
+    "candidate_components": {
+     "telemetry_agreement": 0.1509,
+     "visual_verification": 0.6799,
+     "duration_variability": 0.1735,
+     "temporal_resolution": 0.24
+    },
+    "incumbent_components": {
+     "telemetry_agreement": 0.3813,
+     "visual_verification": 0.3498,
+     "duration_variability": 0.4064,
+     "temporal_resolution": 0.9766
+    }
+   },
+   "labeled_sample": {
+    "candidate": {
+     "snapped_f1_075": 0.04511278195488722,
+     "raw_f1_075": 0.04477611940298507,
+     "snapped_f1_05": 0.2105263157894737,
+     "tp_snapped": 3,
+     "n_pred": 29,
+     "n_ref": 105
+    },
+    "incumbent": {
+     "snapped_f1_075": 0.010582010582010581,
+     "raw_f1_075": 0.010554089709762534,
+     "snapped_f1_05": 0.1904761904761905,
+     "tp_snapped": 2,
+     "n_pred": 274,
+     "n_ref": 105
+    }
+   },
+   "topology_change": true,
+   "root_causes": [
+    {
+     "cause": "Over-segmentation into 1-second segments due to thinking=false and uniform sampling leading to evenly spaced boundaries.",
+     "evidence": "predicted_segments_exactly_1s_fraction = 0.945, median predicted segment = 1.0s, predicted segments <=2s fraction = 0.993 vs reference 0.429; predicted vs reference segments = 274 vs 105."
+    },
+    {
+     "cause": "Lack of temporal refinement and merging step causing failure to align boundaries with true manipulation events.",
+     "evidence": "mean best IoU per reference = 0.439, references matched at IoU>=0.75 = 2 out of 105, references with best IoU <0.5 = 69."
+    },
+    {
+     "cause": "Insufficient temporal resolution of contact sheets (sampling_hz=2.0, frames_per_sheet=20) limiting detection of short events and encouraging uniform spacing.",
+     "evidence": "median predicted segment = 1.0s while median reference segment = 2.37s; predicted segments per episode mean = 23.64, indicating under-resolution of actual manipulation durations."
+    }
+   ],
+   "selected_round": 3,
+   "trials": [
+    {
+     "round": 1,
+     "hypothesis": "Adding deliberate thinking, telemetry hint detection, an inspection\u2011refinement loop, and a merge/filter step, while increasing sampling rate and decreasing frames per sheet to obtain finer granularity, will reduce over\u2011segmentation, improve boundary alignment, and raise Segment F1 at IoU\u22650.75.",
+     "root_causes": [
+      {
+       "cause": "Over-segmentation into 1-second segments due to thinking=false and uniform sampling leading to evenly spaced boundaries.",
+       "evidence": "predicted_segments_exactly_1s_fraction 0.945, median predicted segment 1.0s, predicted segments \u22642s fraction 0.993 vs reference 0.429."
+      },
+      {
+       "cause": "Lack of temporal refinement and merging step causing failure to align boundaries with true manipulation events.",
+       "evidence": "mean best IoU per reference 0.439, references matched at IoU\u22650.75 only 2 out of 105, median reference segment 2.37s."
+      },
+      {
+       "cause": "Insufficient temporal resolution of contact sheets (sampling_hz=2.0, frames_per_sheet=20) limiting detection of short events and encouraging uniform spacing.",
+       "evidence": "predicted segments per episode mean 23.64, median predicted segment 1.0s, while reference median is 2.37s indicating under-resolution."
+      }
+     ],
+     "patch": {
+      "insert_nodes": [
+       {
+        "node": {
+         "id": "hints",
+         "operator": "state_hint_detection",
+         "depends_on": [
+          "sample"
+         ],
+         "params": {
+          "signals": [
+           "gripper",
+           "eef_pause"
+          ],
+          "min_gap_sec": 0.8,
+          "pause_speed_quantile": 0.15,
+          "min_pause_sec": 0.3
+         },
+         "when": "always"
+        },
+        "rewire_dependents_of": null
+       },
+       {
+        "node": {
+         "id": "inspect",
+         "operator": "inspect_transition_windows",
+         "depends_on": [
+          "annotate",
+          "hints"
+         ],
+         "params": {
+          "select": "near_hints",
+          "window_sec": 2.0,
+          "local_hz": 4.0,
+          "max_windows": 8,
+          "include_unmatched_hints": true,
+          "tile_px": 224,
+          "confidence_threshold": 0.7
+         },
+         "when": "always"
+        },
+        "rewire_dependents_of": null
+       },
+       {
+        "node": {
+         "id": "refine",
+         "operator": "refine_intervals",
+         "depends_on": [
+          "inspect"
+         ],
+         "params": {
+          "prompt": "refine.md",
+          "thinking": true,
+          "max_tokens": 16384,
+          "temperature": 0.2,
+          "allow_insert": true,
+          "allow_delete": true
+         },
+         "when": "always"
+        },
+        "rewire_dependents_of": null
+       },
+       {
+        "node": {
+         "id": "merge",
+         "operator": "merge_filter_segments",
+         "depends_on": [
+          "refine"
+         ],
+         "params": {
+          "min_duration_sec": 0.8,
+          "max_gap_sec": 0.5,
+          "tile_full_episode": true,
+          "merge_same_label": false
+         },
+         "when": "always"
+        },
+        "rewire_dependents_of": null
+       }
+      ],
+      "set_params": {
+       "sample": {
+        "sampling_hz": 5.0,
+        "frames_per_sheet": 10,
+        "tile_px": 224,
+        "cols": 5,
+        "badge": "macrodata",
+        "jpeg_quality": 95
+       },
+       "annotate": {
+        "thinking": true
+       }
+      },
+      "set_depends_on": {
+       "annotate": [
+        "sample",
+        "hints"
+       ],
+       "export": [
+        "merge"
+       ]
+      },
+      "prompt_updates": {
+       "prompt.md": "Reconstruct the sequence of manipulation events in this robot video from the timestamped contact sheets.\n\nReturn only JSON with this shape:\n{\"segments\":[{\"start_sec\":0.0,\"end_sec\":1.0,\"subtask\":\"short action description\"}]}\n\nRules:\n- Segment only completed robot manipulation events, not every visible movement.\n- Good boundaries happen when a held object changes, an object is placed or released, a tool starts/stops changing a surface, a container/door/lid opens or closes, or contents move between containers.\n- Do not split approach, grasp adjustment, small repositioning, and retreat unless the world state changes.\n- Do not merge separate pick/place/open/close/pour/wipe events when they complete different states.\n- Most segments should be 2-10 seconds. Shorter segments are okay only for fast pick, place, open, close, or release events under 2 seconds.\n- Avoid predicting segments of exactly 1.0 second unless the action is known to be sub-second.\n- Do not output evenly spaced segments; boundaries must coincide with visible state changes.\n- Use the visible timestamps for start_sec and end_sec.\n- Ignore label wording quality; prioritize temporally correct boundaries.\n\nEpisode instruction: $instruction"
+      }
+     },
+     "labeled_scores": {
+      "snapped_f1_075": 0.01739130434782609,
+      "raw_f1_075": 0.01724137931034483,
+      "snapped_f1_05": 0.08695652173913042,
+      "tp_snapped": 1,
+      "n_pred": 11,
+      "n_ref": 105
+     },
+     "root_cause_stats_labeled": {
+      "predicted_vs_reference_segments": [
+       11,
+       105
+      ],
+      "median_predicted_segment_sec": 3.0,
+      "median_reference_segment_sec": 2.37,
+      "predicted_segments_le_2s_fraction": 0.273,
+      "reference_segments_le_2s_fraction": 0.429,
+      "predicted_segments_exactly_1s_fraction": 0.0,
+      "median_coverage_last_predicted_end_over_reference_end": 1.15,
+      "episodes_with_coverage_below_50pct": 2,
+      "references_matched_at_iou075": 1,
+      "mean_best_iou_per_reference": 0.034,
+      "references_with_best_iou_below_0.5": 100,
+      "pooled_scores": {
+       "snapped_f1_075": 0.01739130434782609,
+       "raw_f1_075": 0.01724137931034483,
+       "snapped_f1_05": 0.08695652173913042,
+       "tp_snapped": 1,
+       "n_pred": 11,
+       "n_ref": 105
+      }
+     }
+    },
+    {
+     "round": 2,
+     "hypothesis": "Adding deliberate thinking, telemetry\u2011hint detection, an inspection\u2011refinement loop, and a merge/filter step, while increasing sampling rate and decreasing frames per sheet to obtain finer granularity, will reduce over\u2011segmentation, improve boundary alignment, and raise Segment F1 at IoU\u22650.75.",
+     "root_causes": [
+      {
+       "cause": "Over-segmentation into 1-second segments due to thinking=false and uniform sampling leading to evenly spaced boundaries.",
+       "evidence": "predicted_segments_exactly_1s_fraction = 0.945, median predicted segment = 1.0s, predicted segments \u22642s fraction = 0.993 vs reference fraction 0.429; predicted vs reference segments = 274 vs 105."
+      },
+      {
+       "cause": "Lack of temporal refinement and merging step causing failure to align boundaries with true manipulation events.",
+       "evidence": "mean best IoU per reference = 0.439, references matched at IoU\u22650.75 = 2 out of 105, references with best IoU <0.5 = 69."
+      },
+      {
+       "cause": "Insufficient temporal resolution of contact sheets (sampling_hz=2.0, frames_per_sheet=20) limiting detection of short events and encouraging uniform spacing.",
+       "evidence": "median predicted segment = 1.0s while median reference segment = 2.37s; predicted segments per episode mean = 23.64, indicating under-resolution of actual manipulation durations."
+      }
+     ],
+     "patch": {
+      "insert_nodes": [
+       {
+        "node": {
+         "id": "hints",
+         "operator": "state_hint_detection",
+         "depends_on": [
+          "sample"
+         ],
+         "params": {
+          "signals": [
+           "gripper",
+           "eef_pause"
+          ],
+          "min_gap_sec": 0.8,
+          "pause_speed_quantile": 0.15,
+          "min_pause_sec": 0.3
+         },
+         "when": "always"
+        },
+        "rewire_dependents_of": null
+       },
+       {
+        "node": {
+         "id": "inspect",
+         "operator": "inspect_transition_windows",
+         "depends_on": [
+          "annotate",
+          "hints"
+         ],
+         "params": {
+          "select": "near_hints",
+          "window_sec": 2.0,
+          "local_hz": 4.0,
+          "max_windows": 8,
+          "include_unmatched_hints": true,
+          "tile_px": 224,
+          "confidence_threshold": 0.7
+         },
+         "when": "always"
+        },
+        "rewire_dependents_of": null
+       },
+       {
+        "node": {
+         "id": "refine",
+         "operator": "refine_intervals",
+         "depends_on": [
+          "inspect"
+         ],
+         "params": {
+          "prompt": "refine.md",
+          "thinking": true,
+          "max_tokens": 16384,
+          "temperature": 0.2,
+          "allow_insert": true,
+          "allow_delete": true
+         },
+         "when": "always"
+        },
+        "rewire_dependents_of": null
+       },
+       {
+        "node": {
+         "id": "merge",
+         "operator": "merge_filter_segments",
+         "depends_on": [
+          "refine"
+         ],
+         "params": {
+          "min_duration_sec": 0.8,
+          "max_gap_sec": 0.5,
+          "tile_full_episode": true,
+          "merge_same_label": false
+         },
+         "when": "always"
+        },
+        "rewire_dependents_of": null
+       }
+      ],
+      "set_params": {
+       "sample": {
+        "sampling_hz": 5.0,
+        "frames_per_sheet": 10,
+        "tile_px": 224,
+        "cols": 5,
+        "badge": "macrodata",
+        "jpeg_quality": 95
+       },
+       "annotate": {
+        "thinking": true
+       }
+      },
+      "set_depends_on": {
+       "annotate": [
+        "sample",
+        "hints"
+       ],
+       "export": [
+        "merge"
+       ]
+      },
+      "prompt_updates": {
+       "prompt.md": "Reconstruct the sequence of manipulation events in this robot video from the timestamped contact sheets.\n\nReturn only JSON with this shape:\n{\"segments\":[{\"start_sec\":0.0,\"end_sec\":1.0,\"subtask\":\"short action description\"}]}\n\nRules:\n- Segment only completed robot manipulation events, not every visible movement.\n- Good boundaries happen when a held object changes, an object is placed or released, a tool starts/stops changing a surface, a container/door/lid opens or closes, or contents move between containers.\n- Do not split approach, grasp adjustment, small repositioning, and retreat unless the world state changes.\n- Do not merge separate pick/place/open/close/pour/wipe events when they complete different states.\n- Most segments should be 2-10 seconds. Shorter segments are okay only for fast pick, place, open, close, or release events under 2 seconds.\n- Avoid predicting segments of exactly 1.0 second unless the action is known to be sub\u2011second.\n- Do not output evenly spaced segments; boundaries must coincide with visible state changes.\n- Use the visible timestamps for start_sec and end_sec.\n- Ignore label wording quality; prioritize temporally correct boundaries.\n\nEpisode instruction: $instruction"
+      }
+     },
+     "labeled_scores": {
+      "snapped_f1_075": 0.0,
+      "raw_f1_075": 0.0,
+      "snapped_f1_05": 0.01834862385321101,
+      "tp_snapped": 0,
+      "n_pred": 4,
+      "n_ref": 105
+     },
+     "root_cause_stats_labeled": {
+      "predicted_vs_reference_segments": [
+       4,
+       105
+      ],
+      "median_predicted_segment_sec": 2.0,
+      "median_reference_segment_sec": 2.37,
+      "predicted_segments_le_2s_fraction": 0.5,
+      "reference_segments_le_2s_fraction": 0.429,
+      "predicted_segments_exactly_1s_fraction": 0.25,
+      "median_coverage_last_predicted_end_over_reference_end": 0.0,
+      "episodes_with_coverage_below_50pct": 4,
+      "references_matched_at_iou075": 0,
+      "mean_best_iou_per_reference": 0.009,
+      "references_with_best_iou_below_0.5": 104,
+      "pooled_scores": {
+       "snapped_f1_075": 0.0,
+       "raw_f1_075": 0.0,
+       "snapped_f1_05": 0.01834862385321101,
+       "tp_snapped": 0,
+       "n_pred": 4,
+       "n_ref": 105
+      }
+     }
+    },
+    {
+     "round": 3,
+     "hypothesis": "By using deliberate thinking (thinking=true) in the initial annotation, adding telemetry-based hint detection, refining segments around those hints, and merging short segments, we will reduce over-segmentation and improve boundary alignment, leading to higher Segment F1 at IoU>=0.75.",
+     "root_causes": [
+      {
+       "cause": "Over-segmentation into 1-second segments due to thinking=false and uniform sampling leading to evenly spaced boundaries.",
+       "evidence": "predicted_segments_exactly_1s_fraction = 0.945, median predicted segment = 1.0s, predicted segments <=2s fraction = 0.993 vs reference 0.429; predicted vs reference segments = 274 vs 105."
+      },
+      {
+       "cause": "Lack of temporal refinement and merging step causing failure to align boundaries with true manipulation events.",
+       "evidence": "mean best IoU per reference = 0.439, references matched at IoU>=0.75 = 2 out of 105, references with best IoU <0.5 = 69."
+      },
+      {
+       "cause": "Insufficient temporal resolution of contact sheets (sampling_hz=2.0, frames_per_sheet=20) limiting detection of short events and encouraging uniform spacing.",
+       "evidence": "median predicted segment = 1.0s while median reference segment = 2.37s; predicted segments per episode mean = 23.64, indicating under-resolution of actual manipulation durations."
+      }
+     ],
+     "patch": {
+      "insert_nodes": [
+       {
+        "node": {
+         "id": "hints",
+         "operator": "state_hint_detection",
+         "depends_on": [
+          "sample"
+         ],
+         "params": {
+          "signals": [
+           "gripper",
+           "eef_pause"
+          ],
+          "min_gap_sec": 0.8,
+          "pause_speed_quantile": 0.15,
+          "min_pause_sec": 0.3
+         },
+         "when": "always"
+        },
+        "rewire_dependents_of": null
+       },
+       {
+        "node": {
+         "id": "inspect",
+         "operator": "inspect_transition_windows",
+         "depends_on": [
+          "annotate",
+          "hints"
+         ],
+         "params": {
+          "select": "near_hints",
+          "window_sec": 2.0,
+          "local_hz": 4.0,
+          "max_windows": 8,
+          "include_unmatched_hints": true,
+          "tile_px": 224,
+          "confidence_threshold": 0.7
+         },
+         "when": "always"
+        },
+        "rewire_dependents_of": null
+       },
+       {
+        "node": {
+         "id": "refine",
+         "operator": "refine_intervals",
+         "depends_on": [
+          "inspect"
+         ],
+         "params": {
+          "prompt": "refine.md",
+          "thinking": true,
+          "max_tokens": 16384,
+          "temperature": 0.2,
+          "allow_insert": true,
+          "allow_delete": true
+         },
+         "when": "always"
+        },
+        "rewire_dependents_of": null
+       },
+       {
+        "node": {
+         "id": "merge",
+         "operator": "merge_filter_segments",
+         "depends_on": [
+          "refine"
+         ],
+         "params": {
+          "min_duration_sec": 0.8,
+          "max_gap_sec": 0.5,
+          "tile_full_episode": true,
+          "merge_same_label": false
+         },
+         "when": "always"
+        },
+        "rewire_dependents_of": null
+       }
+      ],
+      "set_params": {
+       "annotate": {
+        "thinking": true
+       }
+      },
+      "set_depends_on": {
+       "annotate": [
+        "sample",
+        "hints"
+       ],
+       "export": [
+        "merge"
+       ]
+      },
+      "prompt_updates": {
+       "prompt.md": "Reconstruct the sequence of manipulation events in this robot video from the timestamped contact sheets.\n\nReturn only JSON with this shape:\n{\"segments\":[{\"start_sec\":0.0,\"end_sec\":1.0,\"subtask\":\"short action description\"}]}\n\nRules:\n- Segment only completed robot manipulation events, not every visible movement.\n- Good boundaries happen when a held object changes, an object is placed or released, a tool starts/stops changing a surface, a container/door/lid opens or closes, or contents move between containers.\n- Do not split approach, grasp adjustment, small repositioning, and retreat unless the world state changes.\n- Do not merge separate pick/place/open/close/pour/wipe events when they complete different states.\n- Most segments should be 2-10 seconds. Shorter segments are okay only for fast pick, place, open, close, or release events under 2 seconds.\n- Avoid predicting segments of exactly 1.0 second unless the action is known to be sub-second.\n- Do not output evenly spaced segments; boundaries must coincide with visible state changes.\n- Use the visible timestamps for start_sec and end_sec.\n- Ignore label wording quality; prioritize temporally correct boundaries.\n- If you are unsure about a boundary, prefer to merge with a neighboring segment rather than split unnecessarily.\n- The output must cover the entire video from start to end without gaps or overlaps.\n\nEpisode instruction: $instruction"
+      }
+     },
+     "labeled_scores": {
+      "snapped_f1_075": 0.04511278195488722,
+      "raw_f1_075": 0.04477611940298507,
+      "snapped_f1_05": 0.2105263157894737,
+      "tp_snapped": 3,
+      "n_pred": 29,
+      "n_ref": 105
+     },
+     "root_cause_stats_labeled": {
+      "predicted_vs_reference_segments": [
+       29,
+       105
+      ],
+      "median_predicted_segment_sec": 3.2,
+      "median_reference_segment_sec": 2.37,
+      "predicted_segments_le_2s_fraction": 0.138,
+      "reference_segments_le_2s_fraction": 0.429,
+      "predicted_segments_exactly_1s_fraction": 0.034,
+      "median_coverage_last_predicted_end_over_reference_end": 0.0,
+      "episodes_with_coverage_below_50pct": 3,
+      "references_matched_at_iou075": 3,
+      "mean_best_iou_per_reference": 0.2,
+      "references_with_best_iou_below_0.5": 91,
+      "pooled_scores": {
+       "snapped_f1_075": 0.04511278195488722,
+       "raw_f1_075": 0.04477611940298507,
+       "snapped_f1_05": 0.2105263157894737,
+       "tp_snapped": 3,
+       "n_pred": 29,
+       "n_ref": 105
+      }
+     }
+    }
+   ],
+   "shadow_gt": {
+    "candidate": {
+     "snapped_f1_075": 0.017621145374449337,
+     "raw_f1_075": 0.014598540145985401,
+     "snapped_f1_05": 0.1145374449339207,
+     "raw_f1_05": 0.11094890510948906,
+     "tp_snapped": 6,
+     "tp_raw": 5,
+     "tp05_snapped": 39,
+     "tp05_raw": 38,
+     "n_pred": 92,
+     "n_pred_snapped": 88,
+     "n_ref": 593,
+     "invalid_items": 0,
+     "empty_output_episodes": 38,
+     "mean_boundary_mae_sec": 1.9158246395904295,
+     "episodes": 50,
+     "per_episode_snapped_f1": {
+      "galaxea_002": 0.0,
+      "galaxea_007": 0.0,
+      "galaxea_009": 0.0,
+      "galaxea_011": 0.0,
+      "galaxea_013": 0.0,
+      "galaxea_028": 0.0,
+      "galaxea_033": 0.0,
+      "galaxea_037": 0.0,
+      "galaxea_039": 0.0,
+      "galaxea_041": 0.0,
+      "galaxea_043": 0.3333333333333333,
+      "galaxea_045": 0.0,
+      "galaxea_047": 0.0,
+      "galaxea_049": 0.0,
+      "galaxea_050": 0.0,
+      "galaxea_052": 0.0,
+      "galaxea_058": 0.0,
+      "galaxea_060": 0.0,
+      "galaxea_062": 0.0,
+      "galaxea_065": 0.0,
+      "galaxea_067": 0.0,
+      "galaxea_069": 0.0,
+      "galaxea_071": 0.0,
+      "galaxea_073": 0.0,
+      "galaxea_075": 0.0,
+      "homer_1": 0.0,
+      "homer_10": 0.0,
+      "homer_11": 0.0,
+      "homer_12": 0.04878048780487805,
+      "homer_15": 0.0,
+      "homer_2": 0.0,
+      "homer_29": 0.0,
+      "homer_3": 0.0,
+      "homer_33": 0.0,
+      "homer_37": 0.0,
+      "homer_38": 0.0,
+      "homer_39": 0.0,
+      "homer_4": 0.0,
+      "homer_40": 0.0,
+      "homer_41": 0.0,
+      "homer_48": 0.0,
+      "homer_5": 0.0,
+      "homer_50": 0.09302325581395349,
+      "homer_52": 0.0,
+      "homer_53": 0.0,
+      "homer_56": 0.13333333333333333,
+      "homer_59": 0.0,
+      "homer_60": 0.0,
+      "homer_7": 0.0,
+      "homer_9": 0.0
+     }
+    },
+    "incumbent": {
+     "snapped_f1_075": 0.023958927552766688,
+     "raw_f1_075": 0.02258610954263128,
+     "snapped_f1_05": 0.15744438106103822,
+     "raw_f1_05": 0.1535855448898927,
+     "tp_snapped": 21,
+     "tp_raw": 20,
+     "tp05_snapped": 138,
+     "tp05_raw": 136,
+     "n_pred": 1178,
+     "n_pred_snapped": 1160,
+     "n_ref": 593,
+     "invalid_items": 4,
+     "empty_output_episodes": 0,
+     "mean_boundary_mae_sec": 7.35147718094754,
+     "episodes": 50,
+     "per_episode_snapped_f1": {
+      "galaxea_002": 0.14814814814814817,
+      "galaxea_007": 0.1,
+      "galaxea_009": 0.08,
+      "galaxea_011": 0.0,
+      "galaxea_013": 0.0,
+      "galaxea_028": 0.0,
+      "galaxea_033": 0.0,
+      "galaxea_037": 0.0,
+      "galaxea_039": 0.0,
+      "galaxea_041": 0.0,
+      "galaxea_043": 0.0,
+      "galaxea_045": 0.2222222222222222,
+      "galaxea_047": 0.2222222222222222,
+      "galaxea_049": 0.0,
+      "galaxea_050": 0.0,
+      "galaxea_052": 0.2,
+      "galaxea_058": 0.0,
+      "galaxea_060": 0.0,
+      "galaxea_062": 0.0,
+      "galaxea_065": 0.5,
+      "galaxea_067": 0.5,
+      "galaxea_069": 0.4,
+      "galaxea_071": 0.0,
+      "galaxea_073": 0.0,
+      "galaxea_075": 0.0,
+      "homer_1": 0.08695652173913045,
+      "homer_10": 0.0,
+      "homer_11": 0.011560693641618497,
+      "homer_12": 0.01092896174863388,
+      "homer_15": 0.0,
+      "homer_2": 0.010869565217391304,
+      "homer_29": 0.0,
+      "homer_3": 0.19999999999999998,
+      "homer_33": 0.0,
+      "homer_37": 0.0,
+      "homer_38": 0.10526315789473684,
+      "homer_39": 0.0,
+      "homer_4": 0.0,
+      "homer_40": 0.02702702702702703,
+      "homer_41": 0.0,
+      "homer_48": 0.0,
+      "homer_5": 0.0,
+      "homer_50": 0.0,
+      "homer_52": 0.0,
+      "homer_53": 0.0,
+      "homer_56": 0.23529411764705882,
+      "homer_59": 0.0,
+      "homer_60": 0.0,
+      "homer_7": 0.08,
+      "homer_9": 0.0
+     }
+    }
+   },
+   "shadow_gt_heldout": {
+    "candidate": {
+     "snapped_f1_075": 0.010948905109489052,
+     "raw_f1_075": 0.007259528130671507,
+     "snapped_f1_05": 0.09124087591240877,
+     "raw_f1_05": 0.08711433756805809,
+     "tp_snapped": 3,
+     "tp_raw": 2,
+     "tp05_snapped": 25,
+     "tp05_raw": 24,
+     "n_pred": 63,
+     "n_pred_snapped": 60,
+     "n_ref": 488,
+     "invalid_items": 0,
+     "empty_output_episodes": 35,
+     "mean_boundary_mae_sec": 2.1223650061050066,
+     "episodes": 45,
+     "per_episode_snapped_f1": {
+      "galaxea_002": 0.0,
+      "galaxea_007": 0.0,
+      "galaxea_009": 0.0,
+      "galaxea_011": 0.0,
+      "galaxea_013": 0.0,
+      "galaxea_028": 0.0,
+      "galaxea_033": 0.0,
+      "galaxea_037": 0.0,
+      "galaxea_039": 0.0,
+      "galaxea_041": 0.0,
+      "galaxea_045": 0.0,
+      "galaxea_047": 0.0,
+      "galaxea_049": 0.0,
+      "galaxea_050": 0.0,
+      "galaxea_052": 0.0,
+      "galaxea_058": 0.0,
+      "galaxea_060": 0.0,
+      "galaxea_062": 0.0,
+      "galaxea_065": 0.0,
+      "galaxea_067": 0.0,
+      "galaxea_069": 0.0,
+      "galaxea_071": 0.0,
+      "homer_1": 0.0,
+      "homer_10": 0.0,
+      "homer_15": 0.0,
+      "homer_2": 0.0,
+      "homer_29": 0.0,
+      "homer_3": 0.0,
+      "homer_33": 0.0,
+      "homer_37": 0.0,
+      "homer_38": 0.0,
+      "homer_39": 0.0,
+      "homer_4": 0.0,
+      "homer_40": 0.0,
+      "homer_41": 0.0,
+      "homer_48": 0.0,
+      "homer_5": 0.0,
+      "homer_50": 0.09302325581395349,
+      "homer_52": 0.0,
+      "homer_53": 0.0,
+      "homer_56": 0.13333333333333333,
+      "homer_59": 0.0,
+      "homer_60": 0.0,
+      "homer_7": 0.0,
+      "homer_9": 0.0
+     }
+    },
+    "incumbent": {
+     "snapped_f1_075": 0.027636363636363636,
+     "raw_f1_075": 0.025862068965517238,
+     "snapped_f1_05": 0.14836363636363636,
+     "raw_f1_05": 0.14511494252873564,
+     "tp_snapped": 19,
+     "tp_raw": 18,
+     "tp05_snapped": 102,
+     "tp05_raw": 101,
+     "n_pred": 904,
+     "n_pred_snapped": 887,
+     "n_ref": 488,
+     "invalid_items": 3,
+     "empty_output_episodes": 0,
+     "mean_boundary_mae_sec": 8.123574353099606,
+     "episodes": 45,
+     "per_episode_snapped_f1": {
+      "galaxea_002": 0.14814814814814817,
+      "galaxea_007": 0.1,
+      "galaxea_009": 0.08,
+      "galaxea_011": 0.0,
+      "galaxea_013": 0.0,
+      "galaxea_028": 0.0,
+      "galaxea_033": 0.0,
+      "galaxea_037": 0.0,
+      "galaxea_039": 0.0,
+      "galaxea_041": 0.0,
+      "galaxea_045": 0.2222222222222222,
+      "galaxea_047": 0.2222222222222222,
+      "galaxea_049": 0.0,
+      "galaxea_050": 0.0,
+      "galaxea_052": 0.2,
+      "galaxea_058": 0.0,
+      "galaxea_060": 0.0,
+      "galaxea_062": 0.0,
+      "galaxea_065": 0.5,
+      "galaxea_067": 0.5,
+      "galaxea_069": 0.4,
+      "galaxea_071": 0.0,
+      "homer_1": 0.08695652173913045,
+      "homer_10": 0.0,
+      "homer_15": 0.0,
+      "homer_2": 0.010869565217391304,
+      "homer_29": 0.0,
+      "homer_3": 0.19999999999999998,
+      "homer_33": 0.0,
+      "homer_37": 0.0,
+      "homer_38": 0.10526315789473684,
+      "homer_39": 0.0,
+      "homer_4": 0.0,
+      "homer_40": 0.02702702702702703,
+      "homer_41": 0.0,
+      "homer_48": 0.0,
+      "homer_5": 0.0,
+      "homer_50": 0.0,
+      "homer_52": 0.0,
+      "homer_53": 0.0,
+      "homer_56": 0.23529411764705882,
+      "homer_59": 0.0,
+      "homer_60": 0.0,
+      "homer_7": 0.08,
+      "homer_9": 0.0
+     }
+    }
+   },
+   "recursion_cost": {
+    "by_role": {
+     "nemotron": {
+      "calls": 4,
+      "cache_hits": 0,
+      "cost_usd": 0.059965,
+      "prompt_tokens": 35012,
+      "completion_tokens": 20609
+     },
+     "vision": {
+      "calls": 234,
+      "cache_hits": 98,
+      "cost_usd": 1.906199,
+      "prompt_tokens": 625107,
+      "completion_tokens": 939162
+     }
+    },
+    "total_cost_usd": 1.966164
+   }
+  }
+ ],
+ "versions": {
+  "N0": {
+   "headline_gt_heldout": {
+    "snapped_f1_075": 0.027636363636363636,
+    "raw_f1_075": 0.025862068965517238,
+    "snapped_f1_05": 0.14836363636363636,
+    "raw_f1_05": 0.14511494252873564,
+    "tp_snapped": 19,
+    "tp_raw": 18,
+    "tp05_snapped": 102,
+    "tp05_raw": 101,
+    "n_pred": 904,
+    "n_pred_snapped": 887,
+    "n_ref": 488,
+    "invalid_items": 3,
+    "empty_output_episodes": 0,
+    "mean_boundary_mae_sec": 8.123574353099606,
+    "episodes": 45,
+    "per_episode_snapped_f1": {
+     "galaxea_002": 0.14814814814814817,
+     "galaxea_007": 0.1,
+     "galaxea_009": 0.08,
+     "galaxea_011": 0.0,
+     "galaxea_013": 0.0,
+     "galaxea_028": 0.0,
+     "galaxea_033": 0.0,
+     "galaxea_037": 0.0,
+     "galaxea_039": 0.0,
+     "galaxea_041": 0.0,
+     "galaxea_045": 0.2222222222222222,
+     "galaxea_047": 0.2222222222222222,
+     "galaxea_049": 0.0,
+     "galaxea_050": 0.0,
+     "galaxea_052": 0.2,
+     "galaxea_058": 0.0,
+     "galaxea_060": 0.0,
+     "galaxea_062": 0.0,
+     "galaxea_065": 0.5,
+     "galaxea_067": 0.5,
+     "galaxea_069": 0.4,
+     "galaxea_071": 0.0,
+     "homer_1": 0.08695652173913045,
+     "homer_10": 0.0,
+     "homer_15": 0.0,
+     "homer_2": 0.010869565217391304,
+     "homer_29": 0.0,
+     "homer_3": 0.19999999999999998,
+     "homer_33": 0.0,
+     "homer_37": 0.0,
+     "homer_38": 0.10526315789473684,
+     "homer_39": 0.0,
+     "homer_4": 0.0,
+     "homer_40": 0.02702702702702703,
+     "homer_41": 0.0,
+     "homer_48": 0.0,
+     "homer_5": 0.0,
+     "homer_50": 0.0,
+     "homer_52": 0.0,
+     "homer_53": 0.0,
+     "homer_56": 0.23529411764705882,
+     "homer_59": 0.0,
+     "homer_60": 0.0,
+     "homer_7": 0.08,
+     "homer_9": 0.0
+    }
+   },
+   "headline_gt_labeled": {
+    "snapped_f1_075": 0.010582010582010581,
+    "raw_f1_075": 0.010554089709762534,
+    "snapped_f1_05": 0.1904761904761905,
+    "raw_f1_05": 0.18469656992084435,
+    "tp_snapped": 2,
+    "tp_raw": 2,
+    "tp05_snapped": 36,
+    "tp05_raw": 35,
+    "n_pred": 274,
+    "n_pred_snapped": 273,
+    "n_ref": 105,
+    "invalid_items": 1,
+    "empty_output_episodes": 0,
+    "mean_boundary_mae_sec": 0.402602631578947,
+    "episodes": 5,
+    "per_episode_snapped_f1": {
+     "galaxea_043": 0.0,
+     "galaxea_073": 0.0,
+     "galaxea_075": 0.0,
+     "homer_11": 0.011560693641618497,
+     "homer_12": 0.01092896174863388
+    }
+   },
+   "heldout_episodes": 45,
+   "labeled_episodes": 5,
+   "version_id": "N0",
+   "episodes": 50,
+   "headline_gt": {
+    "snapped_f1_075": 0.023958927552766688,
+    "raw_f1_075": 0.02258610954263128,
+    "snapped_f1_05": 0.15744438106103822,
+    "raw_f1_05": 0.1535855448898927,
+    "tp_snapped": 21,
+    "tp_raw": 20,
+    "tp05_snapped": 138,
+    "tp05_raw": 136,
+    "n_pred": 1178,
+    "n_pred_snapped": 1160,
+    "n_ref": 593,
+    "invalid_items": 4,
+    "empty_output_episodes": 0,
+    "mean_boundary_mae_sec": 7.35147718094754,
+    "episodes": 50,
+    "per_episode_snapped_f1": {
+     "galaxea_002": 0.14814814814814817,
+     "galaxea_007": 0.1,
+     "galaxea_009": 0.08,
+     "galaxea_011": 0.0,
+     "galaxea_013": 0.0,
+     "galaxea_028": 0.0,
+     "galaxea_033": 0.0,
+     "galaxea_037": 0.0,
+     "galaxea_039": 0.0,
+     "galaxea_041": 0.0,
+     "galaxea_043": 0.0,
+     "galaxea_045": 0.2222222222222222,
+     "galaxea_047": 0.2222222222222222,
+     "galaxea_049": 0.0,
+     "galaxea_050": 0.0,
+     "galaxea_052": 0.2,
+     "galaxea_058": 0.0,
+     "galaxea_060": 0.0,
+     "galaxea_062": 0.0,
+     "galaxea_065": 0.5,
+     "galaxea_067": 0.5,
+     "galaxea_069": 0.4,
+     "galaxea_071": 0.0,
+     "galaxea_073": 0.0,
+     "galaxea_075": 0.0,
+     "homer_1": 0.08695652173913045,
+     "homer_10": 0.0,
+     "homer_11": 0.011560693641618497,
+     "homer_12": 0.01092896174863388,
+     "homer_15": 0.0,
+     "homer_2": 0.010869565217391304,
+     "homer_29": 0.0,
+     "homer_3": 0.19999999999999998,
+     "homer_33": 0.0,
+     "homer_37": 0.0,
+     "homer_38": 0.10526315789473684,
+     "homer_39": 0.0,
+     "homer_4": 0.0,
+     "homer_40": 0.02702702702702703,
+     "homer_41": 0.0,
+     "homer_48": 0.0,
+     "homer_5": 0.0,
+     "homer_50": 0.0,
+     "homer_52": 0.0,
+     "homer_53": 0.0,
+     "homer_56": 0.23529411764705882,
+     "homer_59": 0.0,
+     "homer_60": 0.0,
+     "homer_7": 0.08,
+     "homer_9": 0.0
+    }
+   },
+   "label_free_self_score": 0.4934,
+   "label_free_components": {
+    "telemetry_agreement": 0.3813,
+    "visual_verification": 0.3498,
+    "duration_variability": 0.4064,
+    "temporal_resolution": 0.9766
+   },
+   "annotation_cost_usd_total": 0.146724,
+   "annotation_calls": 50,
+   "statuses": {
+    "galaxea_002": "ok",
+    "galaxea_007": "ok",
+    "galaxea_009": "ok",
+    "galaxea_011": "ok",
+    "galaxea_013": "ok",
+    "galaxea_028": "ok",
+    "galaxea_033": "ok",
+    "galaxea_037": "ok",
+    "galaxea_039": "ok",
+    "galaxea_041": "ok",
+    "galaxea_043": "ok",
+    "galaxea_045": "ok",
+    "galaxea_047": "ok",
+    "galaxea_049": "ok",
+    "galaxea_050": "ok",
+    "galaxea_052": "ok",
+    "galaxea_058": "ok",
+    "galaxea_060": "ok",
+    "galaxea_062": "ok",
+    "galaxea_065": "ok",
+    "galaxea_067": "ok",
+    "galaxea_069": "ok",
+    "galaxea_071": "ok",
+    "galaxea_073": "ok",
+    "galaxea_075": "ok",
+    "homer_1": "ok",
+    "homer_10": "ok",
+    "homer_11": "ok",
+    "homer_12": "ok",
+    "homer_15": "ok",
+    "homer_2": "ok",
+    "homer_29": "ok",
+    "homer_3": "ok",
+    "homer_33": "ok",
+    "homer_37": "ok",
+    "homer_38": "ok",
+    "homer_39": "ok",
+    "homer_4": "ok",
+    "homer_40": "ok",
+    "homer_41": "ok",
+    "homer_48": "ok",
+    "homer_5": "ok",
+    "homer_50": "ok",
+    "homer_52": "ok",
+    "homer_53": "ok",
+    "homer_56": "ok",
+    "homer_59": "ok",
+    "homer_60": "ok",
+    "homer_7": "ok",
+    "homer_9": "ok"
+   }
+  },
+  "rest50-hitl-EXP-0001_rejected": {
+   "headline_gt_heldout": {
+    "snapped_f1_075": 0.05118829981718464,
+    "raw_f1_075": 0.0400728597449909,
+    "snapped_f1_05": 0.10237659963436928,
+    "raw_f1_05": 0.09107468123861566,
+    "tp_snapped": 14,
+    "tp_raw": 11,
+    "tp05_snapped": 28,
+    "tp05_raw": 25,
+    "n_pred": 61,
+    "n_pred_snapped": 59,
+    "n_ref": 488,
+    "invalid_items": 0,
+    "empty_output_episodes": 30,
+    "mean_boundary_mae_sec": 2.732347750476191,
+    "episodes": 45,
+    "per_episode_snapped_f1": {
+     "galaxea_002": 0.0,
+     "galaxea_007": 0.0,
+     "galaxea_009": 0.0,
+     "galaxea_011": 0.0,
+     "galaxea_013": 0.0,
+     "galaxea_028": 0.0,
+     "galaxea_033": 0.0,
+     "galaxea_037": 0.0,
+     "galaxea_039": 0.0,
+     "galaxea_041": 0.0,
+     "galaxea_045": 1.0,
+     "galaxea_047": 0.8571428571428571,
+     "galaxea_049": 0.0,
+     "galaxea_050": 0.0,
+     "galaxea_052": 0.0,
+     "galaxea_058": 0.0,
+     "galaxea_060": 0.0,
+     "galaxea_062": 0.4,
+     "galaxea_065": 0.0,
+     "galaxea_067": 0.0,
+     "galaxea_069": 0.4,
+     "galaxea_071": 0.4,
+     "homer_1": 0.0,
+     "homer_10": 0.0,
+     "homer_15": 0.0,
+     "homer_2": 0.0,
+     "homer_29": 0.0,
+     "homer_3": 0.46153846153846156,
+     "homer_33": 0.0,
+     "homer_37": 0.0,
+     "homer_38": 0.0,
+     "homer_39": 0.046511627906976744,
+     "homer_4": 0.0,
+     "homer_40": 0.125,
+     "homer_41": 0.0,
+     "homer_48": 0.0,
+     "homer_5": 0.0,
+     "homer_50": 0.0,
+     "homer_52": 0.0,
+     "homer_53": 0.0,
+     "homer_56": 0.0,
+     "homer_59": 0.0,
+     "homer_60": 0.0,
+     "homer_7": 0.0,
+     "homer_9": 0.0
+    }
+   },
+   "headline_gt_labeled": {
+    "snapped_f1_075": 0.07079646017699116,
+    "raw_f1_075": 0.05217391304347825,
+    "snapped_f1_05": 0.08849557522123892,
+    "raw_f1_05": 0.08695652173913042,
+    "tp_snapped": 4,
+    "tp_raw": 3,
+    "tp05_snapped": 5,
+    "tp05_raw": 5,
+    "n_pred": 10,
+    "n_pred_snapped": 8,
+    "n_ref": 105,
+    "invalid_items": 0,
+    "empty_output_episodes": 2,
+    "mean_boundary_mae_sec": 0.6626666666666666,
+    "episodes": 5,
+    "per_episode_snapped_f1": {
+     "galaxea_043": 0.5,
+     "galaxea_073": 1.0,
+     "galaxea_075": 0.3333333333333333,
+     "homer_11": 0.0,
+     "homer_12": 0.0
+    }
+   },
+   "heldout_episodes": 45,
+   "labeled_episodes": 5,
+   "version_id": "rest50-hitl-EXP-0001",
+   "episodes": 50,
+   "headline_gt": {
+    "snapped_f1_075": 0.05454545454545454,
+    "raw_f1_075": 0.04216867469879517,
+    "snapped_f1_05": 0.09999999999999999,
+    "raw_f1_05": 0.09036144578313253,
+    "tp_snapped": 18,
+    "tp_raw": 14,
+    "tp05_snapped": 33,
+    "tp05_raw": 30,
+    "n_pred": 71,
+    "n_pred_snapped": 67,
+    "n_ref": 593,
+    "invalid_items": 0,
+    "empty_output_episodes": 32,
+    "mean_boundary_mae_sec": 2.387400903174603,
+    "episodes": 50,
+    "per_episode_snapped_f1": {
+     "galaxea_002": 0.0,
+     "galaxea_007": 0.0,
+     "galaxea_009": 0.0,
+     "galaxea_011": 0.0,
+     "galaxea_013": 0.0,
+     "galaxea_028": 0.0,
+     "galaxea_033": 0.0,
+     "galaxea_037": 0.0,
+     "galaxea_039": 0.0,
+     "galaxea_041": 0.0,
+     "galaxea_043": 0.5,
+     "galaxea_045": 1.0,
+     "galaxea_047": 0.8571428571428571,
+     "galaxea_049": 0.0,
+     "galaxea_050": 0.0,
+     "galaxea_052": 0.0,
+     "galaxea_058": 0.0,
+     "galaxea_060": 0.0,
+     "galaxea_062": 0.4,
+     "galaxea_065": 0.0,
+     "galaxea_067": 0.0,
+     "galaxea_069": 0.4,
+     "galaxea_071": 0.4,
+     "galaxea_073": 1.0,
+     "galaxea_075": 0.3333333333333333,
+     "homer_1": 0.0,
+     "homer_10": 0.0,
+     "homer_11": 0.0,
+     "homer_12": 0.0,
+     "homer_15": 0.0,
+     "homer_2": 0.0,
+     "homer_29": 0.0,
+     "homer_3": 0.46153846153846156,
+     "homer_33": 0.0,
+     "homer_37": 0.0,
+     "homer_38": 0.0,
+     "homer_39": 0.046511627906976744,
+     "homer_4": 0.0,
+     "homer_40": 0.125,
+     "homer_41": 0.0,
+     "homer_48": 0.0,
+     "homer_5": 0.0,
+     "homer_50": 0.0,
+     "homer_52": 0.0,
+     "homer_53": 0.0,
+     "homer_56": 0.0,
+     "homer_59": 0.0,
+     "homer_60": 0.0,
+     "homer_7": 0.0,
+     "homer_9": 0.0
+    }
+   },
+   "label_free_self_score": 0.2569,
+   "label_free_components": {
+    "telemetry_agreement": 0.2371,
+    "visual_verification": 0.7111,
+    "duration_variability": 0.2449,
+    "temporal_resolution": 0.36
+   },
+   "annotation_cost_usd_total": 0.298144,
+   "annotation_calls": 63,
+   "statuses": {
+    "galaxea_002": "model_error",
+    "galaxea_007": "model_error",
+    "galaxea_009": "model_error",
+    "galaxea_011": "model_error",
+    "galaxea_013": "model_error",
+    "galaxea_028": "model_error",
+    "galaxea_033": "model_error",
+    "galaxea_037": "model_error",
+    "galaxea_039": "partial",
+    "galaxea_041": "model_error",
+    "galaxea_043": "ok",
+    "galaxea_045": "ok",
+    "galaxea_047": "ok",
+    "galaxea_049": "ok",
+    "galaxea_050": "model_error",
+    "galaxea_052": "model_error",
+    "galaxea_058": "ok",
+    "galaxea_060": "ok",
+    "galaxea_062": "ok",
+    "galaxea_065": "ok",
+    "galaxea_067": "model_error",
+    "galaxea_069": "ok",
+    "galaxea_071": "ok",
+    "galaxea_073": "ok",
+    "galaxea_075": "ok",
+    "homer_1": "model_error",
+    "homer_10": "model_error",
+    "homer_11": "model_error",
+    "homer_12": "model_error",
+    "homer_15": "ok",
+    "homer_2": "model_error",
+    "homer_29": "model_error",
+    "homer_3": "ok",
+    "homer_33": "model_error",
+    "homer_37": "model_error",
+    "homer_38": "model_error",
+    "homer_39": "ok",
+    "homer_4": "model_error",
+    "homer_40": "ok",
+    "homer_41": "model_error",
+    "homer_48": "model_error",
+    "homer_5": "model_error",
+    "homer_50": "model_error",
+    "homer_52": "ok",
+    "homer_53": "model_error",
+    "homer_56": "model_error",
+    "homer_59": "model_error",
+    "homer_60": "model_error",
+    "homer_7": "model_error",
+    "homer_9": "model_error"
+   }
+  },
+  "rest50-hitl-EXP-0002_rejected": {
+   "headline_gt_heldout": {
+    "snapped_f1_075": 0.010948905109489052,
+    "raw_f1_075": 0.007259528130671507,
+    "snapped_f1_05": 0.09124087591240877,
+    "raw_f1_05": 0.08711433756805809,
+    "tp_snapped": 3,
+    "tp_raw": 2,
+    "tp05_snapped": 25,
+    "tp05_raw": 24,
+    "n_pred": 63,
+    "n_pred_snapped": 60,
+    "n_ref": 488,
+    "invalid_items": 0,
+    "empty_output_episodes": 35,
+    "mean_boundary_mae_sec": 2.1223650061050066,
+    "episodes": 45,
+    "per_episode_snapped_f1": {
+     "galaxea_002": 0.0,
+     "galaxea_007": 0.0,
+     "galaxea_009": 0.0,
+     "galaxea_011": 0.0,
+     "galaxea_013": 0.0,
+     "galaxea_028": 0.0,
+     "galaxea_033": 0.0,
+     "galaxea_037": 0.0,
+     "galaxea_039": 0.0,
+     "galaxea_041": 0.0,
+     "galaxea_045": 0.0,
+     "galaxea_047": 0.0,
+     "galaxea_049": 0.0,
+     "galaxea_050": 0.0,
+     "galaxea_052": 0.0,
+     "galaxea_058": 0.0,
+     "galaxea_060": 0.0,
+     "galaxea_062": 0.0,
+     "galaxea_065": 0.0,
+     "galaxea_067": 0.0,
+     "galaxea_069": 0.0,
+     "galaxea_071": 0.0,
+     "homer_1": 0.0,
+     "homer_10": 0.0,
+     "homer_15": 0.0,
+     "homer_2": 0.0,
+     "homer_29": 0.0,
+     "homer_3": 0.0,
+     "homer_33": 0.0,
+     "homer_37": 0.0,
+     "homer_38": 0.0,
+     "homer_39": 0.0,
+     "homer_4": 0.0,
+     "homer_40": 0.0,
+     "homer_41": 0.0,
+     "homer_48": 0.0,
+     "homer_5": 0.0,
+     "homer_50": 0.09302325581395349,
+     "homer_52": 0.0,
+     "homer_53": 0.0,
+     "homer_56": 0.13333333333333333,
+     "homer_59": 0.0,
+     "homer_60": 0.0,
+     "homer_7": 0.0,
+     "homer_9": 0.0
+    }
+   },
+   "headline_gt_labeled": {
+    "snapped_f1_075": 0.04511278195488722,
+    "raw_f1_075": 0.04477611940298507,
+    "snapped_f1_05": 0.2105263157894737,
+    "raw_f1_05": 0.208955223880597,
+    "tp_snapped": 3,
+    "tp_raw": 3,
+    "tp05_snapped": 14,
+    "tp05_raw": 14,
+    "n_pred": 29,
+    "n_pred_snapped": 28,
+    "n_ref": 105,
+    "invalid_items": 0,
+    "empty_output_episodes": 3,
+    "mean_boundary_mae_sec": 0.8831228070175435,
+    "episodes": 5,
+    "per_episode_snapped_f1": {
+     "galaxea_043": 0.3333333333333333,
+     "galaxea_073": 0.0,
+     "galaxea_075": 0.0,
+     "homer_11": 0.0,
+     "homer_12": 0.04878048780487805
+    }
+   },
+   "heldout_episodes": 45,
+   "labeled_episodes": 5,
+   "version_id": "rest50-hitl-EXP-0002",
+   "episodes": 50,
+   "headline_gt": {
+    "snapped_f1_075": 0.017621145374449337,
+    "raw_f1_075": 0.014598540145985401,
+    "snapped_f1_05": 0.1145374449339207,
+    "raw_f1_05": 0.11094890510948906,
+    "tp_snapped": 6,
+    "tp_raw": 5,
+    "tp05_snapped": 39,
+    "tp05_raw": 38,
+    "n_pred": 92,
+    "n_pred_snapped": 88,
+    "n_ref": 593,
+    "invalid_items": 0,
+    "empty_output_episodes": 38,
+    "mean_boundary_mae_sec": 1.9158246395904295,
+    "episodes": 50,
+    "per_episode_snapped_f1": {
+     "galaxea_002": 0.0,
+     "galaxea_007": 0.0,
+     "galaxea_009": 0.0,
+     "galaxea_011": 0.0,
+     "galaxea_013": 0.0,
+     "galaxea_028": 0.0,
+     "galaxea_033": 0.0,
+     "galaxea_037": 0.0,
+     "galaxea_039": 0.0,
+     "galaxea_041": 0.0,
+     "galaxea_043": 0.3333333333333333,
+     "galaxea_045": 0.0,
+     "galaxea_047": 0.0,
+     "galaxea_049": 0.0,
+     "galaxea_050": 0.0,
+     "galaxea_052": 0.0,
+     "galaxea_058": 0.0,
+     "galaxea_060": 0.0,
+     "galaxea_062": 0.0,
+     "galaxea_065": 0.0,
+     "galaxea_067": 0.0,
+     "galaxea_069": 0.0,
+     "galaxea_071": 0.0,
+     "galaxea_073": 0.0,
+     "galaxea_075": 0.0,
+     "homer_1": 0.0,
+     "homer_10": 0.0,
+     "homer_11": 0.0,
+     "homer_12": 0.04878048780487805,
+     "homer_15": 0.0,
+     "homer_2": 0.0,
+     "homer_29": 0.0,
+     "homer_3": 0.0,
+     "homer_33": 0.0,
+     "homer_37": 0.0,
+     "homer_38": 0.0,
+     "homer_39": 0.0,
+     "homer_4": 0.0,
+     "homer_40": 0.0,
+     "homer_41": 0.0,
+     "homer_48": 0.0,
+     "homer_5": 0.0,
+     "homer_50": 0.09302325581395349,
+     "homer_52": 0.0,
+     "homer_53": 0.0,
+     "homer_56": 0.13333333333333333,
+     "homer_59": 0.0,
+     "homer_60": 0.0,
+     "homer_7": 0.0,
+     "homer_9": 0.0
+    }
+   },
+   "label_free_self_score": 0.1745,
+   "label_free_components": {
+    "telemetry_agreement": 0.1509,
+    "visual_verification": 0.6799,
+    "duration_variability": 0.1735,
+    "temporal_resolution": 0.24
+   },
+   "annotation_cost_usd_total": 0.191182,
+   "annotation_calls": 56,
+   "statuses": {
+    "galaxea_002": "model_error",
+    "galaxea_007": "model_error",
+    "galaxea_009": "model_error",
+    "galaxea_011": "model_error",
+    "galaxea_013": "model_error",
+    "galaxea_028": "model_error",
+    "galaxea_033": "model_error",
+    "galaxea_037": "model_error",
+    "galaxea_039": "model_error",
+    "galaxea_041": "model_error",
+    "galaxea_043": "ok",
+    "galaxea_045": "ok",
+    "galaxea_047": "model_error",
+    "galaxea_049": "model_error",
+    "galaxea_050": "model_error",
+    "galaxea_052": "model_error",
+    "galaxea_058": "model_error",
+    "galaxea_060": "ok",
+    "galaxea_062": "ok",
+    "galaxea_065": "model_error",
+    "galaxea_067": "model_error",
+    "galaxea_069": "ok",
+    "galaxea_071": "ok",
+    "galaxea_073": "model_error",
+    "galaxea_075": "model_error",
+    "homer_1": "model_error",
+    "homer_10": "model_error",
+    "homer_11": "model_error",
+    "homer_12": "ok",
+    "homer_15": "model_error",
+    "homer_2": "model_error",
+    "homer_29": "model_error",
+    "homer_3": "model_error",
+    "homer_33": "ok",
+    "homer_37": "model_error",
+    "homer_38": "model_error",
+    "homer_39": "ok",
+    "homer_4": "model_error",
+    "homer_40": "model_error",
+    "homer_41": "model_error",
+    "homer_48": "model_error",
+    "homer_5": "model_error",
+    "homer_50": "ok",
+    "homer_52": "model_error",
+    "homer_53": "model_error",
+    "homer_56": "ok",
+    "homer_59": "model_error",
+    "homer_60": "model_error",
+    "homer_7": "ok",
+    "homer_9": "model_error"
+   }
+  }
+ },
+ "mode": "hitl",
+ "labeled_ids": [
+  "galaxea_043",
+  "galaxea_073",
+  "galaxea_075",
+  "homer_11",
+  "homer_12"
+ ]
+}

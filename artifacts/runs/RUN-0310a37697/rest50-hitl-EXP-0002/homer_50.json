@@ -1,0 +1,86 @@
+{
+ "episode_id": "homer_50",
+ "version_id": "rest50-hitl-EXP-0002",
+ "segments": [
+  {
+   "start_sec": 0.0,
+   "end_sec": 2.0,
+   "subtask": "Holding the yellow toy car chassis"
+  },
+  {
+   "start_sec": 2.0,
+   "end_sec": 5.0,
+   "subtask": "Attaching a black wheel to the front left"
+  },
+  {
+   "start_sec": 5.0,
+   "end_sec": 8.0,
+   "subtask": "Attaching a black wheel to the rear right"
+  },
+  {
+   "start_sec": 8.0,
+   "end_sec": 10.0,
+   "subtask": "Using a green screwdriver on the chassis side"
+  },
+  {
+   "start_sec": 10.0,
+   "end_sec": 13.0,
+   "subtask": "Using the green screwdriver on the front axle"
+  },
+  {
+   "start_sec": 13.0,
+   "end_sec": 16.0,
+   "subtask": "Using the green screwdriver on the front left wheel"
+  },
+  {
+   "start_sec": 16.0,
+   "end_sec": 19.0,
+   "subtask": "Checking the wheels by hand"
+  },
+  {
+   "start_sec": 19.0,
+   "end_sec": 22.0,
+   "subtask": "Using the green screwdriver on the rear right wheel"
+  },
+  {
+   "start_sec": 22.0,
+   "end_sec": 25.0,
+   "subtask": "Using the green screwdriver on the rear left wheel"
+  },
+  {
+   "start_sec": 25.0,
+   "end_sec": 28.0,
+   "subtask": "Tightening the rear left wheel with the screwdriver"
+  },
+  {
+   "start_sec": 28.0,
+   "end_sec": 31.0,
+   "subtask": "Inspecting the car by hand"
+  },
+  {
+   "start_sec": 31.0,
+   "end_sec": 34.0,
+   "subtask": "Using the green screwdriver on the front left wheel"
+  },
+  {
+   "start_sec": 34.0,
+   "end_sec": 37.0,
+   "subtask": "Using the green screwdriver on the front right wheel"
+  },
+  {
+   "start_sec": 37.0,
+   "end_sec": 40.0,
+   "subtask": "Tightening the front right wheel with the screwdriver"
+  },
+  {
+   "start_sec": 40.0,
+   "end_sec": 43.0,
+   "subtask": "Using the green screwdriver on the front left wheel"
+  },
+  {
+   "start_sec": 43.0,
+   "end_sec": 46.482,
+   "subtask": "Tightening the front right wheel with the screwdriver"
+  }
+ ]
+}

@@ -1,0 +1,36 @@
+{
+ "episode_id": "homer_56",
+ "version_id": "rest50-hitl-EXP-0002",
+ "segments": [
+  {
+   "start_sec": 0.0,
+   "end_sec": 10.0,
+   "subtask": "A person unfolds a pink cloth and spreads it on the table."
+  },
+  {
+   "start_sec": 10.0,
+   "end_sec": 20.0,
+   "subtask": "The person folds the cloth into a smaller rectangular shape."
+  },
+  {
+   "start_sec": 20.0,
+   "end_sec": 30.0,
+   "subtask": "The person rolls the cloth into a vertical cylinder."
+  },
+  {
+   "start_sec": 30.0,
+   "end_sec": 40.0,
+   "subtask": "The person folds the vertical cylinder in half."
+  },
+  {
+   "start_sec": 40.0,
+   "end_sec": 50.0,
+   "subtask": "The person folds the rectangle into a compact block."
+  },
+  {
+   "start_sec": 50.0,
+   "end_sec": 55.167,
+   "subtask": "The person rolls the block into a vertical cylinder."
+  }
+ ]
+}

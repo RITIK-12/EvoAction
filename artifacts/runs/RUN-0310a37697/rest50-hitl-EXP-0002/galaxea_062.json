@@ -1,0 +1,36 @@
+{
+ "episode_id": "galaxea_062",
+ "version_id": "rest50-hitl-EXP-0002",
+ "segments": [
+  {
+   "start_sec": 0.0,
+   "end_sec": 3.0,
+   "subtask": "robot approaches the orange"
+  },
+  {
+   "start_sec": 3.0,
+   "end_sec": 4.0,
+   "subtask": "robot picks up the orange"
+  },
+  {
+   "start_sec": 4.0,
+   "end_sec": 6.5,
+   "subtask": "robot moves the orange to the bottom left and places it"
+  },
+  {
+   "start_sec": 6.5,
+   "end_sec": 8.0,
+   "subtask": "robot approaches the banana"
+  },
+  {
+   "start_sec": 8.0,
+   "end_sec": 9.0,
+   "subtask": "robot picks up the banana and places it on the dish"
+  },
+  {
+   "start_sec": 9.0,
+   "end_sec": 10.667,
+   "subtask": "robot moves away"
+  }
+ ]
+}

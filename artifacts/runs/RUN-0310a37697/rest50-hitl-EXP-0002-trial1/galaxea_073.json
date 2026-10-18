@@ -1,0 +1,26 @@
+{
+ "episode_id": "galaxea_073",
+ "version_id": "rest50-hitl-EXP-0002-trial1",
+ "segments": [
+  {
+   "start_sec": 0.0,
+   "end_sec": 4.0,
+   "subtask": "The robot opens the red drawer."
+  },
+  {
+   "start_sec": 4.0,
+   "end_sec": 10.0,
+   "subtask": "The robot closes the red drawer."
+  },
+  {
+   "start_sec": 10.0,
+   "end_sec": 13.0,
+   "subtask": "The robot opens the red drawer again."
+  },
+  {
+   "start_sec": 13.0,
+   "end_sec": 14.867,
+   "subtask": "The robot closes the red drawer again."
+  }
+ ]
+}

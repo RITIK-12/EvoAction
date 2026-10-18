@@ -1,0 +1,152 @@
+{
+ "experiment_id": "rest50-hitl-EXP-0002",
+ "protocol": "v3-macrodata",
+ "validation": {
+  "decision": "REJECTED",
+  "gate": {
+   "signal": "human-labeled sample (~10% of the batch, whole instruction groups, fixed before the run)",
+   "rule": "pooled snapped Segment F1@0.75 on the labeled sample strictly improves (ties: raw F1@0.75 strictly improves); valid outputs on every episode",
+   "cost_policy": "no per-episode cost cap; total cost is recorded per recursion (iteration) and per version over the same 50 episodes",
+   "note": "the ~90% held-out episodes are never labeled for agents or the gate; they are measured only for the report"
+  },
+  "checks": {
+   "labeled_sample_snapped_f1_075": {
+    "value": {
+     "delta": 0.0345,
+     "raw_delta": 0.0342
+    },
+    "threshold": "> 0 (ties: raw F1@0.75 > 0)",
+    "pass": true
+   },
+   "valid_outputs": {
+    "value": {
+     "bad_status": {
+      "galaxea_002": "model_error",
+      "galaxea_007": "model_error",
+      "galaxea_009": "model_error",
+      "galaxea_011": "model_error",
+      "galaxea_013": "model_error",
+      "galaxea_028": "model_error",
+      "galaxea_033": "model_error",
+      "galaxea_037": "model_error",
+      "galaxea_039": "model_error",
+      "galaxea_041": "model_error",
+      "galaxea_047": "model_error",
+      "galaxea_049": "model_error",
+      "galaxea_050": "model_error",
+      "galaxea_052": "model_error",
+      "galaxea_058": "model_error",
+      "galaxea_065": "model_error",
+      "galaxea_067": "model_error",
+      "galaxea_073": "model_error",
+      "galaxea_075": "model_error",
+      "homer_1": "model_error",
+      "homer_10": "model_error",
+      "homer_11": "model_error",
+      "homer_15": "model_error",
+      "homer_2": "model_error",
+      "homer_29": "model_error",
+      "homer_3": "model_error",
+      "homer_37": "model_error",
+      "homer_38": "model_error",
+      "homer_4": "model_error",
+      "homer_40": "model_error",
+      "homer_41": "model_error",
+      "homer_48": "model_error",
+      "homer_5": "model_error",
+      "homer_52": "model_error",
+      "homer_53": "model_error",
+      "homer_59": "model_error",
+      "homer_60": "model_error",
+      "homer_9": "model_error"
+     },
+     "empty_output_episodes": [
+      "galaxea_002",
+      "galaxea_007",
+      "galaxea_009",
+      "galaxea_011",
+      "galaxea_013",
+      "galaxea_028",
+      "galaxea_033",
+      "galaxea_037",
+      "galaxea_039",
+      "galaxea_041",
+      "galaxea_047",
+      "galaxea_049",
+      "galaxea_050",
+      "galaxea_052",
+      "galaxea_058",
+      "galaxea_065",
+      "galaxea_067",
+      "galaxea_073",
+      "galaxea_075",
+      "homer_1",
+      "homer_10",
+      "homer_11",
+      "homer_15",
+      "homer_2",
+      "homer_29",
+      "homer_3",
+      "homer_37",
+      "homer_38",
+      "homer_4",
+      "homer_40",
+      "homer_41",
+      "homer_48",
+      "homer_5",
+      "homer_52",
+      "homer_53",
+      "homer_59",
+      "homer_60",
+      "homer_9"
+     ]
+    },
+    "pass": false
+   }
+  },
+  "labeled_sample": {
+   "candidate": {
+    "snapped_f1_075": 0.04511278195488722,
+    "raw_f1_075": 0.04477611940298507,
+    "snapped_f1_05": 0.2105263157894737,
+    "tp_snapped": 3,
+    "n_pred": 29,
+    "n_ref": 105
+   },
+   "incumbent": {
+    "snapped_f1_075": 0.010582010582010581,
+    "raw_f1_075": 0.010554089709762534,
+    "snapped_f1_05": 0.1904761904761905,
+    "tp_snapped": 2,
+    "n_pred": 274,
+    "n_ref": 105
+   }
+  },
+  "label_free": {
+   "candidate_self_score": 0.1745,
+   "incumbent_self_score": 0.4934,
+   "candidate_components": {
+    "telemetry_agreement": 0.1509,
+    "visual_verification": 0.6799,
+    "duration_variability": 0.1735,
+    "temporal_resolution": 0.24
+   },
+   "incumbent_components": {
+    "telemetry_agreement": 0.3813,
+    "visual_verification": 0.3498,
+    "duration_variability": 0.4064,
+    "temporal_resolution": 0.9766
+   }
+  },
+  "uncertainty": "labeled sample of 5 episodes; held-out measured separately",
+  "candidate_usage": {
+   "calls": 107,
+   "cache_hits": 3,
+   "prompt_tokens": 410806,
+   "completion_tokens": 712783,
+   "cost_usd": 1.427635,
+   "model_latency_s": 3564.44
+  },
+  "topology_change": true
+ }
+}

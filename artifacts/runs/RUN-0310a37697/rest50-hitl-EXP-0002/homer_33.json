@@ -1,0 +1,31 @@
+{
+ "episode_id": "homer_33",
+ "version_id": "rest50-hitl-EXP-0002",
+ "segments": [
+  {
+   "start_sec": 0.0,
+   "end_sec": 10.0,
+   "subtask": "A person positions a knife over a whole red onion on a cutting board."
+  },
+  {
+   "start_sec": 10.0,
+   "end_sec": 20.0,
+   "subtask": "The person trims the top of the onion and removes outer skin layers."
+  },
+  {
+   "start_sec": 20.0,
+   "end_sec": 50.0,
+   "subtask": "The person cuts the onion into large wedges or halves."
+  },
+  {
+   "start_sec": 50.0,
+   "end_sec": 70.0,
+   "subtask": "The person dices the onion pieces into smaller cubes."
+  },
+  {
+   "start_sec": 70.0,
+   "end_sec": 72.233,
+   "subtask": "The person makes final cuts to dice the onion into small pieces."
+  }
+ ]
+}

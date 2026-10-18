@@ -1,0 +1,18 @@
+{
+ "id": "rest50-hitl-EXP-0002_rejected",
+ "parent_id": "N0",
+ "status": "REJECTED",
+ "frozen": true,
+ "created_at": 1792281441.058509,
+ "workflow_sha256": "9d7af04796d1c15ec75dca7b99c92dafd4571ae125fe01026ed7526be0b70a35",
+ "files": {
+  "workflow.json": "bcdd7b06cf5245cd3a761802bd67a91cc48f1dc1ca8e45682bc0f353988e3a7e",
+  "config.json": "53e574e73406ebc1eca87fbcf0b8e8a6ca099986a8f08b3dcead2bf810f60cd5",
+  "prompt.md": "e12601de903aa557247c393638c770f991a436ba31c265e47cd0020759c22368",
+  "refine.md": "f478372773f8a0131d0ff6188feb5e649b2fa6a6cde4379fa9a918b370f4df3b",
+  "experiment.json": "335e3da178eb2cb39dd05f4917dd95cc688ceb80e0f03e857969964ea2abafcd",
+  "validation_report.json": "c1376fd505372960b578202cca1524c8cc9859589f68881a7d3b461f42b3dae7"
+ },
+ "frozen_at": 1792282381.253323,
+ "original_id": "rest50-hitl-EXP-0002"
+}
