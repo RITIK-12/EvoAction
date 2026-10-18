@@ -180,3 +180,13 @@ def test_flat_insert_node_is_normalized():
                                          "params": {"min_duration_sec": 2.0}, "rewire_dependents_of": "annotate"}])
     new_wf, _ = apply_patch(wf, prompts, patch)
     assert [n.operator for n in new_wf.nodes][-2:] == ["merge_filter_segments", "validate_export"]
+
+
+def test_operator_name_references_resolve_to_node_ids():
+    wf, prompts = workflow_n0()
+    patch = WorkflowPatch(insert_nodes=[{"id": "merge", "operator": "merge_filter_segments", "depends_on": ["initial_annotate"]}],
+                          set_depends_on={"validate_export": ["merge_filter_segments"]}, set_params={"initial_annotate": {"max_tokens": 4096}})
+    new_wf, _ = apply_patch(wf, prompts, patch)
+    by_id = {n.id: n for n in new_wf.nodes}
+    assert by_id["export"].depends_on == ["merge"] and by_id["merge"].depends_on == ["annotate"]
+    assert by_id["annotate"].params["max_tokens"] == 4096

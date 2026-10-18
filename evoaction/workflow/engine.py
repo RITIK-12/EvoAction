@@ -146,8 +146,30 @@ def validate_workflow(wf: HarnessWorkflow | dict[str, Any], prompts: dict[str, s
     return wf
 
 
+def _resolve_operator_refs(wf: HarnessWorkflow, patch: WorkflowPatch) -> WorkflowPatch:
+    """Agents sometimes name a node by its operator (e.g. 'validate_export' for node 'export'). Map such a reference to the
+    node id when exactly one existing or inserted node has that operator; anything else is left for validation to reject."""
+    all_nodes = list(wf.nodes) + [ins.node for ins in patch.insert_nodes]
+    ids = {n.id for n in all_nodes}
+    by_op: dict[str, list[str]] = {}
+    for n in all_nodes:
+        by_op.setdefault(n.operator, []).append(n.id)
+    fix = lambda r: r if r in ids or len(by_op.get(r, [])) != 1 else by_op[r][0]
+    data = patch.model_dump()
+    data["remove_nodes"] = [fix(r) for r in data["remove_nodes"]]
+    for ins in data["insert_nodes"]:
+        ins["node"]["depends_on"] = [fix(d) for d in ins["node"]["depends_on"]]
+        if ins.get("rewire_dependents_of"):
+            ins["rewire_dependents_of"] = fix(ins["rewire_dependents_of"])
+    data["set_params"] = {fix(k): v for k, v in data["set_params"].items()}
+    data["set_when"] = {fix(k): v for k, v in data["set_when"].items()}
+    data["set_depends_on"] = {fix(k): [fix(d) for d in v] for k, v in data["set_depends_on"].items()}
+    return WorkflowPatch(**data)
+
+
 def apply_patch(wf: HarnessWorkflow, prompts: dict[str, str], patch: WorkflowPatch) -> tuple[HarnessWorkflow, dict[str, str]]:
     """Apply a typed patch to a copy; the result is re-validated by the caller."""
+    patch = _resolve_operator_refs(wf, patch)
     nodes = [n.model_copy(deep=True) for n in wf.nodes]
     by_id = {n.id: n for n in nodes}
     errors: list[str] = []
