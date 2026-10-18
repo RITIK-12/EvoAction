@@ -147,9 +147,13 @@ def root_cause_analysis(r: dict[str, Any], calib_ids: list[str], s: Settings | N
              "references_matched_at_iou075": fb["pooled"]["tp_snapped"], "mean_best_iou_per_reference": round(sum(best) / len(best), 3) if best else None,
              "references_with_best_iou_below_0.5": sum(1 for b in best if b < 0.5), "pooled_scores": fb["pooled"]}
     allr = r["run"]["episodes"]
+    sheets = [x.get("n_sheets") for v in allr.values() for x in (v.get("trace") or []) if x.get("operator") == "sample_contact_sheets" and x.get("n_sheets")]
     ad = [x["end_sec"] - x["start_sec"] for v in allr.values() for x in v["segments"]]
     acov = [max((x["end_sec"] for x in v["segments"]), default=0.0) / v["duration_sec"] for v in allr.values() if v.get("duration_sec")]
-    struct = {"episodes": len(allr), "predicted_segments_per_episode_mean": round(len(ad) / max(1, len(allr)), 2), "median_predicted_segment_sec": _med(ad),
+    durs = [v["duration_sec"] for v in allr.values() if v.get("duration_sec")]
+    struct = {"episodes": len(allr), "episode_duration_sec": {"min": round(min(durs), 1), "median": _med(durs), "max": round(max(durs), 1)} if durs else None,
+              "contact_sheet_images_per_call_at_current_sampling": {"median": _med(sheets), "max": max(sheets)} if sheets else None,
+              "predicted_segments_per_episode_mean": round(len(ad) / max(1, len(allr)), 2), "median_predicted_segment_sec": _med(ad),
               "predicted_segments_exactly_1s_fraction": _frac(ad, lambda x: abs(x - 1.0) < 1e-6),
               "median_coverage_last_predicted_end_over_video_duration": _med(acov),
               "episodes_with_predictions_ending_before_half_the_video": sum(1 for c in acov if c < 0.5),
@@ -161,7 +165,9 @@ def trial_on_labeled(incumbent: Version, wf, prompts: dict[str, str], trial_id: 
                      run_id: str, store, s: Settings) -> dict[str, Any]:
     v = Version(id=trial_id, path=incumbent.path, workflow=wf, prompts=prompts, config=incumbent.config, manifest={"workflow_sha256": "labeled-trial"})
     res = run_version(v, calib_ids, client, run_id, store=store, settings=s)
-    return root_cause_analysis({"run": res}, calib_ids, s)
+    out = root_cause_analysis({"run": res}, calib_ids, s)
+    out["failed_episodes"] = sorted(e for e, x in res["episodes"].items() if x["status"] not in ("ok", "partial"))
+    return out
 
 
 def hitl_propose(client: CrusoeClient, store, run_id: str, exp_id: str, incumbent: Version, analysis: dict[str, Any],
@@ -195,12 +201,14 @@ def hitl_propose(client: CrusoeClient, store, run_id: str, exp_id: str, incumben
             break
         pooled = ta["labeled_sample"]["pooled"]
         tr = {"round": k + 1, "hypothesis": data.get("hypothesis"), "root_causes": data.get("root_causes"), "patch": data.get("candidate_patch"),
-              "labeled_scores": pooled, "root_cause_stats_labeled": ta["root_cause_stats_labeled"],
+              "labeled_scores": pooled, "failed_labeled_episodes": ta["failed_episodes"], "root_cause_stats_labeled": ta["root_cause_stats_labeled"],
               "predictions_by_episode": {e: v["predictions"] for e, v in ta["labeled_sample"]["episodes"].items()}}
         trials.append(tr)
         store.event(run_id, "hitl_trial", {"exp_id": exp_id, "round": k + 1, "hypothesis": data.get("hypothesis"), "labeled_scores": pooled,
+                                           "failed_labeled_episodes": ta["failed_episodes"],
                                            "root_cause_stats_labeled": ta["root_cause_stats_labeled"], "patch": data.get("candidate_patch")})
-        score = (pooled["snapped_f1_075"], pooled["raw_f1_075"])
+        # a round with failed episodes must not win just because fewer predictions inflate F1
+        score = (not ta["failed_episodes"], pooled["snapped_f1_075"], pooled["raw_f1_075"])
         if best is None or score > best[0]:
             best = (score, data, tr)
     if best is None:

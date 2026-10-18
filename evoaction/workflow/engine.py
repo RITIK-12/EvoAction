@@ -375,7 +375,7 @@ def run_episode(version: Version, episode_id: str, client: CrusoeClient, run_id:
                                        "output_hash": out_hash, "duration_s": time.time() - t0, "detail_json": detail,
                                        "created_at": time.time()})
         trace.append({"node": node.id, "operator": node.operator, "status": op_status, **{k: v for k, v in detail.items() if k in (
-            "n_segments", "n_windows", "n_hints", "decisions", "skipped", "error", "n_in", "n_out", "cache_hit")}})
+            "n_segments", "n_sheets", "n_frames", "n_windows", "n_hints", "decisions", "skipped", "error", "n_in", "n_out", "cache_hit", "thinking_fallback")}})
         if op_status != "ok" and node.operator == "initial_annotate":
             status, error = op_status, detail.get("error")
             break

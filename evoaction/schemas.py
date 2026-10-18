@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from typing import Any, Literal
 
-from pydantic import BaseModel, ConfigDict, Field, field_validator
+from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
 OperatorName = Literal[
     "sample_contact_sheets",
@@ -118,6 +118,15 @@ class NodeInsert(BaseModel):
     model_config = ConfigDict(extra="forbid")
     node: WorkflowNode
     rewire_dependents_of: str | None = None  # nodes that depended on this id now depend on the new node
+
+    @model_validator(mode="before")
+    @classmethod
+    def _accept_flat_node(cls, data: Any) -> Any:
+        """Agents sometimes write the node's fields at the top level; normalize to {"node": {...}}."""
+        if isinstance(data, dict) and "node" not in data and "operator" in data:
+            return {"node": {k: v for k, v in data.items() if k != "rewire_dependents_of"},
+                    "rewire_dependents_of": data.get("rewire_dependents_of")}
+        return data
 
 
 class WorkflowPatch(BaseModel):

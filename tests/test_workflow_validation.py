@@ -172,3 +172,11 @@ def test_gripper_hints_from_telemetry(tmp_path):
     hints = detect_hints(str(p), HintParams(signals=["gripper"]))
     times = [h["t"] for h in hints]
     assert len(times) == 2 and abs(times[0] - 3.0) < 0.4 and abs(times[1] - 7.0) < 0.4
+
+
+def test_flat_insert_node_is_normalized():
+    wf, prompts = workflow_n0()
+    patch = WorkflowPatch(insert_nodes=[{"id": "merge", "operator": "merge_filter_segments", "depends_on": ["annotate"],
+                                         "params": {"min_duration_sec": 2.0}, "rewire_dependents_of": "annotate"}])
+    new_wf, _ = apply_patch(wf, prompts, patch)
+    assert [n.operator for n in new_wf.nodes][-2:] == ["merge_filter_segments", "validate_export"]
