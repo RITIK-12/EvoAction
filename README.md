@@ -2,6 +2,8 @@
 
 **Self-improving agentic harness for data annotation.** Built for the Crusoe × Cerebral Valley Recursive Agents Hackathon (Track 3: Version N+1). Runs entirely on NVIDIA Nemotron models served by Crusoe Managed Inference.
 
+![EvoAction architecture](assets/architecture.png)
+
 ## Problem
 
 Physical AI needs robot video labeled into subtasks: when each step starts, when it ends, and what it is. Labeling by hand is slow and expensive. Off-the-shelf VLMs do poorly: on WGO-Bench the best published model reaches a Segment F1 of 0.29. Prompts and pipelines get tuned by hand, one round at a time.
@@ -9,10 +11,6 @@ Physical AI needs robot video labeled into subtasks: when each step starts, when
 ## Solution
 
 A harness that improves its own annotation pipeline the way an annotation team does: label a small sample, find the mistakes, fix the process, run again.
-
-![EvoAction architecture](assets/architecture.png)
-
-![Recursive improvement: label 10%, fix the harness, repeat](assets/recursive_improvement.png)
 
 - **Annotator:** `Nemotron-3-Nano-Omni-30B-A3B`, reading timestamped contact sheets of the video.
 - **N0** replicates Macrodata's published annotation protocol exactly: same prompt, sampling, tiles and timestamp badge.
@@ -29,6 +27,8 @@ A harness that improves its own annotation pipeline the way an annotation team d
 Metric (Macrodata's): **Segment F1 at temporal IoU ≥ 0.75**, pooled over episodes, with the first start and last end snapped to the human episode boundaries.
 
 ## Results: DROID, 50 episodes
+
+![Recursive improvement: label 10%, fix the harness, repeat](assets/recursive_improvement.png)
 
 | Version | What the agent changed | Segment F1@0.75, held-out 45 | Segment F1@0.75, all 50 | Annotation cost, 50 episodes | Recursion cost (agent + trials + runs) |
 |---|---|---|---|---|---|
