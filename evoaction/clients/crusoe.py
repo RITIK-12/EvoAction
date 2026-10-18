@@ -225,6 +225,7 @@ class CrusoeClient:
         episode_id: str | None = None,
         task_id: str | None = None,
         use_cache: bool = True,
+        retries: int | None = None,
     ) -> ChatResult:
         model = model or (self.nemotron_model if role == ROLE_NEMOTRON else self.vision_model)
         params = {"max_tokens": max_tokens, "temperature": temperature, "json_mode": json_mode, "extra_body": extra_body or {}}
@@ -243,7 +244,7 @@ class CrusoeClient:
         projected, _ = self._estimate_cost(model, text_chars / 3.0 + n_images * IMAGE_TOKEN_ESTIMATE, max_tokens)
 
         last_err: Exception | None = None
-        for attempt in range(self.settings.max_retries_per_call + 1):
+        for attempt in range((self.settings.max_retries_per_call if retries is None else retries) + 1):
             self.budget.reserve(self.run_id, role, model, projected)
             t0 = time.time()
             call_id = new_id("CALL")

@@ -108,6 +108,23 @@ def op_sample_contact_sheets(ctx: EpisodeContext, state: dict, params: dict) -> 
         "n_frames": len(ts), "n_sheets": len(sheets), "sheet_sha256": [s.sha256 for s in sheets]}
 
 
+def _vision_json(ctx: EpisodeContext, content: list[dict[str, Any]], purpose: str, p, params: dict, episode_id: str):
+    """One multimodal JSON call. If thinking is requested and the reply has no JSON (Nemotron Omni often reasons past the
+    token cap) or times out, fall back once to a non-thinking call with the same prompt. Returns (result, fell_back)."""
+    msgs = [{"role": "user", "content": content}]
+    kw = dict(purpose=purpose, json_mode=True, max_tokens=p.max_tokens, temperature=p.temperature, version_id=ctx.version_id,
+              episode_id=episode_id)
+    if p.thinking:
+        try:
+            return ctx.client.chat(ROLE_VISION, msgs, extra_body={"chat_template_kwargs": {"enable_thinking": True}},
+                                   cache_scope=f"{purpose}|{json.dumps(params, sort_keys=True)}", retries=0, **kw), False
+        except ModelCallError:
+            pass  # recovery of the same pass: not counted against the version's call budget
+    res = ctx.client.chat(ROLE_VISION, msgs, extra_body={"chat_template_kwargs": {"enable_thinking": False}},
+                          cache_scope=f"{purpose}|{json.dumps({**params, 'thinking': False}, sort_keys=True)}", **kw)
+    return res, bool(p.thinking)
+
+
 def op_initial_annotate(ctx: EpisodeContext, state: dict, params: dict) -> tuple[dict, dict]:
     p = AnnotateParams(**params)
     ep = state["episode"]
@@ -116,13 +133,9 @@ def op_initial_annotate(ctx: EpisodeContext, state: dict, params: dict) -> tuple
                      sampling_hz=sh["sampling_hz"], frame_count=sh["n_frames"], sheet_count=len(sh["sheets"]))
     content = [{"type": "text", "text": prompt}] + [image_part(s.jpeg) for s in sh["sheets"]]
     ctx.take_call()
-    res = ctx.client.chat(ROLE_VISION, [{"role": "user", "content": content}], purpose="initial_annotate", json_mode=True,
-                          max_tokens=p.max_tokens, temperature=p.temperature,
-                          extra_body={"chat_template_kwargs": {"enable_thinking": p.thinking}},
-                          cache_scope=f"initial_annotate|{json.dumps(params, sort_keys=True)}",
-                          version_id=ctx.version_id, episode_id=ep["id"])
+    res, fell_back = _vision_json(ctx, content, "initial_annotate", p, params, ep["id"])
     segs = _segments_from_model(res.data, ep["duration_sec"])
-    return {"segments": segs}, {"n_segments": len(segs), "call_id": res.call_id, "cache_hit": res.cache_hit,
+    return {"segments": segs}, {"n_segments": len(segs), "call_id": res.call_id, "cache_hit": res.cache_hit, "thinking_fallback": fell_back,
                                 "prompt_tokens": res.prompt_tokens, "completion_tokens": res.completion_tokens,
                                 "cost_usd": res.cost_usd}
 
@@ -299,11 +312,7 @@ def op_refine_intervals(ctx: EpisodeContext, state: dict, params: dict) -> tuple
         content.append({"type": "text", "text": f"Window {e['window_id']}:"})
         content.append(image_part(e["sheet"].jpeg))
     ctx.take_call()
-    res = ctx.client.chat(ROLE_VISION, [{"role": "user", "content": content}], purpose="refine_intervals", json_mode=True,
-                          max_tokens=p.max_tokens, temperature=p.temperature,
-                          extra_body={"chat_template_kwargs": {"enable_thinking": p.thinking}},
-                          cache_scope=f"refine_intervals|{json.dumps(params, sort_keys=True)}",
-                          version_id=ctx.version_id, episode_id=ep["id"])
+    res, fell_back = _vision_json(ctx, content, "refine_intervals", p, params, ep["id"])
     decisions = res.data.get("windows", []) if isinstance(res.data, dict) else (res.data or [])
     by_id = {e["window_id"]: e for e in evidence}
     applied = []
@@ -354,7 +363,7 @@ def op_refine_intervals(ctx: EpisodeContext, state: dict, params: dict) -> tuple
                 s["end_sec"] = t
                 segs.insert(j + 1, new)
                 break
-    return {"segments": segs}, {"call_id": res.call_id, "cache_hit": res.cache_hit, "decisions": applied,
+    return {"segments": segs}, {"call_id": res.call_id, "cache_hit": res.cache_hit, "thinking_fallback": fell_back, "decisions": applied,
                                 "prompt_tokens": res.prompt_tokens, "completion_tokens": res.completion_tokens,
                                 "cost_usd": res.cost_usd}
 
