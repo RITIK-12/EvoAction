@@ -1,0 +1,36 @@
+{
+ "episode_id": "galaxea_039",
+ "version_id": "rest50-hitl-EXP-0002",
+ "segments": [
+  {
+   "start_sec": 0.0,
+   "end_sec": 1.0,
+   "subtask": "The robot arm is positioned near the test tubes on the table, preparing to interact with them."
+  },
+  {
+   "start_sec": 1.0,
+   "end_sec": 3.0,
+   "subtask": "The robot arm moves towards the test tubes, positioning its grippers to pick up the yellow and red pigment test tubes."
+  },
+  {
+   "start_sec": 3.0,
+   "end_sec": 5.0,
+   "subtask": "The robot arm grasps the test tubes with yellow and red pigment, lifting them from the table."
+  },
+  {
+   "start_sec": 5.0,
+   "end_sec": 8.0,
+   "subtask": "The robot arm moves the test tubes towards the beaker, positioning them above the beaker for pouring."
+  },
+  {
+   "start_sec": 8.0,
+   "end_sec": 10.0,
+   "subtask": "The robot arm pours the yellow pigment test tube into the beaker, then the red pigment test tube into the beaker."
+  },
+  {
+   "start_sec": 10.0,
+   "end_sec": 51.467,
+   "subtask": "The robot arm places the empty test tubes back on the table and retracts its grippers."
+  }
+ ]
+}

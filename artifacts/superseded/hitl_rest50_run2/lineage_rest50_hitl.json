@@ -1,0 +1,2437 @@
+{
+ "protocol": "v3-macrodata",
+ "episode_set": "rest50",
+ "incumbent": "N0",
+ "next_experiment": 3,
+ "next_version": 1,
+ "experiments": [
+  {
+   "id": "rest50-hitl-EXP-0001",
+   "parent_version": "N0",
+   "version_dir": "rest50-hitl-EXP-0001_rejected",
+   "hypothesis": "Increasing the temporal richness of each contact sheet (more frames per sheet), adding a lightweight refinement pass that uses telemetry hints and close\u2011up windows to adjust boundaries, and rewriting the prompt to strongly discourage sub\u2011second segments while encouraging longer, state\u2011change\u2011aligned segments will reduce over\u2011segmentation, raise median segment length toward the reference distribution, and improve Segment F1 at IoU\u22650.75.",
+   "patch_summary": {
+    "insert_nodes": [
+     {
+      "node": {
+       "id": "hints",
+       "operator": "state_hint_detection",
+       "depends_on": [
+        "sample"
+       ],
+       "params": {
+        "signals": [
+         "gripper",
+         "eef_pause"
+        ],
+        "min_gap_sec": 0.8,
+        "pause_speed_quantile": 0.15,
+        "min_pause_sec": 0.3
+       },
+       "when": "has_telemetry"
+      },
+      "rewire_dependents_of": null
+     },
+     {
+      "node": {
+       "id": "inspect",
+       "operator": "inspect_transition_windows",
+       "depends_on": [
+        "annotate",
+        "hints"
+       ],
+       "params": {
+        "select": "all_boundaries",
+        "window_sec": 2.0,
+        "local_hz": 4.0,
+        "max_windows": 8,
+        "include_unmatched_hints": false,
+        "tile_px": 224,
+        "confidence_threshold": 0.7
+       },
+       "when": "always"
+      },
+      "rewire_dependents_of": null
+     },
+     {
+      "node": {
+       "id": "refine",
+       "operator": "refine_intervals",
+       "depends_on": [
+        "inspect"
+       ],
+       "params": {
+        "prompt": "refine.md",
+        "thinking": false,
+        "max_tokens": 16384,
+        "temperature": 0.2,
+        "allow_insert": true,
+        "allow_delete": true
+       },
+       "when": "always"
+      },
+      "rewire_dependents_of": null
+     },
+     {
+      "node": {
+       "id": "merge",
+       "operator": "merge_filter_segments",
+       "depends_on": [
+        "refine"
+       ],
+       "params": {
+        "min_duration_sec": 0.8,
+        "max_gap_sec": 1.5,
+        "tile_full_episode": true,
+        "merge_same_label": false
+       },
+       "when": "always"
+      },
+      "rewire_dependents_of": null
+     }
+    ],
+    "set_params": {
+     "sample": {
+      "frames_per_sheet": 30
+     }
+    },
+    "set_depends_on": {
+     "validate_export": [
+      "merge"
+     ]
+    },
+    "prompt_updates": {
+     "prompt.md": "Reconstruct the sequence of manipulation events in this robot video from the timestamped contact sheets.\n\nReturn only JSON with this shape:\n{\"segments\":[{\"start_sec\":0.0,\"end_sec\":1.0,\"subtask\":\"short action description\"}]}\n\nRules:\n- Segment only completed robot manipulation events, not every visible movement.\n- Good boundaries happen when a held object changes, an object is placed or released, a tool starts/stops changing a surface, a container/door/lid opens or closes, or contents move between containers.\n- Do not split approach, grasp adjustment, small repositioning, and retreat unless the world state changes.\n- Do not merge separate pick/place/open/close/pour/wipe events when they complete different states.\n- Most segments should be 2-15 seconds. Shorter segments are allowed only for fast pick, place, open, close, or release events that are clearly instantaneous (<1.5 sec).\n- Do not output segments shorter than 1.0 second unless the action is a definitive instantaneous release or grasp.\n- Use the visible timestamps for start_sec and end_sec.\n- Ignore label wording quality; prioritize temporally correct boundaries.\n- Prefer fewer, longer segments that correctly capture state changes over many short segments.\n- If uncertain, merge adjacent short segments into a longer segment that spans the whole manipulation.\n\nEpisode instruction: $instruction"
+    }
+   },
+   "decision": "REJECTED",
+   "label_free": {
+    "candidate_self_score": 0.5923,
+    "incumbent_self_score": 0.4934,
+    "candidate_components": {
+     "telemetry_agreement": 0.455,
+     "visual_verification": 0.5124,
+     "duration_variability": 0.5617,
+     "temporal_resolution": 0.9795
+    },
+    "incumbent_components": {
+     "telemetry_agreement": 0.3813,
+     "visual_verification": 0.3498,
+     "duration_variability": 0.4064,
+     "temporal_resolution": 0.9766
+    }
+   },
+   "labeled_sample": {
+    "candidate": {
+     "snapped_f1_075": 0.021447721179624662,
+     "raw_f1_075": 0.0213903743315508,
+     "snapped_f1_05": 0.20911528150134048,
+     "tp_snapped": 4,
+     "n_pred": 269,
+     "n_ref": 105
+    },
+    "incumbent": {
+     "snapped_f1_075": 0.010582010582010581,
+     "raw_f1_075": 0.010554089709762534,
+     "snapped_f1_05": 0.1904761904761905,
+     "tp_snapped": 2,
+     "n_pred": 274,
+     "n_ref": 105
+    }
+   },
+   "topology_change": true,
+   "root_causes": [
+    {
+     "cause": "Over\u2011segmentation: the model outputs mostly 1\u2011second chunks",
+     "evidence": "predicted_segments_le_2s_fraction = 0.993 vs reference 0.429; predicted_segments_exactly_1s_fraction = 0.945; median predicted segment = 1.0\u202fs while median reference segment = 2.37\u202fs"
+    },
+    {
+     "cause": "Prompt example anchors to a 1\u2011second segment",
+     "evidence": "The incumbent prompt\u2019s example JSON uses {\"start_sec\":0.0,\"end_sec\":1.0,...}, which likely biases the model toward 1\u2011second outputs"
+    },
+    {
+     "cause": "Low temporal detail inside each contact sheet leads to uniform splitting",
+     "evidence": "Each sheet covers 10\u202fs (20 frames @ 2\u202fHz) but the model yields ~4\u20115 segments per sheet (23.64 predicted segments / median 5.0 sheets \u2248 4.7), indicating a tendency to divide each sheet into equal short pieces rather than detecting real state changes"
+    }
+   ],
+   "selected_round": 1,
+   "trials": [
+    {
+     "round": 1,
+     "hypothesis": "Increasing the temporal richness of each contact sheet (more frames per sheet), adding a lightweight refinement pass that uses telemetry hints and close\u2011up windows to adjust boundaries, and rewriting the prompt to strongly discourage sub\u2011second segments while encouraging longer, state\u2011change\u2011aligned segments will reduce over\u2011segmentation, raise median segment length toward the reference distribution, and improve Segment F1 at IoU\u22650.75.",
+     "root_causes": [
+      {
+       "cause": "Over\u2011segmentation: the model outputs mostly 1\u2011second chunks",
+       "evidence": "predicted_segments_le_2s_fraction = 0.993 vs reference 0.429; predicted_segments_exactly_1s_fraction = 0.945; median predicted segment = 1.0\u202fs while median reference segment = 2.37\u202fs"
+      },
+      {
+       "cause": "Prompt example anchors to a 1\u2011second segment",
+       "evidence": "The incumbent prompt\u2019s example JSON uses {\"start_sec\":0.0,\"end_sec\":1.0,...}, which likely biases the model toward 1\u2011second outputs"
+      },
+      {
+       "cause": "Low temporal detail inside each contact sheet leads to uniform splitting",
+       "evidence": "Each sheet covers 10\u202fs (20 frames @ 2\u202fHz) but the model yields ~4\u20115 segments per sheet (23.64 predicted segments / median 5.0 sheets \u2248 4.7), indicating a tendency to divide each sheet into equal short pieces rather than detecting real state changes"
+      }
+     ],
+     "patch": {
+      "insert_nodes": [
+       {
+        "node": {
+         "id": "hints",
+         "operator": "state_hint_detection",
+         "depends_on": [
+          "sample"
+         ],
+         "params": {
+          "signals": [
+           "gripper",
+           "eef_pause"
+          ],
+          "min_gap_sec": 0.8,
+          "pause_speed_quantile": 0.15,
+          "min_pause_sec": 0.3
+         },
+         "when": "has_telemetry"
+        },
+        "rewire_dependents_of": null
+       },
+       {
+        "node": {
+         "id": "inspect",
+         "operator": "inspect_transition_windows",
+         "depends_on": [
+          "annotate",
+          "hints"
+         ],
+         "params": {
+          "select": "all_boundaries",
+          "window_sec": 2.0,
+          "local_hz": 4.0,
+          "max_windows": 8,
+          "include_unmatched_hints": false,
+          "tile_px": 224,
+          "confidence_threshold": 0.7
+         },
+         "when": "always"
+        },
+        "rewire_dependents_of": null
+       },
+       {
+        "node": {
+         "id": "refine",
+         "operator": "refine_intervals",
+         "depends_on": [
+          "inspect"
+         ],
+         "params": {
+          "prompt": "refine.md",
+          "thinking": false,
+          "max_tokens": 16384,
+          "temperature": 0.2,
+          "allow_insert": true,
+          "allow_delete": true
+         },
+         "when": "always"
+        },
+        "rewire_dependents_of": null
+       },
+       {
+        "node": {
+         "id": "merge",
+         "operator": "merge_filter_segments",
+         "depends_on": [
+          "refine"
+         ],
+         "params": {
+          "min_duration_sec": 0.8,
+          "max_gap_sec": 1.5,
+          "tile_full_episode": true,
+          "merge_same_label": false
+         },
+         "when": "always"
+        },
+        "rewire_dependents_of": null
+       }
+      ],
+      "set_params": {
+       "sample": {
+        "frames_per_sheet": 30
+       }
+      },
+      "set_depends_on": {
+       "validate_export": [
+        "merge"
+       ]
+      },
+      "prompt_updates": {
+       "prompt.md": "Reconstruct the sequence of manipulation events in this robot video from the timestamped contact sheets.\n\nReturn only JSON with this shape:\n{\"segments\":[{\"start_sec\":0.0,\"end_sec\":1.0,\"subtask\":\"short action description\"}]}\n\nRules:\n- Segment only completed robot manipulation events, not every visible movement.\n- Good boundaries happen when a held object changes, an object is placed or released, a tool starts/stops changing a surface, a container/door/lid opens or closes, or contents move between containers.\n- Do not split approach, grasp adjustment, small repositioning, and retreat unless the world state changes.\n- Do not merge separate pick/place/open/close/pour/wipe events when they complete different states.\n- Most segments should be 2-15 seconds. Shorter segments are allowed only for fast pick, place, open, close, or release events that are clearly instantaneous (<1.5 sec).\n- Do not output segments shorter than 1.0 second unless the action is a definitive instantaneous release or grasp.\n- Use the visible timestamps for start_sec and end_sec.\n- Ignore label wording quality; prioritize temporally correct boundaries.\n- Prefer fewer, longer segments that correctly capture state changes over many short segments.\n- If uncertain, merge adjacent short segments into a longer segment that spans the whole manipulation.\n\nEpisode instruction: $instruction"
+      }
+     },
+     "labeled_scores": {
+      "snapped_f1_075": 0.021447721179624662,
+      "raw_f1_075": 0.0213903743315508,
+      "snapped_f1_05": 0.20911528150134048,
+      "tp_snapped": 4,
+      "n_pred": 269,
+      "n_ref": 105
+     },
+     "failed_labeled_episodes": [],
+     "root_cause_stats_labeled": {
+      "predicted_vs_reference_segments": [
+       269,
+       105
+      ],
+      "median_predicted_segment_sec": 1.0,
+      "median_reference_segment_sec": 2.37,
+      "predicted_segments_le_2s_fraction": 0.981,
+      "reference_segments_le_2s_fraction": 0.429,
+      "predicted_segments_exactly_1s_fraction": 0.941,
+      "median_coverage_last_predicted_end_over_reference_end": 1.15,
+      "episodes_with_coverage_below_50pct": 0,
+      "references_matched_at_iou075": 4,
+      "mean_best_iou_per_reference": 0.449,
+      "references_with_best_iou_below_0.5": 66,
+      "pooled_scores": {
+       "snapped_f1_075": 0.021447721179624662,
+       "raw_f1_075": 0.0213903743315508,
+       "snapped_f1_05": 0.20911528150134048,
+       "tp_snapped": 4,
+       "n_pred": 269,
+       "n_ref": 105
+      }
+     }
+    },
+    {
+     "round": 2,
+     "hypothesis": "Increasing the temporal richness of each contact sheet (more frames per sheet), adding a lightweight refinement pass that uses telemetry hints and close\u2011up windows to adjust boundaries, and rewriting the prompt to strongly discourage sub\u2011second segments while encouraging longer, state\u2011change\u2011aligned segments will reduce over\u2011segmentation, raise median segment length toward the reference distribution, and improve Segment F1 at IoU\u202f\u2265\u202f0.75.",
+     "root_causes": [
+      {
+       "cause": "Over-segmentation: model outputs mostly 1\u2011second chunks",
+       "evidence": "predicted_segments_le_2s_fraction = 0.993 vs reference 0.429; predicted_segments_exactly_1s_fraction = 0.945; median predicted segment = 1.0\u202fs while median reference segment = 2.37\u202fs"
+      },
+      {
+       "cause": "Prompt example anchors to a 1\u2011second segment",
+       "evidence": "The incumbent prompt\u2019s example JSON uses {\"start_sec\":0.0,\"end_sec\":1.0,...}, which biases the model toward 1\u2011second outputs"
+      },
+      {
+       "cause": "Low temporal detail inside each contact sheet leads to uniform splitting",
+       "evidence": "Each sheet covers ~10\u202fs (20 frames @ 2\u202fHz) but the model yields ~4\u20115 segments per sheet (23.64 predicted segments / median 5.0 sheets \u2248 4.7), indicating a tendency to divide each sheet into equal short pieces rather than detecting real state changes"
+      }
+     ],
+     "patch": {
+      "insert_nodes": [
+       {
+        "node": {
+         "id": "hints",
+         "operator": "state_hint_detection",
+         "depends_on": [
+          "sample"
+         ],
+         "params": {
+          "signals": [
+           "gripper",
+           "eef_pause"
+          ],
+          "min_gap_sec": 0.8,
+          "pause_speed_quantile": 0.15,
+          "min_pause_sec": 0.3
+         },
+         "when": "has_telemetry"
+        },
+        "rewire_dependents_of": null
+       },
+       {
+        "node": {
+         "id": "inspect",
+         "operator": "inspect_transition_windows",
+         "depends_on": [
+          "annotate",
+          "hints"
+         ],
+         "params": {
+          "select": "all_boundaries",
+          "window_sec": 2.0,
+          "local_hz": 4.0,
+          "max_windows": 8,
+          "include_unmatched_hints": false,
+          "tile_px": 224,
+          "confidence_threshold": 0.7
+         },
+         "when": "always"
+        },
+        "rewire_dependents_of": null
+       },
+       {
+        "node": {
+         "id": "refine",
+         "operator": "refine_intervals",
+         "depends_on": [
+          "inspect"
+         ],
+         "params": {
+          "prompt": "refine.md",
+          "thinking": false,
+          "max_tokens": 16384,
+          "temperature": 0.2,
+          "allow_insert": true,
+          "allow_delete": true
+         },
+         "when": "always"
+        },
+        "rewire_dependents_of": null
+       },
+       {
+        "node": {
+         "id": "merge",
+         "operator": "merge_filter_segments",
+         "depends_on": [
+          "refine"
+         ],
+         "params": {
+          "min_duration_sec": 0.8,
+          "max_gap_sec": 1.5,
+          "tile_full_episode": true,
+          "merge_same_label": false
+         },
+         "when": "always"
+        },
+        "rewire_dependents_of": null
+       }
+      ],
+      "set_params": {
+       "sample": {
+        "frames_per_sheet": 30
+       }
+      },
+      "set_depends_on": {
+       "validate_export": [
+        "merge"
+       ]
+      },
+      "prompt_updates": {
+       "prompt.md": "Reconstruct the sequence of manipulation events in this robot video from the timestamped contact sheets.\n\nReturn only JSON with this shape:\n{\"segments\":[{\"start_sec\":0.0,\"end_sec\":1.0,\"subtask\":\"short action description\"}]}\n\nRules:\n- Segment only completed robot manipulation events, not every visible movement.\n- Good boundaries happen when a held object changes, an object is placed or released, a tool starts/stops changing a surface, a container/door/lid opens or closes, or contents move between containers.\n- Do not split approach, grasp adjustment, small repositioning, and retreat unless the world state changes.\n- Do not merge separate pick/place/open/close/pour/wipe events when they complete different states.\n- Most segments should be 2-15 seconds. Shorter segments are allowed only for fast pick, place, open, close, or release events that are clearly instantaneous (<1.5 sec).\n- Do not output segments shorter than 1.0 second unless the action is a definitive instantaneous release or grasp.\n- Use the visible timestamps for start_sec and end_sec.\n- Ignore label wording quality; prioritize temporally correct boundaries.\n- Prefer fewer, longer segments that correctly capture state changes over many short segments.\n- If uncertain, merge adjacent short segments into a longer segment that spans the whole manipulation.\n\nEpisode instruction: $instruction"
+      }
+     },
+     "labeled_scores": {
+      "snapped_f1_075": 0.021447721179624662,
+      "raw_f1_075": 0.0213903743315508,
+      "snapped_f1_05": 0.20911528150134048,
+      "tp_snapped": 4,
+      "n_pred": 269,
+      "n_ref": 105
+     },
+     "failed_labeled_episodes": [],
+     "root_cause_stats_labeled": {
+      "predicted_vs_reference_segments": [
+       269,
+       105
+      ],
+      "median_predicted_segment_sec": 1.0,
+      "median_reference_segment_sec": 2.37,
+      "predicted_segments_le_2s_fraction": 0.981,
+      "reference_segments_le_2s_fraction": 0.429,
+      "predicted_segments_exactly_1s_fraction": 0.941,
+      "median_coverage_last_predicted_end_over_reference_end": 1.15,
+      "episodes_with_coverage_below_50pct": 0,
+      "references_matched_at_iou075": 4,
+      "mean_best_iou_per_reference": 0.449,
+      "references_with_best_iou_below_0.5": 66,
+      "pooled_scores": {
+       "snapped_f1_075": 0.021447721179624662,
+       "raw_f1_075": 0.0213903743315508,
+       "snapped_f1_05": 0.20911528150134048,
+       "tp_snapped": 4,
+       "n_pred": 269,
+       "n_ref": 105
+      }
+     }
+    },
+    {
+     "round": 3,
+     "hypothesis": "Increasing the temporal richness of each contact sheet (more frames per sheet), adding a lightweight refinement pass that uses telemetry hints and close\u2011up windows to adjust boundaries, and rewriting the prompt to strongly discourage sub\u2011second segments while encouraging longer, state\u2011change\u2011aligned segments will reduce over\u2011segmentation, raise median segment length toward the reference distribution, and improve Segment F1 at IoU\u202f\u2265\u202f0.75.",
+     "root_causes": [
+      {
+       "cause": "Over-segmentation: model outputs mostly 1\u2011second chunks",
+       "evidence": "predicted_segments_le_2s_fraction = 0.993 vs reference 0.429; predicted_segments_exactly_1s_fraction = 0.945; median predicted segment = 1.0\u202fs while median reference segment = 2.37\u202fs"
+      },
+      {
+       "cause": "Prompt example anchors to a 1\u2011second segment",
+       "evidence": "The incumbent prompt\u2019s example JSON uses {\"start_sec\":0.0,\"end_sec\":1.0,...}, which biases the model toward 1\u2011second outputs"
+      },
+      {
+       "cause": "Low temporal detail inside each contact sheet leads to uniform splitting",
+       "evidence": "Each sheet covers ~10\u202fs (20 frames @ 2\u202fHz) but the model yields ~4\u20115 segments per sheet (23.64 predicted segments / median 5.0 sheets \u2248 4.7), indicating a tendency to divide each sheet into equal short pieces rather than detecting real state changes"
+      }
+     ],
+     "patch": {
+      "insert_nodes": [
+       {
+        "node": {
+         "id": "hints",
+         "operator": "state_hint_detection",
+         "depends_on": [
+          "sample"
+         ],
+         "params": {
+          "signals": [
+           "gripper",
+           "eef_pause"
+          ],
+          "min_gap_sec": 0.8,
+          "pause_speed_quantile": 0.15,
+          "min_pause_sec": 0.3
+         },
+         "when": "has_telemetry"
+        },
+        "rewire_dependents_of": null
+       },
+       {
+        "node": {
+         "id": "inspect",
+         "operator": "inspect_transition_windows",
+         "depends_on": [
+          "annotate",
+          "hints"
+         ],
+         "params": {
+          "select": "all_boundaries",
+          "window_sec": 2.0,
+          "local_hz": 4.0,
+          "max_windows": 8,
+          "include_unmatched_hints": false,
+          "tile_px": 224,
+          "confidence_threshold": 0.7
+         },
+         "when": "always"
+        },
+        "rewire_dependents_of": null
+       },
+       {
+        "node": {
+         "id": "refine",
+         "operator": "refine_intervals",
+         "depends_on": [
+          "inspect"
+         ],
+         "params": {
+          "prompt": "refine.md",
+          "thinking": false,
+          "max_tokens": 16384,
+          "temperature": 0.2,
+          "allow_insert": true,
+          "allow_delete": true
+         },
+         "when": "always"
+        },
+        "rewire_dependents_of": null
+       },
+       {
+        "node": {
+         "id": "merge",
+         "operator": "merge_filter_segments",
+         "depends_on": [
+          "refine"
+         ],
+         "params": {
+          "min_duration_sec": 0.8,
+          "max_gap_sec": 1.5,
+          "tile_full_episode": true,
+          "merge_same_label": false
+         },
+         "when": "always"
+        },
+        "rewire_dependents_of": null
+       }
+      ],
+      "set_params": {
+       "sample": {
+        "frames_per_sheet": 30
+       }
+      },
+      "set_depends_on": {
+       "validate_export": [
+        "merge"
+       ]
+      },
+      "prompt_updates": {
+       "prompt.md": "Reconstruct the sequence of manipulation events in this robot video from the timestamped contact sheets.\n\nReturn only JSON with this shape:\n{\"segments\":[{\"start_sec\":0.0,\"end_sec\":1.0,\"subtask\":\"short action description\"}]}\n\nRules:\n- Segment only completed robot manipulation events, not every visible movement.\n- Good boundaries happen when a held object changes, an object is placed or released, a tool starts/stops changing a surface, a container/door/lid opens or closes, or contents move between containers.\n- Do not split approach, grasp adjustment, small repositioning, and retreat unless the world state changes.\n- Do not merge separate pick/place/open/close/pour/wipe events when they complete different states.\n- Most segments should be 2-15 seconds. Shorter segments are allowed only for fast pick, place, open, close, or release events that are clearly instantaneous (<1.5 sec).\n- Do not output segments shorter than 1.0 second unless the action is a definitive instantaneous release or grasp.\n- Use the visible timestamps for start_sec and end_sec.\n- Ignore label wording quality; prioritize temporally correct boundaries.\n- Prefer fewer, longer segments that correctly capture state changes over many short segments.\n- If uncertain, merge adjacent short segments into a longer segment that spans the whole manipulation.\n\nEpisode instruction: $instruction"
+      }
+     },
+     "labeled_scores": {
+      "snapped_f1_075": 0.021447721179624662,
+      "raw_f1_075": 0.0213903743315508,
+      "snapped_f1_05": 0.20911528150134048,
+      "tp_snapped": 4,
+      "n_pred": 269,
+      "n_ref": 105
+     },
+     "failed_labeled_episodes": [],
+     "root_cause_stats_labeled": {
+      "predicted_vs_reference_segments": [
+       269,
+       105
+      ],
+      "median_predicted_segment_sec": 1.0,
+      "median_reference_segment_sec": 2.37,
+      "predicted_segments_le_2s_fraction": 0.981,
+      "reference_segments_le_2s_fraction": 0.429,
+      "predicted_segments_exactly_1s_fraction": 0.941,
+      "median_coverage_last_predicted_end_over_reference_end": 1.15,
+      "episodes_with_coverage_below_50pct": 0,
+      "references_matched_at_iou075": 4,
+      "mean_best_iou_per_reference": 0.449,
+      "references_with_best_iou_below_0.5": 66,
+      "pooled_scores": {
+       "snapped_f1_075": 0.021447721179624662,
+       "raw_f1_075": 0.0213903743315508,
+       "snapped_f1_05": 0.20911528150134048,
+       "tp_snapped": 4,
+       "n_pred": 269,
+       "n_ref": 105
+      }
+     }
+    }
+   ],
+   "shadow_gt": {
+    "candidate": {
+     "snapped_f1_075": 0.030094043887147336,
+     "raw_f1_075": 0.028535980148883377,
+     "snapped_f1_05": 0.18934169278996868,
+     "raw_f1_05": 0.18238213399503722,
+     "tp_snapped": 24,
+     "tp_raw": 23,
+     "tp05_snapped": 151,
+     "tp05_raw": 147,
+     "n_pred": 1019,
+     "n_pred_snapped": 1002,
+     "n_ref": 593,
+     "invalid_items": 0,
+     "empty_output_episodes": 1,
+     "mean_boundary_mae_sec": 4.513889052697216,
+     "episodes": 50,
+     "per_episode_snapped_f1": {
+      "galaxea_002": 0.0,
+      "galaxea_007": 0.0,
+      "galaxea_009": 0.0,
+      "galaxea_011": 0.0,
+      "galaxea_013": 0.0,
+      "galaxea_028": 0.0,
+      "galaxea_033": 0.0,
+      "galaxea_037": 0.13333333333333333,
+      "galaxea_039": 0.0,
+      "galaxea_041": 0.3333333333333333,
+      "galaxea_043": 0.0,
+      "galaxea_045": 0.0,
+      "galaxea_047": 0.0,
+      "galaxea_049": 0.28571428571428575,
+      "galaxea_050": 0.0,
+      "galaxea_052": 0.0,
+      "galaxea_058": 0.0,
+      "galaxea_060": 0.0,
+      "galaxea_062": 0.0,
+      "galaxea_065": 0.0,
+      "galaxea_067": 1.0,
+      "galaxea_069": 0.8,
+      "galaxea_071": 0.4,
+      "galaxea_073": 0.0,
+      "galaxea_075": 0.0,
+      "homer_1": 0.0,
+      "homer_10": 0.0,
+      "homer_11": 0.011627906976744186,
+      "homer_12": 0.03314917127071823,
+      "homer_15": 0.0,
+      "homer_2": 0.0634920634920635,
+      "homer_29": 0.2222222222222222,
+      "homer_3": 0.19999999999999998,
+      "homer_33": 0.0,
+      "homer_37": 0.0,
+      "homer_38": 0.05263157894736842,
+      "homer_39": 0.041666666666666664,
+      "homer_4": 0.0,
+      "homer_40": 0.0273972602739726,
+      "homer_41": 0.0,
+      "homer_48": 0.0,
+      "homer_5": 0.0,
+      "homer_50": 0.0,
+      "homer_52": 0.0,
+      "homer_53": 0.0,
+      "homer_56": 0.23529411764705882,
+      "homer_59": 0.0,
+      "homer_60": 0.0,
+      "homer_7": 0.0130718954248366,
+      "homer_9": 0.0
+     }
+    },
+    "incumbent": {
+     "snapped_f1_075": 0.023958927552766688,
+     "raw_f1_075": 0.02258610954263128,
+     "snapped_f1_05": 0.15744438106103822,
+     "raw_f1_05": 0.1535855448898927,
+     "tp_snapped": 21,
+     "tp_raw": 20,
+     "tp05_snapped": 138,
+     "tp05_raw": 136,
+     "n_pred": 1178,
+     "n_pred_snapped": 1160,
+     "n_ref": 593,
+     "invalid_items": 4,
+     "empty_output_episodes": 0,
+     "mean_boundary_mae_sec": 7.35147718094754,
+     "episodes": 50,
+     "per_episode_snapped_f1": {
+      "galaxea_002": 0.14814814814814817,
+      "galaxea_007": 0.1,
+      "galaxea_009": 0.08,
+      "galaxea_011": 0.0,
+      "galaxea_013": 0.0,
+      "galaxea_028": 0.0,
+      "galaxea_033": 0.0,
+      "galaxea_037": 0.0,
+      "galaxea_039": 0.0,
+      "galaxea_041": 0.0,
+      "galaxea_043": 0.0,
+      "galaxea_045": 0.2222222222222222,
+      "galaxea_047": 0.2222222222222222,
+      "galaxea_049": 0.0,
+      "galaxea_050": 0.0,
+      "galaxea_052": 0.2,
+      "galaxea_058": 0.0,
+      "galaxea_060": 0.0,
+      "galaxea_062": 0.0,
+      "galaxea_065": 0.5,
+      "galaxea_067": 0.5,
+      "galaxea_069": 0.4,
+      "galaxea_071": 0.0,
+      "galaxea_073": 0.0,
+      "galaxea_075": 0.0,
+      "homer_1": 0.08695652173913045,
+      "homer_10": 0.0,
+      "homer_11": 0.011560693641618497,
+      "homer_12": 0.01092896174863388,
+      "homer_15": 0.0,
+      "homer_2": 0.010869565217391304,
+      "homer_29": 0.0,
+      "homer_3": 0.19999999999999998,
+      "homer_33": 0.0,
+      "homer_37": 0.0,
+      "homer_38": 0.10526315789473684,
+      "homer_39": 0.0,
+      "homer_4": 0.0,
+      "homer_40": 0.02702702702702703,
+      "homer_41": 0.0,
+      "homer_48": 0.0,
+      "homer_5": 0.0,
+      "homer_50": 0.0,
+      "homer_52": 0.0,
+      "homer_53": 0.0,
+      "homer_56": 0.23529411764705882,
+      "homer_59": 0.0,
+      "homer_60": 0.0,
+      "homer_7": 0.08,
+      "homer_9": 0.0
+     }
+    }
+   },
+   "shadow_gt_heldout": {
+    "candidate": {
+     "snapped_f1_075": 0.03273322422258592,
+     "raw_f1_075": 0.030694668820678516,
+     "snapped_f1_05": 0.18330605564648117,
+     "raw_f1_05": 0.17609046849757673,
+     "tp_snapped": 20,
+     "tp_raw": 19,
+     "tp05_snapped": 112,
+     "tp05_raw": 109,
+     "n_pred": 750,
+     "n_pred_snapped": 734,
+     "n_ref": 488,
+     "invalid_items": 0,
+     "empty_output_episodes": 1,
+     "mean_boundary_mae_sec": 4.930853418733383,
+     "episodes": 45,
+     "per_episode_snapped_f1": {
+      "galaxea_002": 0.0,
+      "galaxea_007": 0.0,
+      "galaxea_009": 0.0,
+      "galaxea_011": 0.0,
+      "galaxea_013": 0.0,
+      "galaxea_028": 0.0,
+      "galaxea_033": 0.0,
+      "galaxea_037": 0.13333333333333333,
+      "galaxea_039": 0.0,
+      "galaxea_041": 0.3333333333333333,
+      "galaxea_045": 0.0,
+      "galaxea_047": 0.0,
+      "galaxea_049": 0.28571428571428575,
+      "galaxea_050": 0.0,
+      "galaxea_052": 0.0,
+      "galaxea_058": 0.0,
+      "galaxea_060": 0.0,
+      "galaxea_062": 0.0,
+      "galaxea_065": 0.0,
+      "galaxea_067": 1.0,
+      "galaxea_069": 0.8,
+      "galaxea_071": 0.4,
+      "homer_1": 0.0,
+      "homer_10": 0.0,
+      "homer_15": 0.0,
+      "homer_2": 0.0634920634920635,
+      "homer_29": 0.2222222222222222,
+      "homer_3": 0.19999999999999998,
+      "homer_33": 0.0,
+      "homer_37": 0.0,
+      "homer_38": 0.05263157894736842,
+      "homer_39": 0.041666666666666664,
+      "homer_4": 0.0,
+      "homer_40": 0.0273972602739726,
+      "homer_41": 0.0,
+      "homer_48": 0.0,
+      "homer_5": 0.0,
+      "homer_50": 0.0,
+      "homer_52": 0.0,
+      "homer_53": 0.0,
+      "homer_56": 0.23529411764705882,
+      "homer_59": 0.0,
+      "homer_60": 0.0,
+      "homer_7": 0.0130718954248366,
+      "homer_9": 0.0
+     }
+    },
+    "incumbent": {
+     "snapped_f1_075": 0.027636363636363636,
+     "raw_f1_075": 0.025862068965517238,
+     "snapped_f1_05": 0.14836363636363636,
+     "raw_f1_05": 0.14511494252873564,
+     "tp_snapped": 19,
+     "tp_raw": 18,
+     "tp05_snapped": 102,
+     "tp05_raw": 101,
+     "n_pred": 904,
+     "n_pred_snapped": 887,
+     "n_ref": 488,
+     "invalid_items": 3,
+     "empty_output_episodes": 0,
+     "mean_boundary_mae_sec": 8.123574353099606,
+     "episodes": 45,
+     "per_episode_snapped_f1": {
+      "galaxea_002": 0.14814814814814817,
+      "galaxea_007": 0.1,
+      "galaxea_009": 0.08,
+      "galaxea_011": 0.0,
+      "galaxea_013": 0.0,
+      "galaxea_028": 0.0,
+      "galaxea_033": 0.0,
+      "galaxea_037": 0.0,
+      "galaxea_039": 0.0,
+      "galaxea_041": 0.0,
+      "galaxea_045": 0.2222222222222222,
+      "galaxea_047": 0.2222222222222222,
+      "galaxea_049": 0.0,
+      "galaxea_050": 0.0,
+      "galaxea_052": 0.2,
+      "galaxea_058": 0.0,
+      "galaxea_060": 0.0,
+      "galaxea_062": 0.0,
+      "galaxea_065": 0.5,
+      "galaxea_067": 0.5,
+      "galaxea_069": 0.4,
+      "galaxea_071": 0.0,
+      "homer_1": 0.08695652173913045,
+      "homer_10": 0.0,
+      "homer_15": 0.0,
+      "homer_2": 0.010869565217391304,
+      "homer_29": 0.0,
+      "homer_3": 0.19999999999999998,
+      "homer_33": 0.0,
+      "homer_37": 0.0,
+      "homer_38": 0.10526315789473684,
+      "homer_39": 0.0,
+      "homer_4": 0.0,
+      "homer_40": 0.02702702702702703,
+      "homer_41": 0.0,
+      "homer_48": 0.0,
+      "homer_5": 0.0,
+      "homer_50": 0.0,
+      "homer_52": 0.0,
+      "homer_53": 0.0,
+      "homer_56": 0.23529411764705882,
+      "homer_59": 0.0,
+      "homer_60": 0.0,
+      "homer_7": 0.08,
+      "homer_9": 0.0
+     }
+    }
+   },
+   "recursion_cost": {
+    "by_role": {
+     "nemotron": {
+      "calls": 3,
+      "cache_hits": 2,
+      "cost_usd": 0.01056,
+      "prompt_tokens": 9895,
+      "completion_tokens": 3163
+     },
+     "vision": {
+      "calls": 268,
+      "cache_hits": 135,
+      "cost_usd": 0.307539,
+      "prompt_tokens": 453322,
+      "completion_tokens": 93739
+     }
+    },
+    "total_cost_usd": 0.318099
+   }
+  },
+  {
+   "id": "rest50-hitl-EXP-0002",
+   "parent_version": "N0",
+   "version_dir": "rest50-hitl-EXP-0002_rejected",
+   "hypothesis": "Adding state hint detection, inspecting transition windows around boundaries, refining intervals with a non\u2011thinking pass, and merging short segments will reduce over\u2011segmentation, shift boundaries toward true state changes, and raise Segment F1 at IoU \u2265 0.75.",
+   "patch_summary": {
+    "insert_nodes": [
+     {
+      "node": {
+       "id": "hints",
+       "operator": "state_hint_detection",
+       "depends_on": [
+        "sample"
+       ],
+       "params": {
+        "signals": [
+         "gripper",
+         "eef_pause"
+        ],
+        "min_gap_sec": 0.8,
+        "pause_speed_quantile": 0.15,
+        "min_pause_sec": 0.3
+       },
+       "when": "has_telemetry"
+      },
+      "rewire_dependents_of": null
+     },
+     {
+      "node": {
+       "id": "inspect",
+       "operator": "inspect_transition_windows",
+       "depends_on": [
+        "annotate",
+        "hints"
+       ],
+       "params": {
+        "select": "all_boundaries",
+        "window_sec": 2.0,
+        "local_hz": 4.0,
+        "max_windows": 8,
+        "include_unmatched_hints": false,
+        "tile_px": 224,
+        "confidence_threshold": 0.7
+       },
+       "when": "always"
+      },
+      "rewire_dependents_of": null
+     },
+     {
+      "node": {
+       "id": "refine",
+       "operator": "refine_intervals",
+       "depends_on": [
+        "inspect"
+       ],
+       "params": {
+        "prompt": "refine.md",
+        "thinking": false,
+        "max_tokens": 16384,
+        "temperature": 0.2,
+        "allow_insert": true,
+        "allow_delete": true
+       },
+       "when": "always"
+      },
+      "rewire_dependents_of": null
+     },
+     {
+      "node": {
+       "id": "merge",
+       "operator": "merge_filter_segments",
+       "depends_on": [
+        "refine"
+       ],
+       "params": {
+        "min_duration_sec": 0.8,
+        "max_gap_sec": 1.5,
+        "tile_full_episode": true,
+        "merge_same_label": false
+       },
+       "when": "always"
+      },
+      "rewire_dependents_of": null
+     }
+    ],
+    "set_params": {
+     "sample": {
+      "frames_per_sheet": 30
+     }
+    },
+    "set_depends_on": {
+     "validate_export": [
+      "merge"
+     ]
+    },
+    "prompt_updates": {
+     "prompt.md": "Reconstruct the sequence of manipulation events in this robot video from the timestamped contact sheets.\n\nReturn only JSON with this shape:\n{\"segments\":[{\"start_sec\":0.0,\"end_sec\":1.0,\"subtask\":\"short action description\"}]}\n\nRules:\n- Segment only completed robot manipulation events, not every visible movement.\n- Good boundaries happen when a held object changes, an object is placed or released, a tool starts/stops changing a surface, a container/door/lid opens or closes, or contents move between containers.\n- Do not split approach, grasp adjustment, small repositioning, and retreat unless the world state changes.\n- Do not merge separate pick/place/open/close/pour/wipe events when they complete different states.\n- Most segments should be 2-10 seconds. Shorter segments are only allowed for fast pick, place, open, close, or release events that are clearly under 2 seconds.\n- Use the visible timestamps for start_sec and end_sec.\n- Ignore label wording quality; prioritize temporally correct boundaries.\n\nEpisode instruction: $instruction"
+    }
+   },
+   "decision": "REJECTED",
+   "label_free": {
+    "candidate_self_score": 0.5388,
+    "incumbent_self_score": 0.4934,
+    "candidate_components": {
+     "telemetry_agreement": 0.4772,
+     "visual_verification": 0.4305,
+     "duration_variability": 0.4284,
+     "temporal_resolution": 0.9684
+    },
+    "incumbent_components": {
+     "telemetry_agreement": 0.3813,
+     "visual_verification": 0.3498,
+     "duration_variability": 0.4064,
+     "temporal_resolution": 0.9766
+    }
+   },
+   "labeled_sample": {
+    "candidate": {
+     "snapped_f1_075": 0.01612903225806452,
+     "raw_f1_075": 0.016042780748663103,
+     "snapped_f1_05": 0.19892473118279572,
+     "tp_snapped": 3,
+     "n_pred": 269,
+     "n_ref": 105
+    },
+    "incumbent": {
+     "snapped_f1_075": 0.010582010582010581,
+     "raw_f1_075": 0.010554089709762534,
+     "snapped_f1_05": 0.1904761904761905,
+     "tp_snapped": 2,
+     "n_pred": 274,
+     "n_ref": 105
+    }
+   },
+   "topology_change": true,
+   "root_causes": [
+    {
+     "cause": "Over-segmentation: model predicts many 1\u2011second segments, ignoring the 2\u201110\u202fsecond guideline.",
+     "evidence": "predicted_segments_exactly_1s_fraction = 0.945 vs reference 0.429; median predicted segment = 1.0\u202fs vs reference 2.37\u202fs; predicted_vs_reference_segments = 274 predicted vs 105 reference."
+    },
+    {
+     "cause": "Boundaries not aligned with manipulation state changes, yielding low IoU.",
+     "evidence": "mean_best_iou_per_reference = 0.439; 69/105 references have best IoU < 0.5; only 2 references matched at IoU \u2265 0.75."
+    },
+    {
+     "cause": "No refinement using telemetry hints or close\u2011up windows to adjust boundaries.",
+     "evidence": "Incumbent workflow lacks state_hint_detection, inspect_transition_windows, and refine_intervals; prior experiment showed adding these nodes improved alignment."
+    }
+   ],
+   "selected_round": 1,
+   "trials": [
+    {
+     "round": 1,
+     "hypothesis": "Adding state hint detection, inspecting transition windows around boundaries, refining intervals with a non\u2011thinking pass, and merging short segments will reduce over\u2011segmentation, shift boundaries toward true state changes, and raise Segment F1 at IoU \u2265 0.75.",
+     "root_causes": [
+      {
+       "cause": "Over-segmentation: model predicts many 1\u2011second segments, ignoring the 2\u201110\u202fsecond guideline.",
+       "evidence": "predicted_segments_exactly_1s_fraction = 0.945 vs reference 0.429; median predicted segment = 1.0\u202fs vs reference 2.37\u202fs; predicted_vs_reference_segments = 274 predicted vs 105 reference."
+      },
+      {
+       "cause": "Boundaries not aligned with manipulation state changes, yielding low IoU.",
+       "evidence": "mean_best_iou_per_reference = 0.439; 69/105 references have best IoU < 0.5; only 2 references matched at IoU \u2265 0.75."
+      },
+      {
+       "cause": "No refinement using telemetry hints or close\u2011up windows to adjust boundaries.",
+       "evidence": "Incumbent workflow lacks state_hint_detection, inspect_transition_windows, and refine_intervals; prior experiment showed adding these nodes improved alignment."
+      }
+     ],
+     "patch": {
+      "insert_nodes": [
+       {
+        "node": {
+         "id": "hints",
+         "operator": "state_hint_detection",
+         "depends_on": [
+          "sample"
+         ],
+         "params": {
+          "signals": [
+           "gripper",
+           "eef_pause"
+          ],
+          "min_gap_sec": 0.8,
+          "pause_speed_quantile": 0.15,
+          "min_pause_sec": 0.3
+         },
+         "when": "has_telemetry"
+        },
+        "rewire_dependents_of": null
+       },
+       {
+        "node": {
+         "id": "inspect",
+         "operator": "inspect_transition_windows",
+         "depends_on": [
+          "annotate",
+          "hints"
+         ],
+         "params": {
+          "select": "all_boundaries",
+          "window_sec": 2.0,
+          "local_hz": 4.0,
+          "max_windows": 8,
+          "include_unmatched_hints": false,
+          "tile_px": 224,
+          "confidence_threshold": 0.7
+         },
+         "when": "always"
+        },
+        "rewire_dependents_of": null
+       },
+       {
+        "node": {
+         "id": "refine",
+         "operator": "refine_intervals",
+         "depends_on": [
+          "inspect"
+         ],
+         "params": {
+          "prompt": "refine.md",
+          "thinking": false,
+          "max_tokens": 16384,
+          "temperature": 0.2,
+          "allow_insert": true,
+          "allow_delete": true
+         },
+         "when": "always"
+        },
+        "rewire_dependents_of": null
+       },
+       {
+        "node": {
+         "id": "merge",
+         "operator": "merge_filter_segments",
+         "depends_on": [
+          "refine"
+         ],
+         "params": {
+          "min_duration_sec": 0.8,
+          "max_gap_sec": 1.5,
+          "tile_full_episode": true,
+          "merge_same_label": false
+         },
+         "when": "always"
+        },
+        "rewire_dependents_of": null
+       }
+      ],
+      "set_params": {
+       "sample": {
+        "frames_per_sheet": 30
+       }
+      },
+      "set_depends_on": {
+       "validate_export": [
+        "merge"
+       ]
+      },
+      "prompt_updates": {
+       "prompt.md": "Reconstruct the sequence of manipulation events in this robot video from the timestamped contact sheets.\n\nReturn only JSON with this shape:\n{\"segments\":[{\"start_sec\":0.0,\"end_sec\":1.0,\"subtask\":\"short action description\"}]}\n\nRules:\n- Segment only completed robot manipulation events, not every visible movement.\n- Good boundaries happen when a held object changes, an object is placed or released, a tool starts/stops changing a surface, a container/door/lid opens or closes, or contents move between containers.\n- Do not split approach, grasp adjustment, small repositioning, and retreat unless the world state changes.\n- Do not merge separate pick/place/open/close/pour/wipe events when they complete different states.\n- Most segments should be 2-10 seconds. Shorter segments are only allowed for fast pick, place, open, close, or release events that are clearly under 2 seconds.\n- Use the visible timestamps for start_sec and end_sec.\n- Ignore label wording quality; prioritize temporally correct boundaries.\n\nEpisode instruction: $instruction"
+      }
+     },
+     "labeled_scores": {
+      "snapped_f1_075": 0.01612903225806452,
+      "raw_f1_075": 0.016042780748663103,
+      "snapped_f1_05": 0.19892473118279572,
+      "tp_snapped": 3,
+      "n_pred": 269,
+      "n_ref": 105
+     },
+     "failed_labeled_episodes": [],
+     "root_cause_stats_labeled": {
+      "predicted_vs_reference_segments": [
+       269,
+       105
+      ],
+      "median_predicted_segment_sec": 1.0,
+      "median_reference_segment_sec": 2.37,
+      "predicted_segments_le_2s_fraction": 0.97,
+      "reference_segments_le_2s_fraction": 0.429,
+      "predicted_segments_exactly_1s_fraction": 0.948,
+      "median_coverage_last_predicted_end_over_reference_end": 1.15,
+      "episodes_with_coverage_below_50pct": 0,
+      "references_matched_at_iou075": 3,
+      "mean_best_iou_per_reference": 0.448,
+      "references_with_best_iou_below_0.5": 68,
+      "pooled_scores": {
+       "snapped_f1_075": 0.01612903225806452,
+       "raw_f1_075": 0.016042780748663103,
+       "snapped_f1_05": 0.19892473118279572,
+       "tp_snapped": 3,
+       "n_pred": 269,
+       "n_ref": 105
+      }
+     }
+    },
+    {
+     "round": 2,
+     "hypothesis": "Increasing temporal richness per contact sheet (more frames per sheet), adding a lightweight refinement pass that uses telemetry hints and close-up windows to adjust boundaries, and rewriting the prompt to strongly discourage sub-second segments while encouraging longer, state-change-aligned segments will reduce over-segmentation, raise median segment length toward the reference distribution, and improve Segment F1 at IoU>=0.75.",
+     "root_causes": [
+      {
+       "cause": "Over-segmentation: model predicts many 1-second segments, ignoring the 2-10 second guideline.",
+       "evidence": "predicted_segments_exactly_1s_fraction = 0.945 vs reference 0.429; median predicted segment = 1.0s vs reference 2.37s; predicted_vs_reference_segments = 274 predicted vs 105 reference."
+      },
+      {
+       "cause": "Boundaries not aligned with manipulation state changes, yielding low IoU.",
+       "evidence": "mean_best_iou_per_reference = 0.439; 69/105 references have best IoU < 0.5; only 2 references matched at IoU >= 0.75."
+      }
+     ],
+     "patch": {
+      "insert_nodes": [
+       {
+        "node": {
+         "id": "hints",
+         "operator": "state_hint_detection",
+         "depends_on": [
+          "sample"
+         ],
+         "params": {
+          "signals": [
+           "gripper",
+           "eef_pause"
+          ],
+          "min_gap_sec": 0.8,
+          "pause_speed_quantile": 0.15,
+          "min_pause_sec": 0.3
+         },
+         "when": "has_telemetry"
+        },
+        "rewire_dependents_of": null
+       },
+       {
+        "node": {
+         "id": "inspect",
+         "operator": "inspect_transition_windows",
+         "depends_on": [
+          "annotate",
+          "hints"
+         ],
+         "params": {
+          "select": "all_boundaries",
+          "window_sec": 2.0,
+          "local_hz": 4.0,
+          "max_windows": 8,
+          "include_unmatched_hints": false,
+          "tile_px": 224,
+          "confidence_threshold": 0.7
+         },
+         "when": "always"
+        },
+        "rewire_dependents_of": null
+       },
+       {
+        "node": {
+         "id": "refine",
+         "operator": "refine_intervals",
+         "depends_on": [
+          "inspect"
+         ],
+         "params": {
+          "prompt": "refine.md",
+          "thinking": false,
+          "max_tokens": 16384,
+          "temperature": 0.2,
+          "allow_insert": true,
+          "allow_delete": true
+         },
+         "when": "always"
+        },
+        "rewire_dependents_of": null
+       },
+       {
+        "node": {
+         "id": "merge",
+         "operator": "merge_filter_segments",
+         "depends_on": [
+          "refine"
+         ],
+         "params": {
+          "min_duration_sec": 0.8,
+          "max_gap_sec": 1.5,
+          "tile_full_episode": true,
+          "merge_same_label": false
+         },
+         "when": "always"
+        },
+        "rewire_dependents_of": null
+       }
+      ],
+      "set_params": {
+       "sample": {
+        "frames_per_sheet": 30
+       }
+      },
+      "set_depends_on": {
+       "validate_export": [
+        "merge"
+       ]
+      },
+      "prompt_updates": {
+       "prompt.md": "Reconstruct the sequence of manipulation events in this robot video from the timestamped contact sheets.\n\nReturn only JSON with this shape:\n{\"segments\":[{\"start_sec\":0.0,\"end_sec\":1.0,\"subtask\":\"short action description\"}]}\n\nRules:\n- Segment only completed robot manipulation events, not every visible movement.\n- Good boundaries happen when a held object changes, an object is placed or released, a tool starts/stops changing a surface, a container/door/lid opens or closes, or contents move between containers.\n- Do not split approach, grasp adjustment, small repositioning, and retreat unless the world state changes.\n- Do not merge separate pick/place/open/close/pour/wipe events when they complete different states.\n- Most segments should be 2-10 seconds. Shorter segments are only allowed for fast pick, place, open, close, or release events that are clearly under 2 seconds.\n- Strongly avoid predicting segments shorter than 1.5 seconds unless the event is unmistakably instantaneous.\n- Use the visible timestamps for start_sec and end_sec.\n- Ignore label wording quality; prioritize temporally correct boundaries.\n\nEpisode instruction: $instruction"
+      }
+     },
+     "labeled_scores": {
+      "snapped_f1_075": 0.016042780748663103,
+      "raw_f1_075": 0.016,
+      "snapped_f1_05": 0.2032085561497326,
+      "tp_snapped": 3,
+      "n_pred": 270,
+      "n_ref": 105
+     },
+     "failed_labeled_episodes": [],
+     "root_cause_stats_labeled": {
+      "predicted_vs_reference_segments": [
+       270,
+       105
+      ],
+      "median_predicted_segment_sec": 1.0,
+      "median_reference_segment_sec": 2.37,
+      "predicted_segments_le_2s_fraction": 0.974,
+      "reference_segments_le_2s_fraction": 0.429,
+      "predicted_segments_exactly_1s_fraction": 0.944,
+      "median_coverage_last_predicted_end_over_reference_end": 1.15,
+      "episodes_with_coverage_below_50pct": 0,
+      "references_matched_at_iou075": 3,
+      "mean_best_iou_per_reference": 0.445,
+      "references_with_best_iou_below_0.5": 67,
+      "pooled_scores": {
+       "snapped_f1_075": 0.016042780748663103,
+       "raw_f1_075": 0.016,
+       "snapped_f1_05": 0.2032085561497326,
+       "tp_snapped": 3,
+       "n_pred": 270,
+       "n_ref": 105
+      }
+     }
+    },
+    {
+     "round": 3,
+     "hypothesis": "Increasing temporal richness per contact sheet (more frames per sheet), adding a lightweight refinement pass that uses telemetry hints and close-up windows to adjust boundaries, and rewriting the prompt to strongly discourage sub-second segments while encouraging longer, state-change-aligned segments will reduce over-segmentation, raise median segment length toward the reference distribution, and improve Segment F1 at IoU>=0.75.",
+     "root_causes": [
+      {
+       "cause": "Over-segmentation: model predicts many 1-second segments, ignoring the 2-10 second guideline.",
+       "evidence": "predicted_segments_exactly_1s_fraction = 0.945 vs reference 0.429; median predicted segment = 1.0s vs reference 2.37s; predicted_vs_reference_segments = 274 predicted vs 105 reference."
+      },
+      {
+       "cause": "Boundaries not aligned with manipulation state changes, yielding low IoU.",
+       "evidence": "mean_best_iou_per_reference = 0.439; 69/105 references have best IoU < 0.5; only 2 references matched at IoU >= 0.75."
+      }
+     ],
+     "patch": {
+      "insert_nodes": [
+       {
+        "node": {
+         "id": "hints",
+         "operator": "state_hint_detection",
+         "depends_on": [
+          "sample"
+         ],
+         "params": {
+          "signals": [
+           "gripper",
+           "eef_pause"
+          ],
+          "min_gap_sec": 0.8,
+          "pause_speed_quantile": 0.15,
+          "min_pause_sec": 0.3
+         },
+         "when": "has_telemetry"
+        },
+        "rewire_dependents_of": null
+       },
+       {
+        "node": {
+         "id": "inspect",
+         "operator": "inspect_transition_windows",
+         "depends_on": [
+          "annotate",
+          "hints"
+         ],
+         "params": {
+          "select": "all_boundaries",
+          "window_sec": 2.0,
+          "local_hz": 4.0,
+          "max_windows": 8,
+          "include_unmatched_hints": false,
+          "tile_px": 224,
+          "confidence_threshold": 0.7
+         },
+         "when": "always"
+        },
+        "rewire_dependents_of": null
+       },
+       {
+        "node": {
+         "id": "refine",
+         "operator": "refine_intervals",
+         "depends_on": [
+          "inspect"
+         ],
+         "params": {
+          "prompt": "refine.md",
+          "thinking": false,
+          "max_tokens": 16384,
+          "temperature": 0.2,
+          "allow_insert": true,
+          "allow_delete": true
+         },
+         "when": "always"
+        },
+        "rewire_dependents_of": null
+       },
+       {
+        "node": {
+         "id": "merge",
+         "operator": "merge_filter_segments",
+         "depends_on": [
+          "refine"
+         ],
+         "params": {
+          "min_duration_sec": 0.8,
+          "max_gap_sec": 1.5,
+          "tile_full_episode": true,
+          "merge_same_label": false
+         },
+         "when": "always"
+        },
+        "rewire_dependents_of": null
+       }
+      ],
+      "set_params": {
+       "sample": {
+        "frames_per_sheet": 30
+       }
+      },
+      "set_depends_on": {
+       "validate_export": [
+        "merge"
+       ]
+      },
+      "prompt_updates": {
+       "prompt.md": "Reconstruct the sequence of manipulation events in this robot video from the timestamped contact sheets.\n\nReturn only JSON with this shape:\n{\"segments\":[{\"start_sec\":0.0,\"end_sec\":1.0,\"subtask\":\"short action description\"}]}\n\nRules:\n- Segment only completed robot manipulation events, not every visible movement.\n- Good boundaries happen when a held object changes, an object is placed or released, a tool starts/stops changing a surface, a container/door/lid opens or closes, or contents move between containers.\n- Do not split approach, grasp adjustment, small repositioning, and retreat unless the world state changes.\n- Do not merge separate pick/place/open/close/pour/wipe events when they complete different states.\n- Most segments should be 2-10 seconds. Shorter segments are only allowed for fast pick, place, open, close, or release events that are clearly under 2 seconds.\n- Strongly avoid predicting segments shorter than 1.5 seconds unless the event is unmistakably instantaneous.\n- Use the visible timestamps for start_sec and end_sec.\n- Ignore label wording quality; prioritize temporally correct boundaries.\n\nEpisode instruction: $instruction"
+      }
+     },
+     "labeled_scores": {
+      "snapped_f1_075": 0.016042780748663103,
+      "raw_f1_075": 0.016,
+      "snapped_f1_05": 0.2032085561497326,
+      "tp_snapped": 3,
+      "n_pred": 270,
+      "n_ref": 105
+     },
+     "failed_labeled_episodes": [],
+     "root_cause_stats_labeled": {
+      "predicted_vs_reference_segments": [
+       270,
+       105
+      ],
+      "median_predicted_segment_sec": 1.0,
+      "median_reference_segment_sec": 2.37,
+      "predicted_segments_le_2s_fraction": 0.974,
+      "reference_segments_le_2s_fraction": 0.429,
+      "predicted_segments_exactly_1s_fraction": 0.944,
+      "median_coverage_last_predicted_end_over_reference_end": 1.15,
+      "episodes_with_coverage_below_50pct": 0,
+      "references_matched_at_iou075": 3,
+      "mean_best_iou_per_reference": 0.445,
+      "references_with_best_iou_below_0.5": 67,
+      "pooled_scores": {
+       "snapped_f1_075": 0.016042780748663103,
+       "raw_f1_075": 0.016,
+       "snapped_f1_05": 0.2032085561497326,
+       "tp_snapped": 3,
+       "n_pred": 270,
+       "n_ref": 105
+      }
+     }
+    }
+   ],
+   "shadow_gt": {
+    "candidate": {
+     "snapped_f1_075": 0.030413625304136254,
+     "raw_f1_075": 0.030048076923076924,
+     "snapped_f1_05": 0.1897810218978102,
+     "raw_f1_05": 0.18509615384615385,
+     "tp_snapped": 25,
+     "tp_raw": 25,
+     "tp05_snapped": 156,
+     "tp05_raw": 154,
+     "n_pred": 1071,
+     "n_pred_snapped": 1051,
+     "n_ref": 593,
+     "invalid_items": 0,
+     "empty_output_episodes": 1,
+     "mean_boundary_mae_sec": 4.675794135881562,
+     "episodes": 50,
+     "per_episode_snapped_f1": {
+      "galaxea_002": 0.03333333333333333,
+      "galaxea_007": 0.0,
+      "galaxea_009": 0.0,
+      "galaxea_011": 0.07692307692307691,
+      "galaxea_013": 0.0,
+      "galaxea_028": 0.26666666666666666,
+      "galaxea_033": 0.0,
+      "galaxea_037": 0.13333333333333333,
+      "galaxea_039": 0.0,
+      "galaxea_041": 0.3333333333333333,
+      "galaxea_043": 0.0,
+      "galaxea_045": 0.0,
+      "galaxea_047": 0.0,
+      "galaxea_049": 0.0,
+      "galaxea_050": 0.0,
+      "galaxea_052": 0.22222222222222224,
+      "galaxea_058": 0.0,
+      "galaxea_060": 0.0,
+      "galaxea_062": 0.0,
+      "galaxea_065": 0.0,
+      "galaxea_067": 0.5,
+      "galaxea_069": 0.4,
+      "galaxea_071": 0.0,
+      "galaxea_073": 0.0,
+      "galaxea_075": 0.0,
+      "homer_1": 0.038461538461538464,
+      "homer_10": 0.0,
+      "homer_11": 0.011627906976744186,
+      "homer_12": 0.02197802197802198,
+      "homer_15": 0.0,
+      "homer_2": 0.03738317757009346,
+      "homer_29": 0.08,
+      "homer_3": 0.1818181818181818,
+      "homer_33": 0.15384615384615385,
+      "homer_37": 0.0,
+      "homer_38": 0.2631578947368421,
+      "homer_39": 0.0,
+      "homer_4": 0.0,
+      "homer_40": 0.0,
+      "homer_41": 0.0,
+      "homer_48": 0.0,
+      "homer_5": 0.0,
+      "homer_50": 0.0,
+      "homer_52": 0.0,
+      "homer_53": 0.0,
+      "homer_56": 0.0,
+      "homer_59": 0.0,
+      "homer_60": 0.0,
+      "homer_7": 0.05263157894736841,
+      "homer_9": 0.0
+     }
+    },
+    "incumbent": {
+     "snapped_f1_075": 0.023958927552766688,
+     "raw_f1_075": 0.02258610954263128,
+     "snapped_f1_05": 0.15744438106103822,
+     "raw_f1_05": 0.1535855448898927,
+     "tp_snapped": 21,
+     "tp_raw": 20,
+     "tp05_snapped": 138,
+     "tp05_raw": 136,
+     "n_pred": 1178,
+     "n_pred_snapped": 1160,
+     "n_ref": 593,
+     "invalid_items": 4,
+     "empty_output_episodes": 0,
+     "mean_boundary_mae_sec": 7.35147718094754,
+     "episodes": 50,
+     "per_episode_snapped_f1": {
+      "galaxea_002": 0.14814814814814817,
+      "galaxea_007": 0.1,
+      "galaxea_009": 0.08,
+      "galaxea_011": 0.0,
+      "galaxea_013": 0.0,
+      "galaxea_028": 0.0,
+      "galaxea_033": 0.0,
+      "galaxea_037": 0.0,
+      "galaxea_039": 0.0,
+      "galaxea_041": 0.0,
+      "galaxea_043": 0.0,
+      "galaxea_045": 0.2222222222222222,
+      "galaxea_047": 0.2222222222222222,
+      "galaxea_049": 0.0,
+      "galaxea_050": 0.0,
+      "galaxea_052": 0.2,
+      "galaxea_058": 0.0,
+      "galaxea_060": 0.0,
+      "galaxea_062": 0.0,
+      "galaxea_065": 0.5,
+      "galaxea_067": 0.5,
+      "galaxea_069": 0.4,
+      "galaxea_071": 0.0,
+      "galaxea_073": 0.0,
+      "galaxea_075": 0.0,
+      "homer_1": 0.08695652173913045,
+      "homer_10": 0.0,
+      "homer_11": 0.011560693641618497,
+      "homer_12": 0.01092896174863388,
+      "homer_15": 0.0,
+      "homer_2": 0.010869565217391304,
+      "homer_29": 0.0,
+      "homer_3": 0.19999999999999998,
+      "homer_33": 0.0,
+      "homer_37": 0.0,
+      "homer_38": 0.10526315789473684,
+      "homer_39": 0.0,
+      "homer_4": 0.0,
+      "homer_40": 0.02702702702702703,
+      "homer_41": 0.0,
+      "homer_48": 0.0,
+      "homer_5": 0.0,
+      "homer_50": 0.0,
+      "homer_52": 0.0,
+      "homer_53": 0.0,
+      "homer_56": 0.23529411764705882,
+      "homer_59": 0.0,
+      "homer_60": 0.0,
+      "homer_7": 0.08,
+      "homer_9": 0.0
+     }
+    }
+   },
+   "shadow_gt_heldout": {
+    "candidate": {
+     "snapped_f1_075": 0.034591194968553465,
+     "raw_f1_075": 0.03410852713178294,
+     "snapped_f1_05": 0.1871069182389937,
+     "raw_f1_05": 0.18139534883720929,
+     "tp_snapped": 22,
+     "tp_raw": 22,
+     "tp05_snapped": 119,
+     "tp05_raw": 117,
+     "n_pred": 802,
+     "n_pred_snapped": 784,
+     "n_ref": 488,
+     "invalid_items": 0,
+     "empty_output_episodes": 1,
+     "mean_boundary_mae_sec": 5.093202261370495,
+     "episodes": 45,
+     "per_episode_snapped_f1": {
+      "galaxea_002": 0.03333333333333333,
+      "galaxea_007": 0.0,
+      "galaxea_009": 0.0,
+      "galaxea_011": 0.07692307692307691,
+      "galaxea_013": 0.0,
+      "galaxea_028": 0.26666666666666666,
+      "galaxea_033": 0.0,
+      "galaxea_037": 0.13333333333333333,
+      "galaxea_039": 0.0,
+      "galaxea_041": 0.3333333333333333,
+      "galaxea_045": 0.0,
+      "galaxea_047": 0.0,
+      "galaxea_049": 0.0,
+      "galaxea_050": 0.0,
+      "galaxea_052": 0.22222222222222224,
+      "galaxea_058": 0.0,
+      "galaxea_060": 0.0,
+      "galaxea_062": 0.0,
+      "galaxea_065": 0.0,
+      "galaxea_067": 0.5,
+      "galaxea_069": 0.4,
+      "galaxea_071": 0.0,
+      "homer_1": 0.038461538461538464,
+      "homer_10": 0.0,
+      "homer_15": 0.0,
+      "homer_2": 0.03738317757009346,
+      "homer_29": 0.08,
+      "homer_3": 0.1818181818181818,
+      "homer_33": 0.15384615384615385,
+      "homer_37": 0.0,
+      "homer_38": 0.2631578947368421,
+      "homer_39": 0.0,
+      "homer_4": 0.0,
+      "homer_40": 0.0,
+      "homer_41": 0.0,
+      "homer_48": 0.0,
+      "homer_5": 0.0,
+      "homer_50": 0.0,
+      "homer_52": 0.0,
+      "homer_53": 0.0,
+      "homer_56": 0.0,
+      "homer_59": 0.0,
+      "homer_60": 0.0,
+      "homer_7": 0.05263157894736841,
+      "homer_9": 0.0
+     }
+    },
+    "incumbent": {
+     "snapped_f1_075": 0.027636363636363636,
+     "raw_f1_075": 0.025862068965517238,
+     "snapped_f1_05": 0.14836363636363636,
+     "raw_f1_05": 0.14511494252873564,
+     "tp_snapped": 19,
+     "tp_raw": 18,
+     "tp05_snapped": 102,
+     "tp05_raw": 101,
+     "n_pred": 904,
+     "n_pred_snapped": 887,
+     "n_ref": 488,
+     "invalid_items": 3,
+     "empty_output_episodes": 0,
+     "mean_boundary_mae_sec": 8.123574353099606,
+     "episodes": 45,
+     "per_episode_snapped_f1": {
+      "galaxea_002": 0.14814814814814817,
+      "galaxea_007": 0.1,
+      "galaxea_009": 0.08,
+      "galaxea_011": 0.0,
+      "galaxea_013": 0.0,
+      "galaxea_028": 0.0,
+      "galaxea_033": 0.0,
+      "galaxea_037": 0.0,
+      "galaxea_039": 0.0,
+      "galaxea_041": 0.0,
+      "galaxea_045": 0.2222222222222222,
+      "galaxea_047": 0.2222222222222222,
+      "galaxea_049": 0.0,
+      "galaxea_050": 0.0,
+      "galaxea_052": 0.2,
+      "galaxea_058": 0.0,
+      "galaxea_060": 0.0,
+      "galaxea_062": 0.0,
+      "galaxea_065": 0.5,
+      "galaxea_067": 0.5,
+      "galaxea_069": 0.4,
+      "galaxea_071": 0.0,
+      "homer_1": 0.08695652173913045,
+      "homer_10": 0.0,
+      "homer_15": 0.0,
+      "homer_2": 0.010869565217391304,
+      "homer_29": 0.0,
+      "homer_3": 0.19999999999999998,
+      "homer_33": 0.0,
+      "homer_37": 0.0,
+      "homer_38": 0.10526315789473684,
+      "homer_39": 0.0,
+      "homer_4": 0.0,
+      "homer_40": 0.02702702702702703,
+      "homer_41": 0.0,
+      "homer_48": 0.0,
+      "homer_5": 0.0,
+      "homer_50": 0.0,
+      "homer_52": 0.0,
+      "homer_53": 0.0,
+      "homer_56": 0.23529411764705882,
+      "homer_59": 0.0,
+      "homer_60": 0.0,
+      "homer_7": 0.08,
+      "homer_9": 0.0
+     }
+    }
+   },
+   "recursion_cost": {
+    "by_role": {
+     "nemotron": {
+      "calls": 3,
+      "cache_hits": 1,
+      "cost_usd": 0.021703,
+      "prompt_tokens": 18327,
+      "completion_tokens": 6752
+     },
+     "vision": {
+      "calls": 262,
+      "cache_hits": 130,
+      "cost_usd": 0.333947,
+      "prompt_tokens": 482490,
+      "completion_tokens": 103388
+     }
+    },
+    "total_cost_usd": 0.35565
+   }
+  }
+ ],
+ "versions": {
+  "N0": {
+   "headline_gt_heldout": {
+    "snapped_f1_075": 0.027636363636363636,
+    "raw_f1_075": 0.025862068965517238,
+    "snapped_f1_05": 0.14836363636363636,
+    "raw_f1_05": 0.14511494252873564,
+    "tp_snapped": 19,
+    "tp_raw": 18,
+    "tp05_snapped": 102,
+    "tp05_raw": 101,
+    "n_pred": 904,
+    "n_pred_snapped": 887,
+    "n_ref": 488,
+    "invalid_items": 3,
+    "empty_output_episodes": 0,
+    "mean_boundary_mae_sec": 8.123574353099606,
+    "episodes": 45,
+    "per_episode_snapped_f1": {
+     "galaxea_002": 0.14814814814814817,
+     "galaxea_007": 0.1,
+     "galaxea_009": 0.08,
+     "galaxea_011": 0.0,
+     "galaxea_013": 0.0,
+     "galaxea_028": 0.0,
+     "galaxea_033": 0.0,
+     "galaxea_037": 0.0,
+     "galaxea_039": 0.0,
+     "galaxea_041": 0.0,
+     "galaxea_045": 0.2222222222222222,
+     "galaxea_047": 0.2222222222222222,
+     "galaxea_049": 0.0,
+     "galaxea_050": 0.0,
+     "galaxea_052": 0.2,
+     "galaxea_058": 0.0,
+     "galaxea_060": 0.0,
+     "galaxea_062": 0.0,
+     "galaxea_065": 0.5,
+     "galaxea_067": 0.5,
+     "galaxea_069": 0.4,
+     "galaxea_071": 0.0,
+     "homer_1": 0.08695652173913045,
+     "homer_10": 0.0,
+     "homer_15": 0.0,
+     "homer_2": 0.010869565217391304,
+     "homer_29": 0.0,
+     "homer_3": 0.19999999999999998,
+     "homer_33": 0.0,
+     "homer_37": 0.0,
+     "homer_38": 0.10526315789473684,
+     "homer_39": 0.0,
+     "homer_4": 0.0,
+     "homer_40": 0.02702702702702703,
+     "homer_41": 0.0,
+     "homer_48": 0.0,
+     "homer_5": 0.0,
+     "homer_50": 0.0,
+     "homer_52": 0.0,
+     "homer_53": 0.0,
+     "homer_56": 0.23529411764705882,
+     "homer_59": 0.0,
+     "homer_60": 0.0,
+     "homer_7": 0.08,
+     "homer_9": 0.0
+    }
+   },
+   "headline_gt_labeled": {
+    "snapped_f1_075": 0.010582010582010581,
+    "raw_f1_075": 0.010554089709762534,
+    "snapped_f1_05": 0.1904761904761905,
+    "raw_f1_05": 0.18469656992084435,
+    "tp_snapped": 2,
+    "tp_raw": 2,
+    "tp05_snapped": 36,
+    "tp05_raw": 35,
+    "n_pred": 274,
+    "n_pred_snapped": 273,
+    "n_ref": 105,
+    "invalid_items": 1,
+    "empty_output_episodes": 0,
+    "mean_boundary_mae_sec": 0.402602631578947,
+    "episodes": 5,
+    "per_episode_snapped_f1": {
+     "galaxea_043": 0.0,
+     "galaxea_073": 0.0,
+     "galaxea_075": 0.0,
+     "homer_11": 0.011560693641618497,
+     "homer_12": 0.01092896174863388
+    }
+   },
+   "heldout_episodes": 45,
+   "labeled_episodes": 5,
+   "version_id": "N0",
+   "episodes": 50,
+   "headline_gt": {
+    "snapped_f1_075": 0.023958927552766688,
+    "raw_f1_075": 0.02258610954263128,
+    "snapped_f1_05": 0.15744438106103822,
+    "raw_f1_05": 0.1535855448898927,
+    "tp_snapped": 21,
+    "tp_raw": 20,
+    "tp05_snapped": 138,
+    "tp05_raw": 136,
+    "n_pred": 1178,
+    "n_pred_snapped": 1160,
+    "n_ref": 593,
+    "invalid_items": 4,
+    "empty_output_episodes": 0,
+    "mean_boundary_mae_sec": 7.35147718094754,
+    "episodes": 50,
+    "per_episode_snapped_f1": {
+     "galaxea_002": 0.14814814814814817,
+     "galaxea_007": 0.1,
+     "galaxea_009": 0.08,
+     "galaxea_011": 0.0,
+     "galaxea_013": 0.0,
+     "galaxea_028": 0.0,
+     "galaxea_033": 0.0,
+     "galaxea_037": 0.0,
+     "galaxea_039": 0.0,
+     "galaxea_041": 0.0,
+     "galaxea_043": 0.0,
+     "galaxea_045": 0.2222222222222222,
+     "galaxea_047": 0.2222222222222222,
+     "galaxea_049": 0.0,
+     "galaxea_050": 0.0,
+     "galaxea_052": 0.2,
+     "galaxea_058": 0.0,
+     "galaxea_060": 0.0,
+     "galaxea_062": 0.0,
+     "galaxea_065": 0.5,
+     "galaxea_067": 0.5,
+     "galaxea_069": 0.4,
+     "galaxea_071": 0.0,
+     "galaxea_073": 0.0,
+     "galaxea_075": 0.0,
+     "homer_1": 0.08695652173913045,
+     "homer_10": 0.0,
+     "homer_11": 0.011560693641618497,
+     "homer_12": 0.01092896174863388,
+     "homer_15": 0.0,
+     "homer_2": 0.010869565217391304,
+     "homer_29": 0.0,
+     "homer_3": 0.19999999999999998,
+     "homer_33": 0.0,
+     "homer_37": 0.0,
+     "homer_38": 0.10526315789473684,
+     "homer_39": 0.0,
+     "homer_4": 0.0,
+     "homer_40": 0.02702702702702703,
+     "homer_41": 0.0,
+     "homer_48": 0.0,
+     "homer_5": 0.0,
+     "homer_50": 0.0,
+     "homer_52": 0.0,
+     "homer_53": 0.0,
+     "homer_56": 0.23529411764705882,
+     "homer_59": 0.0,
+     "homer_60": 0.0,
+     "homer_7": 0.08,
+     "homer_9": 0.0
+    }
+   },
+   "label_free_self_score": 0.4934,
+   "label_free_components": {
+    "telemetry_agreement": 0.3813,
+    "visual_verification": 0.3498,
+    "duration_variability": 0.4064,
+    "temporal_resolution": 0.9766
+   },
+   "annotation_cost_usd_total": 0.146724,
+   "annotation_calls": 50,
+   "statuses": {
+    "galaxea_002": "ok",
+    "galaxea_007": "ok",
+    "galaxea_009": "ok",
+    "galaxea_011": "ok",
+    "galaxea_013": "ok",
+    "galaxea_028": "ok",
+    "galaxea_033": "ok",
+    "galaxea_037": "ok",
+    "galaxea_039": "ok",
+    "galaxea_041": "ok",
+    "galaxea_043": "ok",
+    "galaxea_045": "ok",
+    "galaxea_047": "ok",
+    "galaxea_049": "ok",
+    "galaxea_050": "ok",
+    "galaxea_052": "ok",
+    "galaxea_058": "ok",
+    "galaxea_060": "ok",
+    "galaxea_062": "ok",
+    "galaxea_065": "ok",
+    "galaxea_067": "ok",
+    "galaxea_069": "ok",
+    "galaxea_071": "ok",
+    "galaxea_073": "ok",
+    "galaxea_075": "ok",
+    "homer_1": "ok",
+    "homer_10": "ok",
+    "homer_11": "ok",
+    "homer_12": "ok",
+    "homer_15": "ok",
+    "homer_2": "ok",
+    "homer_29": "ok",
+    "homer_3": "ok",
+    "homer_33": "ok",
+    "homer_37": "ok",
+    "homer_38": "ok",
+    "homer_39": "ok",
+    "homer_4": "ok",
+    "homer_40": "ok",
+    "homer_41": "ok",
+    "homer_48": "ok",
+    "homer_5": "ok",
+    "homer_50": "ok",
+    "homer_52": "ok",
+    "homer_53": "ok",
+    "homer_56": "ok",
+    "homer_59": "ok",
+    "homer_60": "ok",
+    "homer_7": "ok",
+    "homer_9": "ok"
+   }
+  },
+  "rest50-hitl-EXP-0001_rejected": {
+   "headline_gt_heldout": {
+    "snapped_f1_075": 0.03273322422258592,
+    "raw_f1_075": 0.030694668820678516,
+    "snapped_f1_05": 0.18330605564648117,
+    "raw_f1_05": 0.17609046849757673,
+    "tp_snapped": 20,
+    "tp_raw": 19,
+    "tp05_snapped": 112,
+    "tp05_raw": 109,
+    "n_pred": 750,
+    "n_pred_snapped": 734,
+    "n_ref": 488,
+    "invalid_items": 0,
+    "empty_output_episodes": 1,
+    "mean_boundary_mae_sec": 4.930853418733383,
+    "episodes": 45,
+    "per_episode_snapped_f1": {
+     "galaxea_002": 0.0,
+     "galaxea_007": 0.0,
+     "galaxea_009": 0.0,
+     "galaxea_011": 0.0,
+     "galaxea_013": 0.0,
+     "galaxea_028": 0.0,
+     "galaxea_033": 0.0,
+     "galaxea_037": 0.13333333333333333,
+     "galaxea_039": 0.0,
+     "galaxea_041": 0.3333333333333333,
+     "galaxea_045": 0.0,
+     "galaxea_047": 0.0,
+     "galaxea_049": 0.28571428571428575,
+     "galaxea_050": 0.0,
+     "galaxea_052": 0.0,
+     "galaxea_058": 0.0,
+     "galaxea_060": 0.0,
+     "galaxea_062": 0.0,
+     "galaxea_065": 0.0,
+     "galaxea_067": 1.0,
+     "galaxea_069": 0.8,
+     "galaxea_071": 0.4,
+     "homer_1": 0.0,
+     "homer_10": 0.0,
+     "homer_15": 0.0,
+     "homer_2": 0.0634920634920635,
+     "homer_29": 0.2222222222222222,
+     "homer_3": 0.19999999999999998,
+     "homer_33": 0.0,
+     "homer_37": 0.0,
+     "homer_38": 0.05263157894736842,
+     "homer_39": 0.041666666666666664,
+     "homer_4": 0.0,
+     "homer_40": 0.0273972602739726,
+     "homer_41": 0.0,
+     "homer_48": 0.0,
+     "homer_5": 0.0,
+     "homer_50": 0.0,
+     "homer_52": 0.0,
+     "homer_53": 0.0,
+     "homer_56": 0.23529411764705882,
+     "homer_59": 0.0,
+     "homer_60": 0.0,
+     "homer_7": 0.0130718954248366,
+     "homer_9": 0.0
+    }
+   },
+   "headline_gt_labeled": {
+    "snapped_f1_075": 0.021447721179624662,
+    "raw_f1_075": 0.0213903743315508,
+    "snapped_f1_05": 0.20911528150134048,
+    "raw_f1_05": 0.2032085561497326,
+    "tp_snapped": 4,
+    "tp_raw": 4,
+    "tp05_snapped": 39,
+    "tp05_raw": 38,
+    "n_pred": 269,
+    "n_pred_snapped": 268,
+    "n_ref": 105,
+    "invalid_items": 0,
+    "empty_output_episodes": 0,
+    "mean_boundary_mae_sec": 0.8446026315789471,
+    "episodes": 5,
+    "per_episode_snapped_f1": {
+     "galaxea_043": 0.0,
+     "galaxea_073": 0.0,
+     "galaxea_075": 0.0,
+     "homer_11": 0.011627906976744186,
+     "homer_12": 0.03314917127071823
+    }
+   },
+   "heldout_episodes": 45,
+   "labeled_episodes": 5,
+   "version_id": "rest50-hitl-EXP-0001",
+   "episodes": 50,
+   "headline_gt": {
+    "snapped_f1_075": 0.030094043887147336,
+    "raw_f1_075": 0.028535980148883377,
+    "snapped_f1_05": 0.18934169278996868,
+    "raw_f1_05": 0.18238213399503722,
+    "tp_snapped": 24,
+    "tp_raw": 23,
+    "tp05_snapped": 151,
+    "tp05_raw": 147,
+    "n_pred": 1019,
+    "n_pred_snapped": 1002,
+    "n_ref": 593,
+    "invalid_items": 0,
+    "empty_output_episodes": 1,
+    "mean_boundary_mae_sec": 4.513889052697216,
+    "episodes": 50,
+    "per_episode_snapped_f1": {
+     "galaxea_002": 0.0,
+     "galaxea_007": 0.0,
+     "galaxea_009": 0.0,
+     "galaxea_011": 0.0,
+     "galaxea_013": 0.0,
+     "galaxea_028": 0.0,
+     "galaxea_033": 0.0,
+     "galaxea_037": 0.13333333333333333,
+     "galaxea_039": 0.0,
+     "galaxea_041": 0.3333333333333333,
+     "galaxea_043": 0.0,
+     "galaxea_045": 0.0,
+     "galaxea_047": 0.0,
+     "galaxea_049": 0.28571428571428575,
+     "galaxea_050": 0.0,
+     "galaxea_052": 0.0,
+     "galaxea_058": 0.0,
+     "galaxea_060": 0.0,
+     "galaxea_062": 0.0,
+     "galaxea_065": 0.0,
+     "galaxea_067": 1.0,
+     "galaxea_069": 0.8,
+     "galaxea_071": 0.4,
+     "galaxea_073": 0.0,
+     "galaxea_075": 0.0,
+     "homer_1": 0.0,
+     "homer_10": 0.0,
+     "homer_11": 0.011627906976744186,
+     "homer_12": 0.03314917127071823,
+     "homer_15": 0.0,
+     "homer_2": 0.0634920634920635,
+     "homer_29": 0.2222222222222222,
+     "homer_3": 0.19999999999999998,
+     "homer_33": 0.0,
+     "homer_37": 0.0,
+     "homer_38": 0.05263157894736842,
+     "homer_39": 0.041666666666666664,
+     "homer_4": 0.0,
+     "homer_40": 0.0273972602739726,
+     "homer_41": 0.0,
+     "homer_48": 0.0,
+     "homer_5": 0.0,
+     "homer_50": 0.0,
+     "homer_52": 0.0,
+     "homer_53": 0.0,
+     "homer_56": 0.23529411764705882,
+     "homer_59": 0.0,
+     "homer_60": 0.0,
+     "homer_7": 0.0130718954248366,
+     "homer_9": 0.0
+    }
+   },
+   "label_free_self_score": 0.5923,
+   "label_free_components": {
+    "telemetry_agreement": 0.455,
+    "visual_verification": 0.5124,
+    "duration_variability": 0.5617,
+    "temporal_resolution": 0.9795
+   },
+   "annotation_cost_usd_total": 0.21243,
+   "annotation_calls": 95,
+   "statuses": {
+    "galaxea_002": "ok",
+    "galaxea_007": "ok",
+    "galaxea_009": "ok",
+    "galaxea_011": "ok",
+    "galaxea_013": "ok",
+    "galaxea_028": "ok",
+    "galaxea_033": "ok",
+    "galaxea_037": "ok",
+    "galaxea_039": "ok",
+    "galaxea_041": "ok",
+    "galaxea_043": "ok",
+    "galaxea_045": "ok",
+    "galaxea_047": "ok",
+    "galaxea_049": "ok",
+    "galaxea_050": "ok",
+    "galaxea_052": "ok",
+    "galaxea_058": "ok",
+    "galaxea_060": "ok",
+    "galaxea_062": "ok",
+    "galaxea_065": "ok",
+    "galaxea_067": "ok",
+    "galaxea_069": "ok",
+    "galaxea_071": "ok",
+    "galaxea_073": "ok",
+    "galaxea_075": "ok",
+    "homer_1": "ok",
+    "homer_10": "ok",
+    "homer_11": "ok",
+    "homer_12": "ok",
+    "homer_15": "ok",
+    "homer_2": "ok",
+    "homer_29": "ok",
+    "homer_3": "ok",
+    "homer_33": "ok",
+    "homer_37": "ok",
+    "homer_38": "ok",
+    "homer_39": "ok",
+    "homer_4": "model_error",
+    "homer_40": "ok",
+    "homer_41": "ok",
+    "homer_48": "ok",
+    "homer_5": "ok",
+    "homer_50": "ok",
+    "homer_52": "ok",
+    "homer_53": "ok",
+    "homer_56": "ok",
+    "homer_59": "ok",
+    "homer_60": "ok",
+    "homer_7": "ok",
+    "homer_9": "ok"
+   }
+  },
+  "rest50-hitl-EXP-0002_rejected": {
+   "headline_gt_heldout": {
+    "snapped_f1_075": 0.034591194968553465,
+    "raw_f1_075": 0.03410852713178294,
+    "snapped_f1_05": 0.1871069182389937,
+    "raw_f1_05": 0.18139534883720929,
+    "tp_snapped": 22,
+    "tp_raw": 22,
+    "tp05_snapped": 119,
+    "tp05_raw": 117,
+    "n_pred": 802,
+    "n_pred_snapped": 784,
+    "n_ref": 488,
+    "invalid_items": 0,
+    "empty_output_episodes": 1,
+    "mean_boundary_mae_sec": 5.093202261370495,
+    "episodes": 45,
+    "per_episode_snapped_f1": {
+     "galaxea_002": 0.03333333333333333,
+     "galaxea_007": 0.0,
+     "galaxea_009": 0.0,
+     "galaxea_011": 0.07692307692307691,
+     "galaxea_013": 0.0,
+     "galaxea_028": 0.26666666666666666,
+     "galaxea_033": 0.0,
+     "galaxea_037": 0.13333333333333333,
+     "galaxea_039": 0.0,
+     "galaxea_041": 0.3333333333333333,
+     "galaxea_045": 0.0,
+     "galaxea_047": 0.0,
+     "galaxea_049": 0.0,
+     "galaxea_050": 0.0,
+     "galaxea_052": 0.22222222222222224,
+     "galaxea_058": 0.0,
+     "galaxea_060": 0.0,
+     "galaxea_062": 0.0,
+     "galaxea_065": 0.0,
+     "galaxea_067": 0.5,
+     "galaxea_069": 0.4,
+     "galaxea_071": 0.0,
+     "homer_1": 0.038461538461538464,
+     "homer_10": 0.0,
+     "homer_15": 0.0,
+     "homer_2": 0.03738317757009346,
+     "homer_29": 0.08,
+     "homer_3": 0.1818181818181818,
+     "homer_33": 0.15384615384615385,
+     "homer_37": 0.0,
+     "homer_38": 0.2631578947368421,
+     "homer_39": 0.0,
+     "homer_4": 0.0,
+     "homer_40": 0.0,
+     "homer_41": 0.0,
+     "homer_48": 0.0,
+     "homer_5": 0.0,
+     "homer_50": 0.0,
+     "homer_52": 0.0,
+     "homer_53": 0.0,
+     "homer_56": 0.0,
+     "homer_59": 0.0,
+     "homer_60": 0.0,
+     "homer_7": 0.05263157894736841,
+     "homer_9": 0.0
+    }
+   },
+   "headline_gt_labeled": {
+    "snapped_f1_075": 0.01612903225806452,
+    "raw_f1_075": 0.016042780748663103,
+    "snapped_f1_05": 0.19892473118279572,
+    "raw_f1_05": 0.19786096256684493,
+    "tp_snapped": 3,
+    "tp_raw": 3,
+    "tp05_snapped": 37,
+    "tp05_raw": 37,
+    "n_pred": 269,
+    "n_pred_snapped": 267,
+    "n_ref": 105,
+    "invalid_items": 0,
+    "empty_output_episodes": 0,
+    "mean_boundary_mae_sec": 1.002602631578947,
+    "episodes": 5,
+    "per_episode_snapped_f1": {
+     "galaxea_043": 0.0,
+     "galaxea_073": 0.0,
+     "galaxea_075": 0.0,
+     "homer_11": 0.011627906976744186,
+     "homer_12": 0.02197802197802198
+    }
+   },
+   "heldout_episodes": 45,
+   "labeled_episodes": 5,
+   "version_id": "rest50-hitl-EXP-0002",
+   "episodes": 50,
+   "headline_gt": {
+    "snapped_f1_075": 0.030413625304136254,
+    "raw_f1_075": 0.030048076923076924,
+    "snapped_f1_05": 0.1897810218978102,
+    "raw_f1_05": 0.18509615384615385,
+    "tp_snapped": 25,
+    "tp_raw": 25,
+    "tp05_snapped": 156,
+    "tp05_raw": 154,
+    "n_pred": 1071,
+    "n_pred_snapped": 1051,
+    "n_ref": 593,
+    "invalid_items": 0,
+    "empty_output_episodes": 1,
+    "mean_boundary_mae_sec": 4.675794135881562,
+    "episodes": 50,
+    "per_episode_snapped_f1": {
+     "galaxea_002": 0.03333333333333333,
+     "galaxea_007": 0.0,
+     "galaxea_009": 0.0,
+     "galaxea_011": 0.07692307692307691,
+     "galaxea_013": 0.0,
+     "galaxea_028": 0.26666666666666666,
+     "galaxea_033": 0.0,
+     "galaxea_037": 0.13333333333333333,
+     "galaxea_039": 0.0,
+     "galaxea_041": 0.3333333333333333,
+     "galaxea_043": 0.0,
+     "galaxea_045": 0.0,
+     "galaxea_047": 0.0,
+     "galaxea_049": 0.0,
+     "galaxea_050": 0.0,
+     "galaxea_052": 0.22222222222222224,
+     "galaxea_058": 0.0,
+     "galaxea_060": 0.0,
+     "galaxea_062": 0.0,
+     "galaxea_065": 0.0,
+     "galaxea_067": 0.5,
+     "galaxea_069": 0.4,
+     "galaxea_071": 0.0,
+     "galaxea_073": 0.0,
+     "galaxea_075": 0.0,
+     "homer_1": 0.038461538461538464,
+     "homer_10": 0.0,
+     "homer_11": 0.011627906976744186,
+     "homer_12": 0.02197802197802198,
+     "homer_15": 0.0,
+     "homer_2": 0.03738317757009346,
+     "homer_29": 0.08,
+     "homer_3": 0.1818181818181818,
+     "homer_33": 0.15384615384615385,
+     "homer_37": 0.0,
+     "homer_38": 0.2631578947368421,
+     "homer_39": 0.0,
+     "homer_4": 0.0,
+     "homer_40": 0.0,
+     "homer_41": 0.0,
+     "homer_48": 0.0,
+     "homer_5": 0.0,
+     "homer_50": 0.0,
+     "homer_52": 0.0,
+     "homer_53": 0.0,
+     "homer_56": 0.0,
+     "homer_59": 0.0,
+     "homer_60": 0.0,
+     "homer_7": 0.05263157894736841,
+     "homer_9": 0.0
+    }
+   },
+   "label_free_self_score": 0.5388,
+   "label_free_components": {
+    "telemetry_agreement": 0.4772,
+    "visual_verification": 0.4305,
+    "duration_variability": 0.4284,
+    "temporal_resolution": 0.9684
+   },
+   "annotation_cost_usd_total": 0.231389,
+   "annotation_calls": 93,
+   "statuses": {
+    "galaxea_002": "ok",
+    "galaxea_007": "ok",
+    "galaxea_009": "ok",
+    "galaxea_011": "ok",
+    "galaxea_013": "ok",
+    "galaxea_028": "ok",
+    "galaxea_033": "ok",
+    "galaxea_037": "ok",
+    "galaxea_039": "ok",
+    "galaxea_041": "ok",
+    "galaxea_043": "ok",
+    "galaxea_045": "ok",
+    "galaxea_047": "ok",
+    "galaxea_049": "ok",
+    "galaxea_050": "ok",
+    "galaxea_052": "ok",
+    "galaxea_058": "ok",
+    "galaxea_060": "ok",
+    "galaxea_062": "ok",
+    "galaxea_065": "ok",
+    "galaxea_067": "ok",
+    "galaxea_069": "ok",
+    "galaxea_071": "ok",
+    "galaxea_073": "ok",
+    "galaxea_075": "ok",
+    "homer_1": "ok",
+    "homer_10": "ok",
+    "homer_11": "ok",
+    "homer_12": "ok",
+    "homer_15": "ok",
+    "homer_2": "ok",
+    "homer_29": "ok",
+    "homer_3": "ok",
+    "homer_33": "ok",
+    "homer_37": "ok",
+    "homer_38": "ok",
+    "homer_39": "ok",
+    "homer_4": "ok",
+    "homer_40": "ok",
+    "homer_41": "ok",
+    "homer_48": "ok",
+    "homer_5": "ok",
+    "homer_50": "ok",
+    "homer_52": "ok",
+    "homer_53": "model_error",
+    "homer_56": "ok",
+    "homer_59": "ok",
+    "homer_60": "ok",
+    "homer_7": "ok",
+    "homer_9": "ok"
+   }
+  }
+ },
+ "mode": "hitl",
+ "labeled_ids": [
+  "galaxea_043",
+  "galaxea_073",
+  "galaxea_075",
+  "homer_11",
+  "homer_12"
+ ]
+}

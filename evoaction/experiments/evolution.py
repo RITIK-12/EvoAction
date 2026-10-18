@@ -170,6 +170,18 @@ def trial_on_labeled(incumbent: Version, wf, prompts: dict[str, str], trial_id: 
     return out
 
 
+def _trial_view(tr: dict[str, Any]) -> dict[str, Any]:
+    """Compact, agent-facing record of one refinement round (full predictions stay in the logs), so every round fits the prompt."""
+    patch = tr.get("patch") or {}
+    view = {"round": tr.get("round"), "hypothesis": tr.get("hypothesis"), "error": tr.get("error"),
+            "labeled_scores": tr.get("labeled_scores"), "failed_labeled_episodes": tr.get("failed_labeled_episodes"),
+            "root_cause_stats_labeled": tr.get("root_cause_stats_labeled"),
+            "patch": {k: v for k, v in patch.items() if k != "prompt_updates" and v}}
+    for name, text in (patch.get("prompt_updates") or {}).items():
+        view["patch"].setdefault("prompt_updates_excerpt", {})[name] = text[:1200]
+    return {k: v for k, v in view.items() if v is not None}
+
+
 def hitl_propose(client: CrusoeClient, store, run_id: str, exp_id: str, incumbent: Version, analysis: dict[str, Any],
                  history: list[dict[str, Any]], cprof: dict[str, Any], calib_ids: list[str], s: Settings) -> dict[str, Any]:
     """Main agent diagnoses root causes and rewrites the harness, refining over INNER_ROUNDS on the fixed labeled sample."""
@@ -178,7 +190,8 @@ def hitl_propose(client: CrusoeClient, store, run_id: str, exp_id: str, incumben
     root_causes = None
     for k in range(INNER_ROUNDS):
         try:
-            data = supervisor_mod.engineer_patch(client, incumbent, analysis, history, cprof, trials, f"hitl_engineer_round{k + 1}")
+            data = supervisor_mod.engineer_patch(client, incumbent, analysis, history, cprof, [_trial_view(x) for x in trials],
+                                                 f"hitl_engineer_round{k + 1}")
         except (BudgetExceeded, ModelCallError) as e:
             trials.append({"round": k + 1, "error": f"{type(e).__name__}: {str(e)[:300]}"})
             store.event(run_id, "hitl_trial", {"exp_id": exp_id, **trials[-1]})

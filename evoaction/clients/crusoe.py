@@ -36,7 +36,7 @@ class BudgetExceeded(RuntimeError):
 
 
 class ModelCallError(RuntimeError):
-    pass
+    raw_text: str = ""  # last reply that could not be parsed as JSON, if any
 
 
 def _norm_model(mid: str) -> str:
@@ -244,6 +244,7 @@ class CrusoeClient:
         projected, _ = self._estimate_cost(model, text_chars / 3.0 + n_images * IMAGE_TOKEN_ESTIMATE, max_tokens)
 
         last_err: Exception | None = None
+        last_text = ""
         for attempt in range((self.settings.max_retries_per_call if retries is None else retries) + 1):
             self.budget.reserve(self.run_id, role, model, projected)
             t0 = time.time()
@@ -270,7 +271,7 @@ class CrusoeClient:
                         res.data = extract_json(text)
                     except (ValueError, json.JSONDecodeError) as e:
                         self._log_call(res, role, purpose, model, key, "invalid_json", str(e), n_images, is_est, version_id, episode_id, task_id)
-                        last_err = e
+                        last_err, last_text = e, text
                         continue
                 self._log_call(res, role, purpose, model, key, "ok", None, n_images, is_est, version_id, episode_id, task_id)
                 self.store.cache_put(key, model, {k: v for k, v in res.__dict__.items() if k not in ("cache_hit", "call_id")})
@@ -283,7 +284,9 @@ class CrusoeClient:
                 self._log_call(res, role, purpose, model, key, "error", f"{type(e).__name__}: {e}"[:500], n_images, True, version_id, episode_id, task_id)
                 if "429" in str(e) or "rate" in str(e).lower():
                     time.sleep(5 * (attempt + 1))
-        raise ModelCallError(f"{purpose}: failed after retries: {last_err}")
+        err = ModelCallError(f"{purpose}: failed after retries: {last_err}")
+        err.raw_text = last_text
+        raise err
 
     def _create_with_backoff(self, kwargs: dict[str, Any], role: str, purpose: str, model: str, waits: tuple[int, ...] = (5, 10, 20, 40, 60)):
         """HTTP 429 is provider back-pressure, not a model failure: back off without spending the retry budget."""

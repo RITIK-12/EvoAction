@@ -1,0 +1,16 @@
+{
+ "episode_id": "homer_3",
+ "version_id": "rest50-hitl-EXP-0002",
+ "segments": [
+  {
+   "start_sec": 0.0,
+   "end_sec": 1.0,
+   "subtask": "Place the spoon in the bowl"
+  },
+  {
+   "start_sec": 1.0,
+   "end_sec": 137.485,
+   "subtask": "Stir the contents in the bowl"
+  }
+ ]
+}

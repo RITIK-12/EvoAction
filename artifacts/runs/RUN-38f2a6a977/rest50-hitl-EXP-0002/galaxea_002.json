@@ -1,0 +1,226 @@
+{
+ "episode_id": "galaxea_002",
+ "version_id": "rest50-hitl-EXP-0002",
+ "segments": [
+  {
+   "start_sec": 0.0,
+   "end_sec": 1.0,
+   "subtask": "The robot arm is positioned above the word 'BAAI' on the table."
+  },
+  {
+   "start_sec": 1.0,
+   "end_sec": 2.0,
+   "subtask": "The robot arm moves closer to the word 'BAAI'."
+  },
+  {
+   "start_sec": 2.0,
+   "end_sec": 3.0,
+   "subtask": "The robot arm grasps the letter 'B' from the word 'BAAI'."
+  },
+  {
+   "start_sec": 3.0,
+   "end_sec": 4.0,
+   "subtask": "The robot arm moves the letter 'B' to the left side of the word."
+  },
+  {
+   "start_sec": 4.0,
+   "end_sec": 5.0,
+   "subtask": "The robot arm places the letter 'B' on the table, forming 'BBAAI'."
+  },
+  {
+   "start_sec": 5.0,
+   "end_sec": 6.0,
+   "subtask": "The robot arm grasps the letter 'A' from the word 'BAAI'."
+  },
+  {
+   "start_sec": 6.0,
+   "end_sec": 7.0,
+   "subtask": "The robot arm moves the letter 'A' to the left side of the word."
+  },
+  {
+   "start_sec": 7.0,
+   "end_sec": 8.0,
+   "subtask": "The robot arm places the letter 'A' on the table, forming 'BAAAB'."
+  },
+  {
+   "start_sec": 8.0,
+   "end_sec": 9.0,
+   "subtask": "The robot arm grasps the letter 'I' from the word 'BAAI'."
+  },
+  {
+   "start_sec": 9.0,
+   "end_sec": 10.0,
+   "subtask": "The robot arm moves the letter 'I' to the left side of the word."
+  },
+  {
+   "start_sec": 10.0,
+   "end_sec": 11.0,
+   "subtask": "The robot arm places the letter 'I' on the table, forming 'BAAABI'."
+  },
+  {
+   "start_sec": 11.0,
+   "end_sec": 12.0,
+   "subtask": "The robot arm grasps the letter 'N' from the word 'BAAI'."
+  },
+  {
+   "start_sec": 12.0,
+   "end_sec": 13.0,
+   "subtask": "The robot arm moves the letter 'N' to the left side of the word."
+  },
+  {
+   "start_sec": 13.0,
+   "end_sec": 14.0,
+   "subtask": "The robot arm places the letter 'N' on the table, forming 'BAAABIN'."
+  },
+  {
+   "start_sec": 14.0,
+   "end_sec": 15.0,
+   "subtask": "The robot arm grasps the letter 'N' from the word 'BAAABIN'."
+  },
+  {
+   "start_sec": 15.0,
+   "end_sec": 16.0,
+   "subtask": "The robot arm moves the letter 'N' to the left side of the word."
+  },
+  {
+   "start_sec": 16.0,
+   "end_sec": 17.0,
+   "subtask": "The robot arm places the letter 'N' on the table, forming 'BAAABINN'."
+  },
+  {
+   "start_sec": 17.0,
+   "end_sec": 18.0,
+   "subtask": "The robot arm grasps the letter 'N' from the word 'BAAABINN'."
+  },
+  {
+   "start_sec": 18.0,
+   "end_sec": 19.0,
+   "subtask": "The robot arm moves the letter 'N' to the left side of the word."
+  },
+  {
+   "start_sec": 19.0,
+   "end_sec": 20.0,
+   "subtask": "The robot arm places the letter 'N' on the table, forming 'BAAABINNN'."
+  },
+  {
+   "start_sec": 20.0,
+   "end_sec": 21.0,
+   "subtask": "The robot arm grasps the letter 'N' from the word 'BAAABINNN'."
+  },
+  {
+   "start_sec": 21.0,
+   "end_sec": 22.0,
+   "subtask": "The robot arm moves the letter 'N' to the left side of the word."
+  },
+  {
+   "start_sec": 22.0,
+   "end_sec": 23.0,
+   "subtask": "The robot arm places the letter 'N' on the table, forming 'BAAABINNNN'."
+  },
+  {
+   "start_sec": 23.0,
+   "end_sec": 24.0,
+   "subtask": "The robot arm grasps the letter 'N' from the word 'BAAABINNNN'."
+  },
+  {
+   "start_sec": 24.0,
+   "end_sec": 25.0,
+   "subtask": "The robot arm moves the letter 'N' to the left side of the word."
+  },
+  {
+   "start_sec": 25.0,
+   "end_sec": 26.0,
+   "subtask": "The robot arm places the letter 'N' on the table, forming 'BAAABINNNNN'."
+  },
+  {
+   "start_sec": 26.0,
+   "end_sec": 27.0,
+   "subtask": "The robot arm grasps the letter 'N' from the word 'BAAABINNNNN'."
+  },
+  {
+   "start_sec": 27.0,
+   "end_sec": 28.0,
+   "subtask": "The robot arm moves the letter 'N' to the left side of the word."
+  },
+  {
+   "start_sec": 28.0,
+   "end_sec": 29.0,
+   "subtask": "The robot arm places the letter 'N' on the table, forming 'BAAABINNNNNN'."
+  },
+  {
+   "start_sec": 29.0,
+   "end_sec": 30.0,
+   "subtask": "The robot arm grasps the letter 'N' from the word 'BAAABINNNNNN'."
+  },
+  {
+   "start_sec": 30.0,
+   "end_sec": 31.0,
+   "subtask": "The robot arm moves the letter 'N' to the left side of the word."
+  },
+  {
+   "start_sec": 31.0,
+   "end_sec": 32.0,
+   "subtask": "The robot arm places the letter 'N' on the table, forming 'BAAABINNNNNNN'."
+  },
+  {
+   "start_sec": 32.0,
+   "end_sec": 33.0,
+   "subtask": "The robot arm grasps the letter 'N' from the word 'BAAABINNNNNNN'."
+  },
+  {
+   "start_sec": 33.0,
+   "end_sec": 34.0,
+   "subtask": "The robot arm moves the letter 'N' to the left side of the word."
+  },
+  {
+   "start_sec": 34.0,
+   "end_sec": 35.0,
+   "subtask": "The robot arm places the letter 'N' on the table, forming 'BAAABINNNNNNNN'."
+  },
+  {
+   "start_sec": 35.0,
+   "end_sec": 36.0,
+   "subtask": "The robot arm grasps the letter 'N' from the word 'BAAABINNNNNNNN'."
+  },
+  {
+   "start_sec": 36.0,
+   "end_sec": 37.0,
+   "subtask": "The robot arm moves the letter 'N' to the left side of the word."
+  },
+  {
+   "start_sec": 37.0,
+   "end_sec": 38.0,
+   "subtask": "The robot arm places the letter 'N' on the table, forming 'BAAABINNNNNNNNN'."
+  },
+  {
+   "start_sec": 38.0,
+   "end_sec": 39.0,
+   "subtask": "The robot arm grasps the letter 'N' from the word 'BAAABINNNNNNNNN'."
+  },
+  {
+   "start_sec": 39.0,
+   "end_sec": 40.0,
+   "subtask": "The robot arm moves the letter 'N' to the left side of the word."
+  },
+  {
+   "start_sec": 40.0,
+   "end_sec": 41.0,
+   "subtask": "The robot arm places the letter 'N' on the table, forming 'BAAABINNNNNNNNNN'."
+  },
+  {
+   "start_sec": 41.0,
+   "end_sec": 42.0,
+   "subtask": "The robot arm grasps the letter 'N' from the word 'BAAABINNNNNNNNNN'."
+  },
+  {
+   "start_sec": 42.0,
+   "end_sec": 43.0,
+   "subtask": "The robot arm moves the letter 'N' to the left side of the word."
+  },
+  {
+   "start_sec": 43.0,
+   "end_sec": 43.833,
+   "subtask": "The robot arm places the letter 'N' on the table, forming 'BAAABINNNNNNNNNNN'."
+  }
+ ]
+}

@@ -1,0 +1,78 @@
+{
+ "experiment_id": "rest50-hitl-EXP-0002",
+ "protocol": "v3-macrodata",
+ "validation": {
+  "decision": "REJECTED",
+  "gate": {
+   "signal": "human-labeled sample (~10% of the batch, whole instruction groups, fixed before the run)",
+   "rule": "pooled snapped Segment F1@0.75 on the labeled sample strictly improves (ties: raw F1@0.75 strictly improves); valid outputs on every episode",
+   "cost_policy": "no per-episode cost cap; total cost is recorded per recursion (iteration) and per version over the same 50 episodes",
+   "note": "the ~90% held-out episodes are never labeled for agents or the gate; they are measured only for the report"
+  },
+  "checks": {
+   "labeled_sample_snapped_f1_075": {
+    "value": {
+     "delta": 0.0055,
+     "raw_delta": 0.0055
+    },
+    "threshold": "> 0 (ties: raw F1@0.75 > 0)",
+    "pass": true
+   },
+   "valid_outputs": {
+    "value": {
+     "bad_status": {
+      "homer_53": "model_error"
+     },
+     "empty_output_episodes": [
+      "homer_53"
+     ]
+    },
+    "pass": false
+   }
+  },
+  "labeled_sample": {
+   "candidate": {
+    "snapped_f1_075": 0.01612903225806452,
+    "raw_f1_075": 0.016042780748663103,
+    "snapped_f1_05": 0.19892473118279572,
+    "tp_snapped": 3,
+    "n_pred": 269,
+    "n_ref": 105
+   },
+   "incumbent": {
+    "snapped_f1_075": 0.010582010582010581,
+    "raw_f1_075": 0.010554089709762534,
+    "snapped_f1_05": 0.1904761904761905,
+    "tp_snapped": 2,
+    "n_pred": 274,
+    "n_ref": 105
+   }
+  },
+  "label_free": {
+   "candidate_self_score": 0.5388,
+   "incumbent_self_score": 0.4934,
+   "candidate_components": {
+    "telemetry_agreement": 0.4772,
+    "visual_verification": 0.4305,
+    "duration_variability": 0.4284,
+    "temporal_resolution": 0.9684
+   },
+   "incumbent_components": {
+    "telemetry_agreement": 0.3813,
+    "visual_verification": 0.3498,
+    "duration_variability": 0.4064,
+    "temporal_resolution": 0.9766
+   }
+  },
+  "uncertainty": "labeled sample of 5 episodes; held-out measured separately",
+  "candidate_usage": {
+   "calls": 136,
+   "cache_hits": 25,
+   "prompt_tokens": 391464,
+   "completion_tokens": 72770,
+   "cost_usd": 0.250608,
+   "model_latency_s": 465.46
+  },
+  "topology_change": true
+ }
+}

@@ -1,0 +1,46 @@
+{
+ "episode_id": "homer_56",
+ "version_id": "rest50-hitl-EXP-0001",
+ "segments": [
+  {
+   "start_sec": 0.0,
+   "end_sec": 1.0,
+   "subtask": "The cloth is on the table."
+  },
+  {
+   "start_sec": 1.0,
+   "end_sec": 4.0,
+   "subtask": "The person picks up the cloth."
+  },
+  {
+   "start_sec": 4.0,
+   "end_sec": 15.0,
+   "subtask": "The person unfolds the cloth."
+  },
+  {
+   "start_sec": 15.0,
+   "end_sec": 20.0,
+   "subtask": "The person folds the cloth."
+  },
+  {
+   "start_sec": 20.0,
+   "end_sec": 25.0,
+   "subtask": "The person folds the cloth."
+  },
+  {
+   "start_sec": 25.0,
+   "end_sec": 30.0,
+   "subtask": "The person folds the cloth."
+  },
+  {
+   "start_sec": 30.0,
+   "end_sec": 45.0,
+   "subtask": "The person folds the cloth."
+  },
+  {
+   "start_sec": 45.0,
+   "end_sec": 55.167,
+   "subtask": "The person rolls the cloth."
+  }
+ ]
+}

@@ -1,0 +1,86 @@
+{
+ "episode_id": "galaxea_007",
+ "version_id": "rest50-hitl-EXP-0002",
+ "segments": [
+  {
+   "start_sec": 0.0,
+   "end_sec": 1.0,
+   "subtask": "The robot arm moves towards the green mat where a white food item and a blue tool are located."
+  },
+  {
+   "start_sec": 1.0,
+   "end_sec": 2.5,
+   "subtask": "The robot arm grasps the white food item with the right gripper."
+  },
+  {
+   "start_sec": 2.5,
+   "end_sec": 5.0,
+   "subtask": "The robot arm lifts the food item and moves it towards the right basket."
+  },
+  {
+   "start_sec": 5.0,
+   "end_sec": 7.0,
+   "subtask": "The robot arm places the food item into the right basket."
+  },
+  {
+   "start_sec": 7.0,
+   "end_sec": 9.0,
+   "subtask": "The robot arm moves back to the green mat to pick up the blue tool."
+  },
+  {
+   "start_sec": 9.0,
+   "end_sec": 11.0,
+   "subtask": "The robot arm grasps the blue tool with the right gripper."
+  },
+  {
+   "start_sec": 11.0,
+   "end_sec": 13.0,
+   "subtask": "The robot arm lifts the blue tool and moves it towards the right basket."
+  },
+  {
+   "start_sec": 13.0,
+   "end_sec": 15.0,
+   "subtask": "The robot arm places the blue tool into the right basket."
+  },
+  {
+   "start_sec": 15.0,
+   "end_sec": 17.0,
+   "subtask": "The robot arm moves to the left side of the green mat where a black container and a white item are located."
+  },
+  {
+   "start_sec": 17.0,
+   "end_sec": 19.0,
+   "subtask": "The robot arm grasps the white item with the left gripper."
+  },
+  {
+   "start_sec": 19.0,
+   "end_sec": 21.0,
+   "subtask": "The robot arm lifts the white item and moves it towards the left basket."
+  },
+  {
+   "start_sec": 21.0,
+   "end_sec": 23.0,
+   "subtask": "The robot arm places the white item into the left basket."
+  },
+  {
+   "start_sec": 23.0,
+   "end_sec": 25.0,
+   "subtask": "The robot arm moves back to the green mat to pick up the black container."
+  },
+  {
+   "start_sec": 25.0,
+   "end_sec": 27.0,
+   "subtask": "The robot arm grasps the black container with the left gripper."
+  },
+  {
+   "start_sec": 27.0,
+   "end_sec": 29.0,
+   "subtask": "The robot arm lifts the black container and moves it towards the left basket."
+  },
+  {
+   "start_sec": 29.0,
+   "end_sec": 35.533,
+   "subtask": "The robot arm places the black container into the left basket."
+  }
+ ]
+}

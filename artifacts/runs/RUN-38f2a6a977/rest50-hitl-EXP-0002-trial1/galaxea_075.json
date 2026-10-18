@@ -1,0 +1,36 @@
+{
+ "episode_id": "galaxea_075",
+ "version_id": "rest50-hitl-EXP-0002-trial1",
+ "segments": [
+  {
+   "start_sec": 0.0,
+   "end_sec": 1.0,
+   "subtask": "approach drawer"
+  },
+  {
+   "start_sec": 1.0,
+   "end_sec": 2.0,
+   "subtask": "grasp drawer handle"
+  },
+  {
+   "start_sec": 2.0,
+   "end_sec": 4.5,
+   "subtask": "open drawer"
+  },
+  {
+   "start_sec": 4.5,
+   "end_sec": 10.0,
+   "subtask": "reposition gripper"
+  },
+  {
+   "start_sec": 10.0,
+   "end_sec": 12.0,
+   "subtask": "close drawer"
+  },
+  {
+   "start_sec": 12.0,
+   "end_sec": 13.4,
+   "subtask": "release drawer"
+  }
+ ]
+}

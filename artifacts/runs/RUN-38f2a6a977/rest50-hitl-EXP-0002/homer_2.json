@@ -1,0 +1,396 @@
+{
+ "episode_id": "homer_2",
+ "version_id": "rest50-hitl-EXP-0002",
+ "segments": [
+  {
+   "start_sec": 0.0,
+   "end_sec": 1.0,
+   "subtask": "The person is holding a sponge in their right hand and a knife in their left hand."
+  },
+  {
+   "start_sec": 1.0,
+   "end_sec": 3.0,
+   "subtask": "The person is holding a sponge in their right hand and a knife in their left hand."
+  },
+  {
+   "start_sec": 3.0,
+   "end_sec": 5.0,
+   "subtask": "The person is holding a sponge in their right hand and a knife in their left hand."
+  },
+  {
+   "start_sec": 5.0,
+   "end_sec": 7.0,
+   "subtask": "The person is holding a sponge in their right hand and a knife in their left hand."
+  },
+  {
+   "start_sec": 7.0,
+   "end_sec": 9.0,
+   "subtask": "The person is holding a sponge in their right hand and a knife in their left hand."
+  },
+  {
+   "start_sec": 9.0,
+   "end_sec": 11.0,
+   "subtask": "The person is holding a sponge in their right hand and a knife in their left hand."
+  },
+  {
+   "start_sec": 11.0,
+   "end_sec": 13.0,
+   "subtask": "The person is holding a sponge in their right hand and a knife in their left hand."
+  },
+  {
+   "start_sec": 13.0,
+   "end_sec": 15.0,
+   "subtask": "The person is holding a sponge in their right hand and a knife in their left hand."
+  },
+  {
+   "start_sec": 15.0,
+   "end_sec": 17.0,
+   "subtask": "The person is holding a sponge in their right hand and a knife in their left hand."
+  },
+  {
+   "start_sec": 17.0,
+   "end_sec": 19.0,
+   "subtask": "The person is holding a sponge in their right hand and a knife in their left hand."
+  },
+  {
+   "start_sec": 19.0,
+   "end_sec": 21.0,
+   "subtask": "The person is holding a sponge in their right hand and a knife in their left hand."
+  },
+  {
+   "start_sec": 21.0,
+   "end_sec": 23.0,
+   "subtask": "The person is holding a sponge in their right hand and a knife in their left hand."
+  },
+  {
+   "start_sec": 23.0,
+   "end_sec": 25.0,
+   "subtask": "The person is holding a sponge in their right hand and a knife in their left hand."
+  },
+  {
+   "start_sec": 25.0,
+   "end_sec": 27.0,
+   "subtask": "The person is holding a sponge in their right hand and a knife in their left hand."
+  },
+  {
+   "start_sec": 27.0,
+   "end_sec": 29.0,
+   "subtask": "The person is holding a sponge in their right hand and a knife in their left hand."
+  },
+  {
+   "start_sec": 29.0,
+   "end_sec": 31.0,
+   "subtask": "The person is holding a sponge in their right hand and a knife in their left hand."
+  },
+  {
+   "start_sec": 31.0,
+   "end_sec": 33.0,
+   "subtask": "The person is holding a sponge in their right hand and a knife in their left hand."
+  },
+  {
+   "start_sec": 33.0,
+   "end_sec": 35.0,
+   "subtask": "The person is holding a sponge in their right hand and a knife in their left hand."
+  },
+  {
+   "start_sec": 35.0,
+   "end_sec": 37.0,
+   "subtask": "The person is holding a sponge in their right hand and a knife in their left hand."
+  },
+  {
+   "start_sec": 37.0,
+   "end_sec": 39.0,
+   "subtask": "The person is holding a sponge in their right hand and a knife in their left hand."
+  },
+  {
+   "start_sec": 39.0,
+   "end_sec": 41.0,
+   "subtask": "The person is holding a sponge in their right hand and a knife in their left hand."
+  },
+  {
+   "start_sec": 41.0,
+   "end_sec": 43.0,
+   "subtask": "The person is holding a sponge in their right hand and a knife in their left hand."
+  },
+  {
+   "start_sec": 43.0,
+   "end_sec": 45.0,
+   "subtask": "The person is holding a sponge in their right hand and a knife in their left hand."
+  },
+  {
+   "start_sec": 45.0,
+   "end_sec": 47.0,
+   "subtask": "The person is holding a sponge in their right hand and a knife in their left hand."
+  },
+  {
+   "start_sec": 47.0,
+   "end_sec": 49.0,
+   "subtask": "The person is holding a sponge in their right hand and a knife in their left hand."
+  },
+  {
+   "start_sec": 49.0,
+   "end_sec": 51.0,
+   "subtask": "The person is holding a sponge in their right hand and a knife in their left hand."
+  },
+  {
+   "start_sec": 51.0,
+   "end_sec": 53.0,
+   "subtask": "The person is holding a sponge in their right hand and a knife in their left hand."
+  },
+  {
+   "start_sec": 53.0,
+   "end_sec": 55.0,
+   "subtask": "The person is holding a sponge in their right hand and a knife in their left hand."
+  },
+  {
+   "start_sec": 55.0,
+   "end_sec": 57.0,
+   "subtask": "The person is holding a sponge in their right hand and a knife in their left hand."
+  },
+  {
+   "start_sec": 57.0,
+   "end_sec": 59.0,
+   "subtask": "The person is holding a sponge in their right hand and a knife in their left hand."
+  },
+  {
+   "start_sec": 59.0,
+   "end_sec": 61.0,
+   "subtask": "The person is holding a sponge in their right hand and a knife in their left hand."
+  },
+  {
+   "start_sec": 61.0,
+   "end_sec": 63.0,
+   "subtask": "The person is holding a sponge in their right hand and a knife in their left hand."
+  },
+  {
+   "start_sec": 63.0,
+   "end_sec": 65.0,
+   "subtask": "The person is holding a sponge in their right hand and a knife in their left hand."
+  },
+  {
+   "start_sec": 65.0,
+   "end_sec": 67.0,
+   "subtask": "The person is holding a sponge in their right hand and a knife in their left hand."
+  },
+  {
+   "start_sec": 67.0,
+   "end_sec": 69.0,
+   "subtask": "The person is holding a sponge in their right hand and a knife in their left hand."
+  },
+  {
+   "start_sec": 69.0,
+   "end_sec": 71.0,
+   "subtask": "The person is holding a sponge in their right hand and a knife in their left hand."
+  },
+  {
+   "start_sec": 71.0,
+   "end_sec": 73.0,
+   "subtask": "The person is holding a sponge in their right hand and a knife in their left hand."
+  },
+  {
+   "start_sec": 73.0,
+   "end_sec": 75.0,
+   "subtask": "The person is holding a sponge in their right hand and a knife in their left hand."
+  },
+  {
+   "start_sec": 75.0,
+   "end_sec": 77.0,
+   "subtask": "The person is holding a sponge in their right hand and a knife in their left hand."
+  },
+  {
+   "start_sec": 77.0,
+   "end_sec": 79.0,
+   "subtask": "The person is holding a sponge in their right hand and a knife in their left hand."
+  },
+  {
+   "start_sec": 79.0,
+   "end_sec": 81.0,
+   "subtask": "The person is holding a sponge in their right hand and a knife in their left hand."
+  },
+  {
+   "start_sec": 81.0,
+   "end_sec": 83.0,
+   "subtask": "The person is holding a sponge in their right hand and a knife in their left hand."
+  },
+  {
+   "start_sec": 83.0,
+   "end_sec": 85.0,
+   "subtask": "The person is holding a sponge in their right hand and a knife in their left hand."
+  },
+  {
+   "start_sec": 85.0,
+   "end_sec": 87.0,
+   "subtask": "The person is holding a sponge in their right hand and a knife in their left hand."
+  },
+  {
+   "start_sec": 87.0,
+   "end_sec": 89.0,
+   "subtask": "The person is holding a sponge in their right hand and a knife in their left hand."
+  },
+  {
+   "start_sec": 89.0,
+   "end_sec": 91.0,
+   "subtask": "The person is holding a sponge in their right hand and a knife in their left hand."
+  },
+  {
+   "start_sec": 91.0,
+   "end_sec": 93.0,
+   "subtask": "The person is holding a sponge in their right hand and a knife in their left hand."
+  },
+  {
+   "start_sec": 93.0,
+   "end_sec": 95.0,
+   "subtask": "The person is holding a sponge in their right hand and a knife in their left hand."
+  },
+  {
+   "start_sec": 95.0,
+   "end_sec": 97.0,
+   "subtask": "The person is holding a sponge in their right hand and a knife in their left hand."
+  },
+  {
+   "start_sec": 97.0,
+   "end_sec": 99.0,
+   "subtask": "The person is holding a sponge in their right hand and a knife in their left hand."
+  },
+  {
+   "start_sec": 99.0,
+   "end_sec": 101.0,
+   "subtask": "The person is holding a sponge in their right hand and a knife in their left hand."
+  },
+  {
+   "start_sec": 101.0,
+   "end_sec": 103.0,
+   "subtask": "The person is holding a sponge in their right hand and a knife in their left hand."
+  },
+  {
+   "start_sec": 103.0,
+   "end_sec": 105.0,
+   "subtask": "The person is holding a sponge in their right hand and a knife in their left hand."
+  },
+  {
+   "start_sec": 105.0,
+   "end_sec": 107.0,
+   "subtask": "The person is holding a sponge in their right hand and a knife in their left hand."
+  },
+  {
+   "start_sec": 107.0,
+   "end_sec": 109.0,
+   "subtask": "The person is holding a sponge in their right hand and a knife in their left hand."
+  },
+  {
+   "start_sec": 109.0,
+   "end_sec": 111.0,
+   "subtask": "The person is holding a sponge in their right hand and a knife in their left hand."
+  },
+  {
+   "start_sec": 111.0,
+   "end_sec": 113.0,
+   "subtask": "The person is holding a sponge in their right hand and a knife in their left hand."
+  },
+  {
+   "start_sec": 113.0,
+   "end_sec": 115.0,
+   "subtask": "The person is holding a sponge in their right hand and a knife in their left hand."
+  },
+  {
+   "start_sec": 115.0,
+   "end_sec": 117.0,
+   "subtask": "The person is holding a sponge in their right hand and a knife in their left hand."
+  },
+  {
+   "start_sec": 117.0,
+   "end_sec": 119.0,
+   "subtask": "The person is holding a sponge in their right hand and a knife in their left hand."
+  },
+  {
+   "start_sec": 119.0,
+   "end_sec": 121.0,
+   "subtask": "The person is holding a sponge in their right hand and a knife in their left hand."
+  },
+  {
+   "start_sec": 121.0,
+   "end_sec": 123.0,
+   "subtask": "The person is holding a sponge in their right hand and a knife in their left hand."
+  },
+  {
+   "start_sec": 123.0,
+   "end_sec": 125.0,
+   "subtask": "The person is holding a sponge in their right hand and a knife in their left hand."
+  },
+  {
+   "start_sec": 125.0,
+   "end_sec": 127.0,
+   "subtask": "The person is holding a sponge in their right hand and a knife in their left hand."
+  },
+  {
+   "start_sec": 127.0,
+   "end_sec": 129.0,
+   "subtask": "The person is holding a sponge in their right hand and a knife in their left hand."
+  },
+  {
+   "start_sec": 129.0,
+   "end_sec": 131.0,
+   "subtask": "The person is holding a sponge in their right hand and a knife in their left hand."
+  },
+  {
+   "start_sec": 131.0,
+   "end_sec": 133.0,
+   "subtask": "The person is holding a sponge in their right hand and a knife in their left hand."
+  },
+  {
+   "start_sec": 133.0,
+   "end_sec": 135.0,
+   "subtask": "The person is holding a sponge in their right hand and a knife in their left hand."
+  },
+  {
+   "start_sec": 135.0,
+   "end_sec": 137.0,
+   "subtask": "The person is holding a sponge in their right hand and a knife in their left hand."
+  },
+  {
+   "start_sec": 137.0,
+   "end_sec": 139.0,
+   "subtask": "The person is holding a sponge in their right hand and a knife in their left hand."
+  },
+  {
+   "start_sec": 139.0,
+   "end_sec": 141.0,
+   "subtask": "The person is holding a sponge in their right hand and a knife in their left hand."
+  },
+  {
+   "start_sec": 141.0,
+   "end_sec": 143.0,
+   "subtask": "The person is holding a sponge in their right hand and a knife in their left hand."
+  },
+  {
+   "start_sec": 143.0,
+   "end_sec": 145.0,
+   "subtask": "The person is holding a sponge in their right hand and a knife in their left hand."
+  },
+  {
+   "start_sec": 145.0,
+   "end_sec": 147.0,
+   "subtask": "The person is holding a sponge in their right hand and a knife in their left hand."
+  },
+  {
+   "start_sec": 147.0,
+   "end_sec": 149.0,
+   "subtask": "The person is holding a sponge in their right hand and a knife in their left hand."
+  },
+  {
+   "start_sec": 149.0,
+   "end_sec": 151.0,
+   "subtask": "The person is holding a sponge in their right hand and a knife in their left hand."
+  },
+  {
+   "start_sec": 151.0,
+   "end_sec": 153.0,
+   "subtask": "The person is holding a sponge in their right hand and a knife in their left hand."
+  },
+  {
+   "start_sec": 153.0,
+   "end_sec": 154.2,
+   "subtask": "The person is holding a sponge in their right hand and a knife in their left hand."
+  }
+ ]
+}

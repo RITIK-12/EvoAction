@@ -1,0 +1,26 @@
+{
+ "episode_id": "galaxea_069",
+ "version_id": "rest50-hitl-EXP-0002",
+ "segments": [
+  {
+   "start_sec": 0.0,
+   "end_sec": 2.5,
+   "subtask": "Approach the banana on the white box"
+  },
+  {
+   "start_sec": 2.5,
+   "end_sec": 4.5,
+   "subtask": "Grasp the banana with the gripper"
+  },
+  {
+   "start_sec": 4.5,
+   "end_sec": 6.5,
+   "subtask": "Lift the banana and move it to the white box"
+  },
+  {
+   "start_sec": 6.5,
+   "end_sec": 8.167,
+   "subtask": "Place the banana on the white box"
+  }
+ ]
+}

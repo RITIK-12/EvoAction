@@ -1,0 +1,36 @@
+{
+ "episode_id": "galaxea_002",
+ "version_id": "rest50-hitl-EXP-0001",
+ "segments": [
+  {
+   "start_sec": 0.0,
+   "end_sec": 1.0,
+   "subtask": "The robot arm is positioned above the scattered letters on the table, preparing to begin the rearrangement task."
+  },
+  {
+   "start_sec": 1.0,
+   "end_sec": 10.0,
+   "subtask": "The robot arm moves into position and begins grasping the letter 'B' from the scattered arrangement on the table."
+  },
+  {
+   "start_sec": 10.0,
+   "end_sec": 15.0,
+   "subtask": "The robot arm places the letter 'B' in the correct position to start forming the word 'BRAIN'."
+  },
+  {
+   "start_sec": 15.0,
+   "end_sec": 25.0,
+   "subtask": "The robot arm grasps the letter 'R' and places it next to the 'B' to continue forming the word 'BRAIN'."
+  },
+  {
+   "start_sec": 25.0,
+   "end_sec": 35.0,
+   "subtask": "The robot arm grasps the letter 'A' and places it in the correct position to continue forming the word 'BRAIN'."
+  },
+  {
+   "start_sec": 35.0,
+   "end_sec": 43.833,
+   "subtask": "The robot arm grasps the letter 'I' and places it in the correct position to continue forming the word 'BRAIN'."
+  }
+ ]
+}

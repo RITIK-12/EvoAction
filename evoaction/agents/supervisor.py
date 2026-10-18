@@ -295,7 +295,7 @@ Root-cause statistics on the human-labeled sample: {json.dumps(analysis['root_ca
 Structure of the incumbent's predictions on ALL episodes (label-free): {json.dumps(analysis['structure_all_episodes'])}
 Labeled sample, human references vs incumbent predictions: {compact(analysis['labeled_sample']['episodes'], 9000)}
 Previous experiments in this lineage: {compact(history, 2500) if history else 'none'}
-Your earlier attempts in this recursion and their labeled-sample results: {compact(trials, 7000) if trials else 'none yet'}
+Your earlier attempts in this recursion and their labeled-sample results: {compact(trials, 14000) if trials else 'none yet'}
 
 Return JSON: {{"root_causes": [{{"cause": str, "evidence": str}}], "hypothesis": str, "candidate_patch": <WorkflowPatch>, "expected_outcome": str}}"""
     res = _chat(client, PROMPT_ENGINEER_SYSTEM, user, purpose)

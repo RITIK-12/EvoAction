@@ -7,6 +7,7 @@ State keys: episode, sheets, segments, hints, evidence, export.
 from __future__ import annotations
 
 import json
+import re
 import math
 from dataclasses import dataclass, field
 from pathlib import Path
@@ -15,7 +16,7 @@ from typing import Any, Callable
 
 import numpy as np
 
-from evoaction.clients.crusoe import ROLE_VISION, BudgetExceeded, CrusoeClient, ModelCallError, image_part
+from evoaction.clients.crusoe import ROLE_VISION, BudgetExceeded, ChatResult, CrusoeClient, ModelCallError, image_part
 from evoaction.media.contact_sheets import build_sheets, uniform_timestamps
 from evoaction.schemas import (
     AnnotateParams, ExportParams, HintParams, InspectParams, MergeParams, RefineParams, SampleParams, Segment,
@@ -120,9 +121,36 @@ def _vision_json(ctx: EpisodeContext, content: list[dict[str, Any]], purpose: st
                                    cache_scope=f"{purpose}|{json.dumps(params, sort_keys=True)}", retries=0, **kw), False
         except ModelCallError:
             pass  # recovery of the same pass: not counted against the version's call budget
-    res = ctx.client.chat(ROLE_VISION, msgs, extra_body={"chat_template_kwargs": {"enable_thinking": False}},
-                          cache_scope=f"{purpose}|{json.dumps({**params, 'thinking': False}, sort_keys=True)}", **kw)
-    return res, bool(p.thinking)
+    scope = f"{purpose}|{json.dumps({**params, 'thinking': False}, sort_keys=True)}"
+    try:
+        res = ctx.client.chat(ROLE_VISION, msgs, extra_body={"chat_template_kwargs": {"enable_thinking": False}}, cache_scope=scope, **kw)
+        return res, bool(p.thinking)
+    except ModelCallError as e:
+        # A runaway reply (repeating until the token cap) leaves unterminated JSON. Keep the complete segments it already
+        # wrote; if there are none, retry once at a higher temperature to break the loop.
+        salvaged = _salvage_segments(e.raw_text) if purpose == "initial_annotate" else []
+        if salvaged:
+            return ChatResult(text=e.raw_text, model=ctx.client.vision_model, data={"segments": salvaged}, call_id="salvaged"), "salvaged_truncated"
+        kw["temperature"] = 0.6
+        res = ctx.client.chat(ROLE_VISION, msgs, extra_body={"chat_template_kwargs": {"enable_thinking": False}},
+                              cache_scope=scope + "|t0.6", retries=0, **kw)
+        return res, "retried_t0.6"
+
+
+def _salvage_segments(text: str) -> list[dict[str, Any]]:
+    """Complete {start_sec, end_sec, ...} objects from a truncated reply, de-duplicated by (start, end)."""
+    out, seen = [], set()
+    for m in re.finditer(r"\{[^{}]*\}", text or ""):
+        try:
+            obj = json.loads(m.group(0))
+        except json.JSONDecodeError:
+            continue
+        if isinstance(obj, dict) and "start_sec" in obj and "end_sec" in obj:
+            key = (obj["start_sec"], obj["end_sec"])
+            if key not in seen:
+                seen.add(key)
+                out.append(obj)
+    return out
 
 
 def op_initial_annotate(ctx: EpisodeContext, state: dict, params: dict) -> tuple[dict, dict]:

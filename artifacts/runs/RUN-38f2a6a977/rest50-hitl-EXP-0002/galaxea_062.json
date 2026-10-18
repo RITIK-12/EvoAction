@@ -1,0 +1,26 @@
+{
+ "episode_id": "galaxea_062",
+ "version_id": "rest50-hitl-EXP-0002",
+ "segments": [
+  {
+   "start_sec": 0.0,
+   "end_sec": 3.0,
+   "subtask": "Approach and grasp the orange object"
+  },
+  {
+   "start_sec": 3.0,
+   "end_sec": 6.0,
+   "subtask": "Lift and move the orange object to the gray dish"
+  },
+  {
+   "start_sec": 6.0,
+   "end_sec": 8.0,
+   "subtask": "Place the orange object on the gray dish"
+  },
+  {
+   "start_sec": 8.0,
+   "end_sec": 10.667,
+   "subtask": "Retract the gripper and return to initial position"
+  }
+ ]
+}

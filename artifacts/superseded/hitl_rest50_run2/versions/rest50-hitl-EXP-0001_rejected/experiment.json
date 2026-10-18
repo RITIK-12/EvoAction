@@ -1,0 +1,562 @@
+{
+ "hypothesis": "Increasing the temporal richness of each contact sheet (more frames per sheet), adding a lightweight refinement pass that uses telemetry hints and close\u2011up windows to adjust boundaries, and rewriting the prompt to strongly discourage sub\u2011second segments while encouraging longer, state\u2011change\u2011aligned segments will reduce over\u2011segmentation, raise median segment length toward the reference distribution, and improve Segment F1 at IoU\u22650.75.",
+ "candidate_patch": {
+  "insert_nodes": [
+   {
+    "node": {
+     "id": "hints",
+     "operator": "state_hint_detection",
+     "depends_on": [
+      "sample"
+     ],
+     "params": {
+      "signals": [
+       "gripper",
+       "eef_pause"
+      ],
+      "min_gap_sec": 0.8,
+      "pause_speed_quantile": 0.15,
+      "min_pause_sec": 0.3
+     },
+     "when": "has_telemetry"
+    },
+    "rewire_dependents_of": null
+   },
+   {
+    "node": {
+     "id": "inspect",
+     "operator": "inspect_transition_windows",
+     "depends_on": [
+      "annotate",
+      "hints"
+     ],
+     "params": {
+      "select": "all_boundaries",
+      "window_sec": 2.0,
+      "local_hz": 4.0,
+      "max_windows": 8,
+      "include_unmatched_hints": false,
+      "tile_px": 224,
+      "confidence_threshold": 0.7
+     },
+     "when": "always"
+    },
+    "rewire_dependents_of": null
+   },
+   {
+    "node": {
+     "id": "refine",
+     "operator": "refine_intervals",
+     "depends_on": [
+      "inspect"
+     ],
+     "params": {
+      "prompt": "refine.md",
+      "thinking": false,
+      "max_tokens": 16384,
+      "temperature": 0.2,
+      "allow_insert": true,
+      "allow_delete": true
+     },
+     "when": "always"
+    },
+    "rewire_dependents_of": null
+   },
+   {
+    "node": {
+     "id": "merge",
+     "operator": "merge_filter_segments",
+     "depends_on": [
+      "refine"
+     ],
+     "params": {
+      "min_duration_sec": 0.8,
+      "max_gap_sec": 1.5,
+      "tile_full_episode": true,
+      "merge_same_label": false
+     },
+     "when": "always"
+    },
+    "rewire_dependents_of": null
+   }
+  ],
+  "set_params": {
+   "sample": {
+    "frames_per_sheet": 30
+   }
+  },
+  "set_depends_on": {
+   "validate_export": [
+    "merge"
+   ]
+  },
+  "prompt_updates": {
+   "prompt.md": "Reconstruct the sequence of manipulation events in this robot video from the timestamped contact sheets.\n\nReturn only JSON with this shape:\n{\"segments\":[{\"start_sec\":0.0,\"end_sec\":1.0,\"subtask\":\"short action description\"}]}\n\nRules:\n- Segment only completed robot manipulation events, not every visible movement.\n- Good boundaries happen when a held object changes, an object is placed or released, a tool starts/stops changing a surface, a container/door/lid opens or closes, or contents move between containers.\n- Do not split approach, grasp adjustment, small repositioning, and retreat unless the world state changes.\n- Do not merge separate pick/place/open/close/pour/wipe events when they complete different states.\n- Most segments should be 2-15 seconds. Shorter segments are allowed only for fast pick, place, open, close, or release events that are clearly instantaneous (<1.5 sec).\n- Do not output segments shorter than 1.0 second unless the action is a definitive instantaneous release or grasp.\n- Use the visible timestamps for start_sec and end_sec.\n- Ignore label wording quality; prioritize temporally correct boundaries.\n- Prefer fewer, longer segments that correctly capture state changes over many short segments.\n- If uncertain, merge adjacent short segments into a longer segment that spans the whole manipulation.\n\nEpisode instruction: $instruction"
+  }
+ },
+ "root_causes": [
+  {
+   "cause": "Over\u2011segmentation: the model outputs mostly 1\u2011second chunks",
+   "evidence": "predicted_segments_le_2s_fraction = 0.993 vs reference 0.429; predicted_segments_exactly_1s_fraction = 0.945; median predicted segment = 1.0\u202fs while median reference segment = 2.37\u202fs"
+  },
+  {
+   "cause": "Prompt example anchors to a 1\u2011second segment",
+   "evidence": "The incumbent prompt\u2019s example JSON uses {\"start_sec\":0.0,\"end_sec\":1.0,...}, which likely biases the model toward 1\u2011second outputs"
+  },
+  {
+   "cause": "Low temporal detail inside each contact sheet leads to uniform splitting",
+   "evidence": "Each sheet covers 10\u202fs (20 frames @ 2\u202fHz) but the model yields ~4\u20115 segments per sheet (23.64 predicted segments / median 5.0 sheets \u2248 4.7), indicating a tendency to divide each sheet into equal short pieces rather than detecting real state changes"
+  }
+ ],
+ "expected_outcome": "The refined workflow will produce fewer, longer segments that better align with manipulation state changes. Median predicted segment length should rise from ~1.0\u202fs toward the reference median (~2.4\u202fs), the fraction of \u22642\u2011second segments should drop well below 0.5, and the snapped F1 at IoU\u22650.75 should increase from the current ~0.01 to a value substantially higher (target >0.2), indicating many more correctly bounded segments.",
+ "selected_round": 1,
+ "evidence_ids": [],
+ "incumbent_labeled_scores": {
+  "snapped_f1_075": 0.010582010582010581,
+  "raw_f1_075": 0.010554089709762534,
+  "snapped_f1_05": 0.1904761904761905,
+  "tp_snapped": 2,
+  "n_pred": 274,
+  "n_ref": 105
+ },
+ "trials": [
+  {
+   "round": 1,
+   "hypothesis": "Increasing the temporal richness of each contact sheet (more frames per sheet), adding a lightweight refinement pass that uses telemetry hints and close\u2011up windows to adjust boundaries, and rewriting the prompt to strongly discourage sub\u2011second segments while encouraging longer, state\u2011change\u2011aligned segments will reduce over\u2011segmentation, raise median segment length toward the reference distribution, and improve Segment F1 at IoU\u22650.75.",
+   "root_causes": [
+    {
+     "cause": "Over\u2011segmentation: the model outputs mostly 1\u2011second chunks",
+     "evidence": "predicted_segments_le_2s_fraction = 0.993 vs reference 0.429; predicted_segments_exactly_1s_fraction = 0.945; median predicted segment = 1.0\u202fs while median reference segment = 2.37\u202fs"
+    },
+    {
+     "cause": "Prompt example anchors to a 1\u2011second segment",
+     "evidence": "The incumbent prompt\u2019s example JSON uses {\"start_sec\":0.0,\"end_sec\":1.0,...}, which likely biases the model toward 1\u2011second outputs"
+    },
+    {
+     "cause": "Low temporal detail inside each contact sheet leads to uniform splitting",
+     "evidence": "Each sheet covers 10\u202fs (20 frames @ 2\u202fHz) but the model yields ~4\u20115 segments per sheet (23.64 predicted segments / median 5.0 sheets \u2248 4.7), indicating a tendency to divide each sheet into equal short pieces rather than detecting real state changes"
+    }
+   ],
+   "patch": {
+    "insert_nodes": [
+     {
+      "node": {
+       "id": "hints",
+       "operator": "state_hint_detection",
+       "depends_on": [
+        "sample"
+       ],
+       "params": {
+        "signals": [
+         "gripper",
+         "eef_pause"
+        ],
+        "min_gap_sec": 0.8,
+        "pause_speed_quantile": 0.15,
+        "min_pause_sec": 0.3
+       },
+       "when": "has_telemetry"
+      },
+      "rewire_dependents_of": null
+     },
+     {
+      "node": {
+       "id": "inspect",
+       "operator": "inspect_transition_windows",
+       "depends_on": [
+        "annotate",
+        "hints"
+       ],
+       "params": {
+        "select": "all_boundaries",
+        "window_sec": 2.0,
+        "local_hz": 4.0,
+        "max_windows": 8,
+        "include_unmatched_hints": false,
+        "tile_px": 224,
+        "confidence_threshold": 0.7
+       },
+       "when": "always"
+      },
+      "rewire_dependents_of": null
+     },
+     {
+      "node": {
+       "id": "refine",
+       "operator": "refine_intervals",
+       "depends_on": [
+        "inspect"
+       ],
+       "params": {
+        "prompt": "refine.md",
+        "thinking": false,
+        "max_tokens": 16384,
+        "temperature": 0.2,
+        "allow_insert": true,
+        "allow_delete": true
+       },
+       "when": "always"
+      },
+      "rewire_dependents_of": null
+     },
+     {
+      "node": {
+       "id": "merge",
+       "operator": "merge_filter_segments",
+       "depends_on": [
+        "refine"
+       ],
+       "params": {
+        "min_duration_sec": 0.8,
+        "max_gap_sec": 1.5,
+        "tile_full_episode": true,
+        "merge_same_label": false
+       },
+       "when": "always"
+      },
+      "rewire_dependents_of": null
+     }
+    ],
+    "set_params": {
+     "sample": {
+      "frames_per_sheet": 30
+     }
+    },
+    "set_depends_on": {
+     "validate_export": [
+      "merge"
+     ]
+    },
+    "prompt_updates": {
+     "prompt.md": "Reconstruct the sequence of manipulation events in this robot video from the timestamped contact sheets.\n\nReturn only JSON with this shape:\n{\"segments\":[{\"start_sec\":0.0,\"end_sec\":1.0,\"subtask\":\"short action description\"}]}\n\nRules:\n- Segment only completed robot manipulation events, not every visible movement.\n- Good boundaries happen when a held object changes, an object is placed or released, a tool starts/stops changing a surface, a container/door/lid opens or closes, or contents move between containers.\n- Do not split approach, grasp adjustment, small repositioning, and retreat unless the world state changes.\n- Do not merge separate pick/place/open/close/pour/wipe events when they complete different states.\n- Most segments should be 2-15 seconds. Shorter segments are allowed only for fast pick, place, open, close, or release events that are clearly instantaneous (<1.5 sec).\n- Do not output segments shorter than 1.0 second unless the action is a definitive instantaneous release or grasp.\n- Use the visible timestamps for start_sec and end_sec.\n- Ignore label wording quality; prioritize temporally correct boundaries.\n- Prefer fewer, longer segments that correctly capture state changes over many short segments.\n- If uncertain, merge adjacent short segments into a longer segment that spans the whole manipulation.\n\nEpisode instruction: $instruction"
+    }
+   },
+   "labeled_scores": {
+    "snapped_f1_075": 0.021447721179624662,
+    "raw_f1_075": 0.0213903743315508,
+    "snapped_f1_05": 0.20911528150134048,
+    "tp_snapped": 4,
+    "n_pred": 269,
+    "n_ref": 105
+   },
+   "failed_labeled_episodes": [],
+   "root_cause_stats_labeled": {
+    "predicted_vs_reference_segments": [
+     269,
+     105
+    ],
+    "median_predicted_segment_sec": 1.0,
+    "median_reference_segment_sec": 2.37,
+    "predicted_segments_le_2s_fraction": 0.981,
+    "reference_segments_le_2s_fraction": 0.429,
+    "predicted_segments_exactly_1s_fraction": 0.941,
+    "median_coverage_last_predicted_end_over_reference_end": 1.15,
+    "episodes_with_coverage_below_50pct": 0,
+    "references_matched_at_iou075": 4,
+    "mean_best_iou_per_reference": 0.449,
+    "references_with_best_iou_below_0.5": 66,
+    "pooled_scores": {
+     "snapped_f1_075": 0.021447721179624662,
+     "raw_f1_075": 0.0213903743315508,
+     "snapped_f1_05": 0.20911528150134048,
+     "tp_snapped": 4,
+     "n_pred": 269,
+     "n_ref": 105
+    }
+   }
+  },
+  {
+   "round": 2,
+   "hypothesis": "Increasing the temporal richness of each contact sheet (more frames per sheet), adding a lightweight refinement pass that uses telemetry hints and close\u2011up windows to adjust boundaries, and rewriting the prompt to strongly discourage sub\u2011second segments while encouraging longer, state\u2011change\u2011aligned segments will reduce over\u2011segmentation, raise median segment length toward the reference distribution, and improve Segment F1 at IoU\u202f\u2265\u202f0.75.",
+   "root_causes": [
+    {
+     "cause": "Over-segmentation: model outputs mostly 1\u2011second chunks",
+     "evidence": "predicted_segments_le_2s_fraction = 0.993 vs reference 0.429; predicted_segments_exactly_1s_fraction = 0.945; median predicted segment = 1.0\u202fs while median reference segment = 2.37\u202fs"
+    },
+    {
+     "cause": "Prompt example anchors to a 1\u2011second segment",
+     "evidence": "The incumbent prompt\u2019s example JSON uses {\"start_sec\":0.0,\"end_sec\":1.0,...}, which biases the model toward 1\u2011second outputs"
+    },
+    {
+     "cause": "Low temporal detail inside each contact sheet leads to uniform splitting",
+     "evidence": "Each sheet covers ~10\u202fs (20 frames @ 2\u202fHz) but the model yields ~4\u20115 segments per sheet (23.64 predicted segments / median 5.0 sheets \u2248 4.7), indicating a tendency to divide each sheet into equal short pieces rather than detecting real state changes"
+    }
+   ],
+   "patch": {
+    "insert_nodes": [
+     {
+      "node": {
+       "id": "hints",
+       "operator": "state_hint_detection",
+       "depends_on": [
+        "sample"
+       ],
+       "params": {
+        "signals": [
+         "gripper",
+         "eef_pause"
+        ],
+        "min_gap_sec": 0.8,
+        "pause_speed_quantile": 0.15,
+        "min_pause_sec": 0.3
+       },
+       "when": "has_telemetry"
+      },
+      "rewire_dependents_of": null
+     },
+     {
+      "node": {
+       "id": "inspect",
+       "operator": "inspect_transition_windows",
+       "depends_on": [
+        "annotate",
+        "hints"
+       ],
+       "params": {
+        "select": "all_boundaries",
+        "window_sec": 2.0,
+        "local_hz": 4.0,
+        "max_windows": 8,
+        "include_unmatched_hints": false,
+        "tile_px": 224,
+        "confidence_threshold": 0.7
+       },
+       "when": "always"
+      },
+      "rewire_dependents_of": null
+     },
+     {
+      "node": {
+       "id": "refine",
+       "operator": "refine_intervals",
+       "depends_on": [
+        "inspect"
+       ],
+       "params": {
+        "prompt": "refine.md",
+        "thinking": false,
+        "max_tokens": 16384,
+        "temperature": 0.2,
+        "allow_insert": true,
+        "allow_delete": true
+       },
+       "when": "always"
+      },
+      "rewire_dependents_of": null
+     },
+     {
+      "node": {
+       "id": "merge",
+       "operator": "merge_filter_segments",
+       "depends_on": [
+        "refine"
+       ],
+       "params": {
+        "min_duration_sec": 0.8,
+        "max_gap_sec": 1.5,
+        "tile_full_episode": true,
+        "merge_same_label": false
+       },
+       "when": "always"
+      },
+      "rewire_dependents_of": null
+     }
+    ],
+    "set_params": {
+     "sample": {
+      "frames_per_sheet": 30
+     }
+    },
+    "set_depends_on": {
+     "validate_export": [
+      "merge"
+     ]
+    },
+    "prompt_updates": {
+     "prompt.md": "Reconstruct the sequence of manipulation events in this robot video from the timestamped contact sheets.\n\nReturn only JSON with this shape:\n{\"segments\":[{\"start_sec\":0.0,\"end_sec\":1.0,\"subtask\":\"short action description\"}]}\n\nRules:\n- Segment only completed robot manipulation events, not every visible movement.\n- Good boundaries happen when a held object changes, an object is placed or released, a tool starts/stops changing a surface, a container/door/lid opens or closes, or contents move between containers.\n- Do not split approach, grasp adjustment, small repositioning, and retreat unless the world state changes.\n- Do not merge separate pick/place/open/close/pour/wipe events when they complete different states.\n- Most segments should be 2-15 seconds. Shorter segments are allowed only for fast pick, place, open, close, or release events that are clearly instantaneous (<1.5 sec).\n- Do not output segments shorter than 1.0 second unless the action is a definitive instantaneous release or grasp.\n- Use the visible timestamps for start_sec and end_sec.\n- Ignore label wording quality; prioritize temporally correct boundaries.\n- Prefer fewer, longer segments that correctly capture state changes over many short segments.\n- If uncertain, merge adjacent short segments into a longer segment that spans the whole manipulation.\n\nEpisode instruction: $instruction"
+    }
+   },
+   "labeled_scores": {
+    "snapped_f1_075": 0.021447721179624662,
+    "raw_f1_075": 0.0213903743315508,
+    "snapped_f1_05": 0.20911528150134048,
+    "tp_snapped": 4,
+    "n_pred": 269,
+    "n_ref": 105
+   },
+   "failed_labeled_episodes": [],
+   "root_cause_stats_labeled": {
+    "predicted_vs_reference_segments": [
+     269,
+     105
+    ],
+    "median_predicted_segment_sec": 1.0,
+    "median_reference_segment_sec": 2.37,
+    "predicted_segments_le_2s_fraction": 0.981,
+    "reference_segments_le_2s_fraction": 0.429,
+    "predicted_segments_exactly_1s_fraction": 0.941,
+    "median_coverage_last_predicted_end_over_reference_end": 1.15,
+    "episodes_with_coverage_below_50pct": 0,
+    "references_matched_at_iou075": 4,
+    "mean_best_iou_per_reference": 0.449,
+    "references_with_best_iou_below_0.5": 66,
+    "pooled_scores": {
+     "snapped_f1_075": 0.021447721179624662,
+     "raw_f1_075": 0.0213903743315508,
+     "snapped_f1_05": 0.20911528150134048,
+     "tp_snapped": 4,
+     "n_pred": 269,
+     "n_ref": 105
+    }
+   }
+  },
+  {
+   "round": 3,
+   "hypothesis": "Increasing the temporal richness of each contact sheet (more frames per sheet), adding a lightweight refinement pass that uses telemetry hints and close\u2011up windows to adjust boundaries, and rewriting the prompt to strongly discourage sub\u2011second segments while encouraging longer, state\u2011change\u2011aligned segments will reduce over\u2011segmentation, raise median segment length toward the reference distribution, and improve Segment F1 at IoU\u202f\u2265\u202f0.75.",
+   "root_causes": [
+    {
+     "cause": "Over-segmentation: model outputs mostly 1\u2011second chunks",
+     "evidence": "predicted_segments_le_2s_fraction = 0.993 vs reference 0.429; predicted_segments_exactly_1s_fraction = 0.945; median predicted segment = 1.0\u202fs while median reference segment = 2.37\u202fs"
+    },
+    {
+     "cause": "Prompt example anchors to a 1\u2011second segment",
+     "evidence": "The incumbent prompt\u2019s example JSON uses {\"start_sec\":0.0,\"end_sec\":1.0,...}, which biases the model toward 1\u2011second outputs"
+    },
+    {
+     "cause": "Low temporal detail inside each contact sheet leads to uniform splitting",
+     "evidence": "Each sheet covers ~10\u202fs (20 frames @ 2\u202fHz) but the model yields ~4\u20115 segments per sheet (23.64 predicted segments / median 5.0 sheets \u2248 4.7), indicating a tendency to divide each sheet into equal short pieces rather than detecting real state changes"
+    }
+   ],
+   "patch": {
+    "insert_nodes": [
+     {
+      "node": {
+       "id": "hints",
+       "operator": "state_hint_detection",
+       "depends_on": [
+        "sample"
+       ],
+       "params": {
+        "signals": [
+         "gripper",
+         "eef_pause"
+        ],
+        "min_gap_sec": 0.8,
+        "pause_speed_quantile": 0.15,
+        "min_pause_sec": 0.3
+       },
+       "when": "has_telemetry"
+      },
+      "rewire_dependents_of": null
+     },
+     {
+      "node": {
+       "id": "inspect",
+       "operator": "inspect_transition_windows",
+       "depends_on": [
+        "annotate",
+        "hints"
+       ],
+       "params": {
+        "select": "all_boundaries",
+        "window_sec": 2.0,
+        "local_hz": 4.0,
+        "max_windows": 8,
+        "include_unmatched_hints": false,
+        "tile_px": 224,
+        "confidence_threshold": 0.7
+       },
+       "when": "always"
+      },
+      "rewire_dependents_of": null
+     },
+     {
+      "node": {
+       "id": "refine",
+       "operator": "refine_intervals",
+       "depends_on": [
+        "inspect"
+       ],
+       "params": {
+        "prompt": "refine.md",
+        "thinking": false,
+        "max_tokens": 16384,
+        "temperature": 0.2,
+        "allow_insert": true,
+        "allow_delete": true
+       },
+       "when": "always"
+      },
+      "rewire_dependents_of": null
+     },
+     {
+      "node": {
+       "id": "merge",
+       "operator": "merge_filter_segments",
+       "depends_on": [
+        "refine"
+       ],
+       "params": {
+        "min_duration_sec": 0.8,
+        "max_gap_sec": 1.5,
+        "tile_full_episode": true,
+        "merge_same_label": false
+       },
+       "when": "always"
+      },
+      "rewire_dependents_of": null
+     }
+    ],
+    "set_params": {
+     "sample": {
+      "frames_per_sheet": 30
+     }
+    },
+    "set_depends_on": {
+     "validate_export": [
+      "merge"
+     ]
+    },
+    "prompt_updates": {
+     "prompt.md": "Reconstruct the sequence of manipulation events in this robot video from the timestamped contact sheets.\n\nReturn only JSON with this shape:\n{\"segments\":[{\"start_sec\":0.0,\"end_sec\":1.0,\"subtask\":\"short action description\"}]}\n\nRules:\n- Segment only completed robot manipulation events, not every visible movement.\n- Good boundaries happen when a held object changes, an object is placed or released, a tool starts/stops changing a surface, a container/door/lid opens or closes, or contents move between containers.\n- Do not split approach, grasp adjustment, small repositioning, and retreat unless the world state changes.\n- Do not merge separate pick/place/open/close/pour/wipe events when they complete different states.\n- Most segments should be 2-15 seconds. Shorter segments are allowed only for fast pick, place, open, close, or release events that are clearly instantaneous (<1.5 sec).\n- Do not output segments shorter than 1.0 second unless the action is a definitive instantaneous release or grasp.\n- Use the visible timestamps for start_sec and end_sec.\n- Ignore label wording quality; prioritize temporally correct boundaries.\n- Prefer fewer, longer segments that correctly capture state changes over many short segments.\n- If uncertain, merge adjacent short segments into a longer segment that spans the whole manipulation.\n\nEpisode instruction: $instruction"
+    }
+   },
+   "labeled_scores": {
+    "snapped_f1_075": 0.021447721179624662,
+    "raw_f1_075": 0.0213903743315508,
+    "snapped_f1_05": 0.20911528150134048,
+    "tp_snapped": 4,
+    "n_pred": 269,
+    "n_ref": 105
+   },
+   "failed_labeled_episodes": [],
+   "root_cause_stats_labeled": {
+    "predicted_vs_reference_segments": [
+     269,
+     105
+    ],
+    "median_predicted_segment_sec": 1.0,
+    "median_reference_segment_sec": 2.37,
+    "predicted_segments_le_2s_fraction": 0.981,
+    "reference_segments_le_2s_fraction": 0.429,
+    "predicted_segments_exactly_1s_fraction": 0.941,
+    "median_coverage_last_predicted_end_over_reference_end": 1.15,
+    "episodes_with_coverage_below_50pct": 0,
+    "references_matched_at_iou075": 4,
+    "mean_best_iou_per_reference": 0.449,
+    "references_with_best_iou_below_0.5": 66,
+    "pooled_scores": {
+     "snapped_f1_075": 0.021447721179624662,
+     "raw_f1_075": 0.0213903743315508,
+     "snapped_f1_05": 0.20911528150134048,
+     "tp_snapped": 4,
+     "n_pred": 269,
+     "n_ref": 105
+    }
+   }
+  }
+ ],
+ "task_ids": [],
+ "protocol": "v3-macrodata",
+ "task_tree": []
+}

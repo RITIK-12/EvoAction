@@ -1,0 +1,31 @@
+{
+ "episode_id": "homer_53",
+ "version_id": "rest50-hitl-EXP-0001",
+ "segments": [
+  {
+   "start_sec": 0.0,
+   "end_sec": 1.0,
+   "subtask": "The person is sitting on the floor with their legs stretched out in front of them."
+  },
+  {
+   "start_sec": 1.0,
+   "end_sec": 15.0,
+   "subtask": "The person is tying their shoelaces."
+  },
+  {
+   "start_sec": 15.0,
+   "end_sec": 30.0,
+   "subtask": "The person is tying their shoelaces."
+  },
+  {
+   "start_sec": 30.0,
+   "end_sec": 45.0,
+   "subtask": "The person is tying their shoelaces."
+  },
+  {
+   "start_sec": 45.0,
+   "end_sec": 47.114,
+   "subtask": "The person is tying their shoelaces."
+  }
+ ]
+}

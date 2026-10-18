@@ -1,0 +1,166 @@
+{
+ "episode_id": "homer_1",
+ "version_id": "rest50-hitl-EXP-0002",
+ "segments": [
+  {
+   "start_sec": 0.0,
+   "end_sec": 1.0,
+   "subtask": "The person is holding a white container with both hands, preparing to pour."
+  },
+  {
+   "start_sec": 1.0,
+   "end_sec": 10.0,
+   "subtask": "The person is holding a white container with both hands, preparing to pour."
+  },
+  {
+   "start_sec": 10.0,
+   "end_sec": 15.0,
+   "subtask": "The person is holding a white container with both hands, preparing to pour."
+  },
+  {
+   "start_sec": 15.0,
+   "end_sec": 20.0,
+   "subtask": "The person is holding a white container with both hands, preparing to pour."
+  },
+  {
+   "start_sec": 20.0,
+   "end_sec": 25.0,
+   "subtask": "The person is holding a white container with both hands, preparing to pour."
+  },
+  {
+   "start_sec": 25.0,
+   "end_sec": 30.0,
+   "subtask": "The person is holding a white container with both hands, preparing to pour."
+  },
+  {
+   "start_sec": 30.0,
+   "end_sec": 35.0,
+   "subtask": "The person is holding a white container with both hands, preparing to pour."
+  },
+  {
+   "start_sec": 35.0,
+   "end_sec": 40.0,
+   "subtask": "The person is holding a white container with both hands, preparing to pour."
+  },
+  {
+   "start_sec": 40.0,
+   "end_sec": 45.0,
+   "subtask": "The person is holding a white container with both hands, preparing to pour."
+  },
+  {
+   "start_sec": 45.0,
+   "end_sec": 50.0,
+   "subtask": "The person is holding a white container with both hands, preparing to pour."
+  },
+  {
+   "start_sec": 50.0,
+   "end_sec": 55.0,
+   "subtask": "The person is holding a white container with both hands, preparing to pour."
+  },
+  {
+   "start_sec": 55.0,
+   "end_sec": 60.0,
+   "subtask": "The person is holding a white container with both hands, preparing to pour."
+  },
+  {
+   "start_sec": 60.0,
+   "end_sec": 65.0,
+   "subtask": "The person is holding a white container with both hands, preparing to pour."
+  },
+  {
+   "start_sec": 65.0,
+   "end_sec": 70.0,
+   "subtask": "The person is holding a white container with both hands, preparing to pour."
+  },
+  {
+   "start_sec": 70.0,
+   "end_sec": 75.0,
+   "subtask": "The person is holding a white container with both hands, preparing to pour."
+  },
+  {
+   "start_sec": 75.0,
+   "end_sec": 80.0,
+   "subtask": "The person is holding a white container with both hands, preparing to pour."
+  },
+  {
+   "start_sec": 80.0,
+   "end_sec": 85.0,
+   "subtask": "The person is holding a white container with both hands, preparing to pour."
+  },
+  {
+   "start_sec": 85.0,
+   "end_sec": 90.0,
+   "subtask": "The person is holding a white container with both hands, preparing to pour."
+  },
+  {
+   "start_sec": 90.0,
+   "end_sec": 95.0,
+   "subtask": "The person is holding a white container with both hands, preparing to pour."
+  },
+  {
+   "start_sec": 95.0,
+   "end_sec": 100.0,
+   "subtask": "The person is holding a white container with both hands, preparing to pour."
+  },
+  {
+   "start_sec": 100.0,
+   "end_sec": 105.0,
+   "subtask": "The person is holding a white container with both hands, preparing to pour."
+  },
+  {
+   "start_sec": 105.0,
+   "end_sec": 110.0,
+   "subtask": "The person is holding a white container with both hands, preparing to pour."
+  },
+  {
+   "start_sec": 110.0,
+   "end_sec": 115.0,
+   "subtask": "The person is holding a white container with both hands, preparing to pour."
+  },
+  {
+   "start_sec": 115.0,
+   "end_sec": 120.0,
+   "subtask": "The person is holding a white container with both hands, preparing to pour."
+  },
+  {
+   "start_sec": 120.0,
+   "end_sec": 125.0,
+   "subtask": "The person is holding a white container with both hands, preparing to pour."
+  },
+  {
+   "start_sec": 125.0,
+   "end_sec": 130.0,
+   "subtask": "The person is holding a white container with both hands, preparing to pour."
+  },
+  {
+   "start_sec": 130.0,
+   "end_sec": 135.0,
+   "subtask": "The person is holding a white container with both hands, preparing to pour."
+  },
+  {
+   "start_sec": 135.0,
+   "end_sec": 140.0,
+   "subtask": "The person is holding a white container with both hands, preparing to pour."
+  },
+  {
+   "start_sec": 140.0,
+   "end_sec": 145.0,
+   "subtask": "The person is holding a white container with both hands, preparing to pour."
+  },
+  {
+   "start_sec": 145.0,
+   "end_sec": 150.0,
+   "subtask": "The person is holding a white container with both hands, preparing to pour."
+  },
+  {
+   "start_sec": 150.0,
+   "end_sec": 155.0,
+   "subtask": "The person is holding a white container with both hands, preparing to pour."
+  },
+  {
+   "start_sec": 155.0,
+   "end_sec": 161.183,
+   "subtask": "The person is holding a white container with both hands, preparing to pour."
+  }
+ ]
+}

@@ -190,3 +190,33 @@ def test_operator_name_references_resolve_to_node_ids():
     by_id = {n.id: n for n in new_wf.nodes}
     assert by_id["export"].depends_on == ["merge"] and by_id["merge"].depends_on == ["annotate"]
     assert by_id["annotate"].params["max_tokens"] == 4096
+
+
+class _StubClient:
+    """Fails the first non-thinking call with a truncated reply, then answers; records the temperatures it saw."""
+    vision_model = "stub"
+
+    def __init__(self, raw_text):
+        self.raw_text, self.temps = raw_text, []
+
+    def chat(self, role, messages, **kw):
+        from evoaction.clients.crusoe import ChatResult, ModelCallError
+        self.temps.append(kw["temperature"])
+        if len(self.temps) == 1:
+            e = ModelCallError("initial_annotate: failed after retries: unterminated JSON in model output")
+            e.raw_text = self.raw_text
+            raise e
+        return ChatResult(text="{}", data={"segments": [{"start_sec": 0.0, "end_sec": 3.0, "subtask": "x"}]})
+
+
+def test_runaway_reply_is_salvaged_or_retried(tmp_path):
+    from evoaction.schemas import AnnotateParams
+    from evoaction.workflow.operators import _vision_json
+    p = AnnotateParams(thinking=False)
+    ctx = EpisodeContext(episode={"id": "e", "duration_sec": 10.0}, prompts={}, client=None, version_id="v", run_id=None, out_dir=tmp_path, max_calls=1)
+    ctx.client = _StubClient('{"segments":[{"start_sec":0,"end_sec":2,"subtask":"a"}' + ',{"start_sec":2,"end_sec":3,"subtask":"b"}' * 50 + ',{"st')
+    res, how = _vision_json(ctx, [], "initial_annotate", p, {}, "e")
+    assert how == "salvaged_truncated" and [s["end_sec"] for s in res.data["segments"]] == [2, 3]
+    ctx.client = _StubClient('{"segments":[{"st')  # nothing complete to salvage -> one retry at higher temperature
+    res, how = _vision_json(ctx, [], "initial_annotate", p, {}, "e")
+    assert how == "retried_t0.6" and ctx.client.temps == [p.temperature, 0.6] and res.data["segments"]

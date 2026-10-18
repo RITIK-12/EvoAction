@@ -1,0 +1,11 @@
+{
+ "episode_id": "homer_15",
+ "version_id": "rest50-hitl-EXP-0002",
+ "segments": [
+  {
+   "start_sec": 0.0,
+   "end_sec": 132.3,
+   "subtask": "fold the white cloth"
+  }
+ ]
+}

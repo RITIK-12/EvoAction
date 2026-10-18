@@ -1,0 +1,31 @@
+{
+ "episode_id": "homer_29",
+ "version_id": "rest50-hitl-EXP-0001",
+ "segments": [
+  {
+   "start_sec": 0.0,
+   "end_sec": 3.0,
+   "subtask": "Place onion on cutting board"
+  },
+  {
+   "start_sec": 3.0,
+   "end_sec": 15.0,
+   "subtask": "Cut onion into pieces"
+  },
+  {
+   "start_sec": 15.0,
+   "end_sec": 30.0,
+   "subtask": "Gather cut onion pieces"
+  },
+  {
+   "start_sec": 30.0,
+   "end_sec": 45.0,
+   "subtask": "Place onion pieces in container"
+  },
+  {
+   "start_sec": 45.0,
+   "end_sec": 84.933,
+   "subtask": "Clean cutting board"
+  }
+ ]
+}

@@ -1,0 +1,41 @@
+{
+ "episode_id": "galaxea_041",
+ "version_id": "rest50-hitl-EXP-0002",
+ "segments": [
+  {
+   "start_sec": 0.0,
+   "end_sec": 1.0,
+   "subtask": "approach the test tubes"
+  },
+  {
+   "start_sec": 1.0,
+   "end_sec": 5.0,
+   "subtask": "grasp the test tube with yellow pigment"
+  },
+  {
+   "start_sec": 5.0,
+   "end_sec": 10.0,
+   "subtask": "lift the test tube with yellow pigment"
+  },
+  {
+   "start_sec": 10.0,
+   "end_sec": 15.0,
+   "subtask": "move the test tube with yellow pigment to the beaker"
+  },
+  {
+   "start_sec": 15.0,
+   "end_sec": 20.0,
+   "subtask": "pour the yellow pigment into the beaker"
+  },
+  {
+   "start_sec": 20.0,
+   "end_sec": 25.0,
+   "subtask": "return to the test tube with red pigment"
+  },
+  {
+   "start_sec": 25.0,
+   "end_sec": 27.3,
+   "subtask": "grasp the test tube with red pigment"
+  }
+ ]
+}
