@@ -12,6 +12,8 @@ A harness that improves its own annotation pipeline the way an annotation team d
 
 ![EvoAction architecture](assets/architecture.png)
 
+![Recursive improvement: label 10%, fix the harness, repeat](assets/recursive_improvement.png)
+
 - **Annotator:** `Nemotron-3-Nano-Omni-30B-A3B`, reading timestamped contact sheets of the video.
 - **N0** replicates Macrodata's published annotation protocol exactly: same prompt, sampling, tiles and timestamp badge.
 - **Operators the agent can wire together:** contact-sheet sampling, annotate, telemetry hint detection, close-up boundary windows, refine, and merge/filter. The pipeline is a validated DAG, and no generated code is ever executed.
@@ -22,17 +24,21 @@ A harness that improves its own annotation pipeline the way an annotation team d
 
 [WGO-Bench](https://huggingface.co/datasets/macrodata/WGO-Bench) by Macrodata: 100 robot manipulation episodes (50 DROID, 25 Galaxea, 25 HomER) with 743 human-annotated subtask segments. Licence CC-BY-NC-SA-4.0, not redistributed here.
 
+![From robot video to subtask segments](assets/video_to_segments.png)
+
 Metric (Macrodata's): **Segment F1 at temporal IoU ≥ 0.75**, pooled over episodes, with the first start and last end snapped to the human episode boundaries.
 
 ## Results: DROID, 50 episodes
 
-| Version | What the agent changed | Segment F1@0.75, held-out 45 | Segment F1@0.75, all 50 |
-|---|---|---|---|
-| N0 | Macrodata protocol on Nemotron Omni | 0.069 | 0.081 |
-| N1 | added telemetry hints → close-up windows → refine → merge (≥ 2 s, full coverage) | 0.066 | 0.086 |
-| **N2** | rewrote the annotate and refine prompts ("most segments 3–12 s"), 30 frames per sheet, refine every boundary, merge ≥ 3 s and join same-label neighbours | **0.182** | **0.196** |
+| Version | What the agent changed | Segment F1@0.75, held-out 45 | Segment F1@0.75, all 50 | Annotation cost, 50 episodes | Recursion cost (agent + trials + runs) |
+|---|---|---|---|---|---|
+| N0 | Macrodata protocol on Nemotron Omni | 0.069 | 0.081 | $0.056 | $0.13 |
+| N1 | added telemetry hints → close-up windows → refine → merge (≥ 2 s, full coverage) | 0.066 | 0.086 | $0.461 | $0.81 |
+| **N2** | rewrote the annotate and refine prompts ("most segments 3–12 s"), 30 frames per sheet, refine every boundary, merge ≥ 3 s and join same-label neighbours | **0.182** | **0.196** | **$0.164** | $1.11 |
+| **Total** | | | | | **$2.08** (includes $0.03 from an aborted early run) |
 
-- N2 is 2.6× N0 on the held-out episodes.
+- N2 is 2.6× N0 on the held-out episodes, at **$0.003 per episode** to annotate. The whole self-improvement run (N0 plus two recursions) cost **$2.08**.
+- The recursion cost includes everything spent: agent calls, refinement trials on the labeled sample, full 50-episode runs, label-free checks, and for N2 a crashed attempt and its re-run. Costs come from the logged token counts at Crusoe's listed prices.
 - **The gate rejected N2:** it passed the labeled-sample check (0.381 vs 0.276), but 1 of 50 episodes returned invalid JSON, so the strict valid-output rule rejected it. The gated incumbent is still N1.
 - Re-running N1 gave 0.079 on held-out, so expect about ±0.015 of run-to-run noise.
 
