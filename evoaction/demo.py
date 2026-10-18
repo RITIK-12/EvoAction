@@ -263,7 +263,8 @@ class Handler(BaseHTTPRequestHandler):
                 results[-1]["next_change"] = "agent step failed; unchanged"
         pool.shutdown(wait=False)
         store.finish_run(run_id, "ok")
-        best = max(results, key=lambda x: (x["snapped_f1_075"], x["raw_f1_075"]))["label"] if results else None
+        top = max(results, key=lambda x: (x["snapped_f1_075"], x["raw_f1_075"])) if results else None
+        best = top["label"] if top and top["snapped_f1_075"] > 0 else None  # no "best" tag when every version scores 0
         self._event({"type": "done", "best": best})
 
 
