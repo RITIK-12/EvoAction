@@ -10,23 +10,7 @@ Physical AI needs robot video labeled into subtasks: when each step starts, when
 
 A harness that improves its own annotation pipeline the way an annotation team does: label a small sample, find the mistakes, fix the process, run again.
 
-```
-N  ──run on all episodes──▶ predictions
-        │
-        ▼
-root-cause analysis on a fixed 10% human-labeled sample
-(segment counts and lengths, 1-second-grid fraction, coverage, best IoU per human segment)
-        │
-        ▼
-main agent (Nemotron-3-Super-120B) ranks the root causes and writes a typed WorkflowPatch:
-rewrite the prompt, change parameters, or add/remove pipeline operators
-        │
-        ▼
-try on the labeled sample ─▶ refine (up to 3 rounds) ─▶ best round runs on all episodes
-        │
-        ▼
-gate (labeled-sample F1 must improve, every episode must produce valid output) ─▶ N+1
-```
+![EvoAction architecture](assets/architecture.png)
 
 - **Annotator:** `Nemotron-3-Nano-Omni-30B-A3B`, reading timestamped contact sheets of the video.
 - **N0** replicates Macrodata's published annotation protocol exactly: same prompt, sampling, tiles and timestamp badge.
@@ -51,11 +35,10 @@ Metric (Macrodata's): **Segment F1 at temporal IoU ≥ 0.75**, pooled over episo
 - N2 is 2.6× N0 on the held-out episodes.
 - **The gate rejected N2:** it passed the labeled-sample check (0.381 vs 0.276), but 1 of 50 episodes returned invalid JSON, so the strict valid-output rule rejected it. The gated incumbent is still N1.
 - Re-running N1 gave 0.079 on held-out, so expect about ±0.015 of run-to-run noise.
-- The Galaxea + HomER batch is still running.
 
 ## Compared with Macrodata's model sweep
 
-Macrodata's original sweep: Segment F1@0.75, contact-sheet setup, all 100 episodes. **Our row is DROID only (45 held-out episodes)**, because the second batch isn't finished.
+Macrodata's original sweep: Segment F1@0.75, contact-sheet setup, all 100 episodes. **Our row is DROID only (45 held-out episodes).**
 
 | # | System | Segment F1@0.75 |
 |---|---|---|
