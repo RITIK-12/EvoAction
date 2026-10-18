@@ -1,0 +1,21 @@
+{
+ "episode_id": "homer_1",
+ "version_id": "rest50-hitl-EXP-0002",
+ "segments": [
+  {
+   "start_sec": 0.0,
+   "end_sec": 15.0,
+   "subtask": "Open the container"
+  },
+  {
+   "start_sec": 15.0,
+   "end_sec": 115.0,
+   "subtask": "Pour water into tall glass and wine glass"
+  },
+  {
+   "start_sec": 115.0,
+   "end_sec": 161.183,
+   "subtask": "Close the container"
+  }
+ ]
+}

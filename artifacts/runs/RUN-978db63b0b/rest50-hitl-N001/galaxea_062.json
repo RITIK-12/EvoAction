@@ -1,0 +1,26 @@
+{
+ "episode_id": "galaxea_062",
+ "version_id": "rest50-hitl-N001",
+ "segments": [
+  {
+   "start_sec": 0.0,
+   "end_sec": 3.0,
+   "subtask": "approach and grasp the orange"
+  },
+  {
+   "start_sec": 3.0,
+   "end_sec": 6.0,
+   "subtask": "lift and move the orange to the dish"
+  },
+  {
+   "start_sec": 6.0,
+   "end_sec": 8.0,
+   "subtask": "place the orange on the dish"
+  },
+  {
+   "start_sec": 8.0,
+   "end_sec": 10.667,
+   "subtask": "retract and return to initial position"
+  }
+ ]
+}

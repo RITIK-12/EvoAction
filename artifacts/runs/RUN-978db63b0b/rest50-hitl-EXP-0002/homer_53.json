@@ -1,0 +1,11 @@
+{
+ "episode_id": "homer_53",
+ "version_id": "rest50-hitl-EXP-0002",
+ "segments": [
+  {
+   "start_sec": 0.0,
+   "end_sec": 47.114,
+   "subtask": "put the shoe on the foot"
+  }
+ ]
+}

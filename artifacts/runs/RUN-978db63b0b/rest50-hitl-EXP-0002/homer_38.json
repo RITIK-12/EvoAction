@@ -1,0 +1,116 @@
+{
+ "episode_id": "homer_38",
+ "version_id": "rest50-hitl-EXP-0002",
+ "segments": [
+  {
+   "start_sec": 0.0,
+   "end_sec": 2.0,
+   "subtask": "pick up a plate from the stack"
+  },
+  {
+   "start_sec": 2.0,
+   "end_sec": 12.0,
+   "subtask": "place the plate on the table"
+  },
+  {
+   "start_sec": 12.0,
+   "end_sec": 16.0,
+   "subtask": "pick up a plate from the stack"
+  },
+  {
+   "start_sec": 16.0,
+   "end_sec": 20.0,
+   "subtask": "place the plate on the table"
+  },
+  {
+   "start_sec": 20.0,
+   "end_sec": 24.0,
+   "subtask": "pick up a plate from the stack"
+  },
+  {
+   "start_sec": 24.0,
+   "end_sec": 28.0,
+   "subtask": "place the plate on the table"
+  },
+  {
+   "start_sec": 28.0,
+   "end_sec": 32.0,
+   "subtask": "pick up a plate from the stack"
+  },
+  {
+   "start_sec": 32.0,
+   "end_sec": 36.0,
+   "subtask": "place the plate on the table"
+  },
+  {
+   "start_sec": 36.0,
+   "end_sec": 40.0,
+   "subtask": "pick up a plate from the stack"
+  },
+  {
+   "start_sec": 40.0,
+   "end_sec": 44.0,
+   "subtask": "place the plate on the table"
+  },
+  {
+   "start_sec": 44.0,
+   "end_sec": 48.0,
+   "subtask": "pick up a plate from the stack"
+  },
+  {
+   "start_sec": 48.0,
+   "end_sec": 52.0,
+   "subtask": "place the plate on the table"
+  },
+  {
+   "start_sec": 52.0,
+   "end_sec": 56.0,
+   "subtask": "pick up a plate from the stack"
+  },
+  {
+   "start_sec": 56.0,
+   "end_sec": 60.0,
+   "subtask": "place the plate on the table"
+  },
+  {
+   "start_sec": 60.0,
+   "end_sec": 64.0,
+   "subtask": "pick up a plate from the stack"
+  },
+  {
+   "start_sec": 64.0,
+   "end_sec": 68.0,
+   "subtask": "place the plate on the table"
+  },
+  {
+   "start_sec": 68.0,
+   "end_sec": 72.0,
+   "subtask": "pick up a plate from the stack"
+  },
+  {
+   "start_sec": 72.0,
+   "end_sec": 76.0,
+   "subtask": "place the plate on the table"
+  },
+  {
+   "start_sec": 76.0,
+   "end_sec": 80.0,
+   "subtask": "pick up a plate from the stack"
+  },
+  {
+   "start_sec": 80.0,
+   "end_sec": 84.0,
+   "subtask": "place the plate on the table"
+  },
+  {
+   "start_sec": 84.0,
+   "end_sec": 88.0,
+   "subtask": "pick up a plate from the stack"
+  },
+  {
+   "start_sec": 88.0,
+   "end_sec": 90.794,
+   "subtask": "place the plate on the table"
+  }
+ ]
+}

@@ -1,0 +1,26 @@
+{
+ "episode_id": "galaxea_050",
+ "version_id": "rest50-hitl-EXP-0002",
+ "segments": [
+  {
+   "start_sec": 0.0,
+   "end_sec": 3.75,
+   "subtask": "approach cup"
+  },
+  {
+   "start_sec": 3.75,
+   "end_sec": 6.0,
+   "subtask": "grasp cup"
+  },
+  {
+   "start_sec": 6.0,
+   "end_sec": 9.75,
+   "subtask": "lift cup"
+  },
+  {
+   "start_sec": 9.75,
+   "end_sec": 12.9,
+   "subtask": "pour solid into bowl"
+  }
+ ]
+}

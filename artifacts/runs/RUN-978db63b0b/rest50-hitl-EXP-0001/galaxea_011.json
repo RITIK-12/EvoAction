@@ -1,0 +1,81 @@
+{
+ "episode_id": "galaxea_011",
+ "version_id": "rest50-hitl-EXP-0001",
+ "segments": [
+  {
+   "start_sec": 0.0,
+   "end_sec": 1.0,
+   "subtask": "The robot arm is positioned over the table with two baskets and two cutting mats, preparing to begin manipulation."
+  },
+  {
+   "start_sec": 1.0,
+   "end_sec": 2.5,
+   "subtask": "The robot arm moves its left gripper towards the left basket, positioning itself to pick up a non-food item."
+  },
+  {
+   "start_sec": 2.5,
+   "end_sec": 4.5,
+   "subtask": "The robot arm grasps a black rectangular object from the left side of the table with its left gripper."
+  },
+  {
+   "start_sec": 4.5,
+   "end_sec": 6.5,
+   "subtask": "The robot arm moves the black rectangular object from the left side towards the left basket."
+  },
+  {
+   "start_sec": 6.5,
+   "end_sec": 8.5,
+   "subtask": "The robot arm places the black rectangular object into the left basket."
+  },
+  {
+   "start_sec": 8.5,
+   "end_sec": 10.5,
+   "subtask": "The robot arm retracts from the left basket and moves towards the right side of the table."
+  },
+  {
+   "start_sec": 10.5,
+   "end_sec": 13.5,
+   "subtask": "The robot arm positions its right gripper over the right basket, preparing to pick up a food item."
+  },
+  {
+   "start_sec": 13.5,
+   "end_sec": 15.5,
+   "subtask": "The robot arm grasps a yellow food item from the right cutting mat with its right gripper."
+  },
+  {
+   "start_sec": 15.5,
+   "end_sec": 17.0,
+   "subtask": "The robot arm moves the yellow food item from the right cutting mat towards the right basket."
+  },
+  {
+   "start_sec": 17.0,
+   "end_sec": 19.0,
+   "subtask": "The robot arm places the yellow food item into the right basket."
+  },
+  {
+   "start_sec": 19.0,
+   "end_sec": 21.0,
+   "subtask": "The robot arm retracts from the right basket and moves back towards the center of the table."
+  },
+  {
+   "start_sec": 21.0,
+   "end_sec": 23.0,
+   "subtask": "The robot arm positions its left gripper over the left basket, preparing to pick up another non-food item."
+  },
+  {
+   "start_sec": 23.0,
+   "end_sec": 25.0,
+   "subtask": "The robot arm grasps a black rectangular object from the left side of the table with its left gripper."
+  },
+  {
+   "start_sec": 25.0,
+   "end_sec": 27.0,
+   "subtask": "The robot arm moves the black rectangular object from the left side towards the left basket."
+  },
+  {
+   "start_sec": 27.0,
+   "end_sec": 29.167,
+   "subtask": "The robot arm places the black rectangular object into the left basket."
+  }
+ ]
+}

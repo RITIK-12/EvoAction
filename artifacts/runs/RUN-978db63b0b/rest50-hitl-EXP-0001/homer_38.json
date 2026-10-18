@@ -1,0 +1,101 @@
+{
+ "episode_id": "homer_38",
+ "version_id": "rest50-hitl-EXP-0001",
+ "segments": [
+  {
+   "start_sec": 0.0,
+   "end_sec": 1.0,
+   "subtask": "Place a stack of plates on the counter"
+  },
+  {
+   "start_sec": 1.0,
+   "end_sec": 4.5,
+   "subtask": "Carry the stack of plates to the table"
+  },
+  {
+   "start_sec": 4.5,
+   "end_sec": 10.5,
+   "subtask": "Place the stack of plates on the table"
+  },
+  {
+   "start_sec": 10.5,
+   "end_sec": 14.5,
+   "subtask": "Take a plate from the stack and place it on the table"
+  },
+  {
+   "start_sec": 14.5,
+   "end_sec": 20.5,
+   "subtask": "Take another plate from the stack and place it on the table"
+  },
+  {
+   "start_sec": 20.5,
+   "end_sec": 25.5,
+   "subtask": "Take a third plate from the stack and place it on the table"
+  },
+  {
+   "start_sec": 25.5,
+   "end_sec": 30.5,
+   "subtask": "Take a fourth plate from the stack and place it on the table"
+  },
+  {
+   "start_sec": 30.5,
+   "end_sec": 35.5,
+   "subtask": "Take a fifth plate from the stack and place it on the table"
+  },
+  {
+   "start_sec": 35.5,
+   "end_sec": 40.5,
+   "subtask": "Take a sixth plate from the stack and place it on the table"
+  },
+  {
+   "start_sec": 40.5,
+   "end_sec": 45.5,
+   "subtask": "Take a seventh plate from the stack and place it on the table"
+  },
+  {
+   "start_sec": 45.5,
+   "end_sec": 50.5,
+   "subtask": "Take an eighth plate from the stack and place it on the table"
+  },
+  {
+   "start_sec": 50.5,
+   "end_sec": 55.5,
+   "subtask": "Take a ninth plate from the stack and place it on the table"
+  },
+  {
+   "start_sec": 55.5,
+   "end_sec": 60.5,
+   "subtask": "Take a tenth plate from the stack and place it on the table"
+  },
+  {
+   "start_sec": 60.5,
+   "end_sec": 65.5,
+   "subtask": "Take an eleventh plate from the stack and place it on the table"
+  },
+  {
+   "start_sec": 65.5,
+   "end_sec": 70.5,
+   "subtask": "Take a twelfth plate from the stack and place it on the table"
+  },
+  {
+   "start_sec": 70.5,
+   "end_sec": 75.5,
+   "subtask": "Take a thirteenth plate from the stack and place it on the table"
+  },
+  {
+   "start_sec": 75.5,
+   "end_sec": 80.5,
+   "subtask": "Take a fourteenth plate from the stack and place it on the table"
+  },
+  {
+   "start_sec": 80.5,
+   "end_sec": 85.5,
+   "subtask": "Take a fifteenth plate from the stack and place it on the table"
+  },
+  {
+   "start_sec": 85.5,
+   "end_sec": 90.794,
+   "subtask": "Take a sixteenth plate from the stack and place it on the table"
+  }
+ ]
+}

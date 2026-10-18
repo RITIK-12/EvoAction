@@ -1,0 +1,11 @@
+{
+ "episode_id": "galaxea_007",
+ "version_id": "rest50-hitl-EXP-0002",
+ "segments": [
+  {
+   "start_sec": 0.0,
+   "end_sec": 35.533,
+   "subtask": "robot arm moves to position"
+  }
+ ]
+}

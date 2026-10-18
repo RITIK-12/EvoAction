@@ -1,0 +1,26 @@
+{
+ "episode_id": "homer_29",
+ "version_id": "rest50-hitl-EXP-0002",
+ "segments": [
+  {
+   "start_sec": 0.0,
+   "end_sec": 15.0,
+   "subtask": "Cut onion into pieces"
+  },
+  {
+   "start_sec": 15.0,
+   "end_sec": 20.0,
+   "subtask": "Gather cut onion pieces"
+  },
+  {
+   "start_sec": 20.0,
+   "end_sec": 25.0,
+   "subtask": "Place cut onion pieces into container"
+  },
+  {
+   "start_sec": 25.0,
+   "end_sec": 84.933,
+   "subtask": "Clean knife"
+  }
+ ]
+}

@@ -1,0 +1,41 @@
+{
+ "episode_id": "galaxea_013",
+ "version_id": "rest50-hitl-N001",
+ "segments": [
+  {
+   "start_sec": 0.0,
+   "end_sec": 1.0,
+   "subtask": "The robot arm is positioned near the green mat with a pink food item and a black object."
+  },
+  {
+   "start_sec": 1.0,
+   "end_sec": 4.5,
+   "subtask": "The robot arm moves towards the green mat and grasps the pink food item with the right gripper."
+  },
+  {
+   "start_sec": 4.5,
+   "end_sec": 10.0,
+   "subtask": "The robot arm lifts the pink food item and moves it towards the right basket."
+  },
+  {
+   "start_sec": 10.0,
+   "end_sec": 15.0,
+   "subtask": "The robot arm places the pink food item into the right basket."
+  },
+  {
+   "start_sec": 15.0,
+   "end_sec": 17.5,
+   "subtask": "The robot arm moves back towards the green mat to pick up the black object."
+  },
+  {
+   "start_sec": 17.5,
+   "end_sec": 20.0,
+   "subtask": "The robot arm grasps the black object with the left gripper."
+  },
+  {
+   "start_sec": 20.0,
+   "end_sec": 22.1,
+   "subtask": "The robot arm moves the black object towards the left basket and places it inside."
+  }
+ ]
+}

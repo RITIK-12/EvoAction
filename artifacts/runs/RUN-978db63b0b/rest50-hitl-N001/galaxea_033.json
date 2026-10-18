@@ -1,0 +1,26 @@
+{
+ "episode_id": "galaxea_033",
+ "version_id": "rest50-hitl-N001",
+ "segments": [
+  {
+   "start_sec": 0.0,
+   "end_sec": 1.0,
+   "subtask": "The robot arm is positioned near the test tubes on the table, preparing to pick them up."
+  },
+  {
+   "start_sec": 1.0,
+   "end_sec": 15.0,
+   "subtask": "The robot arm moves to the test tubes, grasps the red pigment test tube, and lifts it."
+  },
+  {
+   "start_sec": 15.0,
+   "end_sec": 25.0,
+   "subtask": "The robot arm moves to the container and pours the red pigment into it."
+  },
+  {
+   "start_sec": 25.0,
+   "end_sec": 34.867,
+   "subtask": "The robot arm moves back to the test tubes, grasps the blue pigment test tube, and lifts it."
+  }
+ ]
+}

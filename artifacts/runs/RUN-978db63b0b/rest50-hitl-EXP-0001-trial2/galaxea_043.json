@@ -1,0 +1,26 @@
+{
+ "episode_id": "galaxea_043",
+ "version_id": "rest50-hitl-EXP-0001-trial2",
+ "segments": [
+  {
+   "start_sec": 0.0,
+   "end_sec": 2.5,
+   "subtask": "The robot arm moves towards the mouse on the left side of the table."
+  },
+  {
+   "start_sec": 2.5,
+   "end_sec": 4.5,
+   "subtask": "The robot arm grasps the mouse and lifts it from the table."
+  },
+  {
+   "start_sec": 4.5,
+   "end_sec": 7.0,
+   "subtask": "The robot arm moves the mouse to the right side of the table and places it on the mouse pad."
+  },
+  {
+   "start_sec": 7.0,
+   "end_sec": 9.167,
+   "subtask": "The robot arm releases the mouse and retracts from the table."
+  }
+ ]
+}

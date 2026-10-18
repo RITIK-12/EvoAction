@@ -1,0 +1,61 @@
+{
+ "episode_id": "homer_9",
+ "version_id": "rest50-hitl-EXP-0001",
+ "segments": [
+  {
+   "start_sec": 0.0,
+   "end_sec": 1.0,
+   "subtask": "approach sink"
+  },
+  {
+   "start_sec": 1.0,
+   "end_sec": 3.0,
+   "subtask": "grasp first glass"
+  },
+  {
+   "start_sec": 3.0,
+   "end_sec": 10.0,
+   "subtask": "wash first glass"
+  },
+  {
+   "start_sec": 10.0,
+   "end_sec": 12.0,
+   "subtask": "rinse first glass"
+  },
+  {
+   "start_sec": 12.0,
+   "end_sec": 14.0,
+   "subtask": "place first glass"
+  },
+  {
+   "start_sec": 14.0,
+   "end_sec": 16.0,
+   "subtask": "grasp second glass"
+  },
+  {
+   "start_sec": 16.0,
+   "end_sec": 23.0,
+   "subtask": "wash second glass"
+  },
+  {
+   "start_sec": 23.0,
+   "end_sec": 25.0,
+   "subtask": "rinse second glass"
+  },
+  {
+   "start_sec": 25.0,
+   "end_sec": 27.0,
+   "subtask": "place second glass"
+  },
+  {
+   "start_sec": 27.0,
+   "end_sec": 28.0,
+   "subtask": "turn off faucet"
+  },
+  {
+   "start_sec": 28.0,
+   "end_sec": 171.063,
+   "subtask": "dry hands"
+  }
+ ]
+}

@@ -1,0 +1,11 @@
+{
+ "episode_id": "homer_7",
+ "version_id": "rest50-hitl-EXP-0002",
+ "segments": [
+  {
+   "start_sec": 0.0,
+   "end_sec": 143.815,
+   "subtask": "drawing the sun rays"
+  }
+ ]
+}

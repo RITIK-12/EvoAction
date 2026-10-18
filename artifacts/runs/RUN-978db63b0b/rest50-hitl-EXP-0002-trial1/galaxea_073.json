@@ -1,0 +1,21 @@
+{
+ "episode_id": "galaxea_073",
+ "version_id": "rest50-hitl-EXP-0002-trial1",
+ "segments": [
+  {
+   "start_sec": 0.0,
+   "end_sec": 5.0,
+   "subtask": "grasp drawer handle"
+  },
+  {
+   "start_sec": 5.0,
+   "end_sec": 10.0,
+   "subtask": "open drawer"
+  },
+  {
+   "start_sec": 10.0,
+   "end_sec": 14.867,
+   "subtask": "close drawer"
+  }
+ ]
+}

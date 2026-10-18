@@ -1,0 +1,26 @@
+{
+ "episode_id": "galaxea_075",
+ "version_id": "rest50-hitl-EXP-0002-trial2",
+ "segments": [
+  {
+   "start_sec": 0.0,
+   "end_sec": 4.0,
+   "subtask": "approach the yellow drawer"
+  },
+  {
+   "start_sec": 4.0,
+   "end_sec": 6.0,
+   "subtask": "grasp the yellow drawer"
+  },
+  {
+   "start_sec": 6.0,
+   "end_sec": 8.0,
+   "subtask": "open the yellow drawer"
+  },
+  {
+   "start_sec": 8.0,
+   "end_sec": 13.4,
+   "subtask": "close the yellow drawer"
+  }
+ ]
+}

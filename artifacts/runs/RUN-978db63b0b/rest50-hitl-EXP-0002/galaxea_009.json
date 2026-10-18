@@ -1,0 +1,11 @@
+{
+ "episode_id": "galaxea_009",
+ "version_id": "rest50-hitl-EXP-0002",
+ "segments": [
+  {
+   "start_sec": 0.0,
+   "end_sec": 40.167,
+   "subtask": "place the non food items in the left basket with the left gripper"
+  }
+ ]
+}

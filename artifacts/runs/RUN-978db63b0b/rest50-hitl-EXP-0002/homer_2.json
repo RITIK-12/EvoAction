@@ -1,0 +1,11 @@
+{
+ "episode_id": "homer_2",
+ "version_id": "rest50-hitl-EXP-0002",
+ "segments": [
+  {
+   "start_sec": 0.0,
+   "end_sec": 154.2,
+   "subtask": "wash the dishes in the sink"
+  }
+ ]
+}

@@ -1,0 +1,11 @@
+{
+ "episode_id": "homer_48",
+ "version_id": "rest50-hitl-EXP-0002",
+ "segments": [
+  {
+   "start_sec": 0.0,
+   "end_sec": 55.989,
+   "subtask": "move green container to the right"
+  }
+ ]
+}

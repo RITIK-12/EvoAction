@@ -1,0 +1,31 @@
+{
+ "episode_id": "galaxea_075",
+ "version_id": "rest50-hitl-EXP-0001",
+ "segments": [
+  {
+   "start_sec": 0.0,
+   "end_sec": 1.0,
+   "subtask": "approach drawer"
+  },
+  {
+   "start_sec": 1.0,
+   "end_sec": 3.0,
+   "subtask": "insert gripper into drawer"
+  },
+  {
+   "start_sec": 3.0,
+   "end_sec": 5.0,
+   "subtask": "open drawer"
+  },
+  {
+   "start_sec": 5.0,
+   "end_sec": 8.0,
+   "subtask": "close drawer"
+  },
+  {
+   "start_sec": 8.0,
+   "end_sec": 13.4,
+   "subtask": "retract gripper"
+  }
+ ]
+}

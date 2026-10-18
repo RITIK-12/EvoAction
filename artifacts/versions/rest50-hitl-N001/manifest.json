@@ -1,0 +1,19 @@
+{
+ "id": "rest50-hitl-N001",
+ "parent_id": "N0",
+ "status": "incumbent",
+ "frozen": true,
+ "created_at": 1792284279.107646,
+ "workflow_sha256": "e303a61a6e8b4e73be6c8811c8b1e40970624e992b6ce8feb6eb61ebf9360f52",
+ "files": {
+  "workflow.json": "8145827cd48841f0e067341a59c7bff9b3e69c44d2944aed6d62bc585a556ee1",
+  "config.json": "53e574e73406ebc1eca87fbcf0b8e8a6ca099986a8f08b3dcead2bf810f60cd5",
+  "prompt.md": "0621cedb8cecdc6efcdf620c2ed3ffb0cbaee7b20eba994cd0fe4730bb624821",
+  "refine.md": "f478372773f8a0131d0ff6188feb5e649b2fa6a6cde4379fa9a918b370f4df3b",
+  "experiment.json": "22dc7e282c111a1cba32a6513dd63a1080e4fc0c339370a87ef24d26463bc881",
+  "validation_report.json": "c86681db0c55d9a6d55fd30ac386cd2708a93f739f7ee22f77523353e6dfaf31"
+ },
+ "frozen_at": 1792284352.9516249,
+ "original_id": "rest50-hitl-EXP-0001",
+ "source_experiment": "rest50-hitl-EXP-0001_promoted"
+}

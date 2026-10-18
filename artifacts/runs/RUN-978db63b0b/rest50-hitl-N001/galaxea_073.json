@@ -1,0 +1,31 @@
+{
+ "episode_id": "galaxea_073",
+ "version_id": "rest50-hitl-N001",
+ "segments": [
+  {
+   "start_sec": 0.0,
+   "end_sec": 1.5,
+   "subtask": "approach red drawer"
+  },
+  {
+   "start_sec": 1.5,
+   "end_sec": 3.5,
+   "subtask": "grasp red drawer"
+  },
+  {
+   "start_sec": 3.5,
+   "end_sec": 10.5,
+   "subtask": "open red drawer"
+  },
+  {
+   "start_sec": 10.5,
+   "end_sec": 12.5,
+   "subtask": "release red drawer"
+  },
+  {
+   "start_sec": 12.5,
+   "end_sec": 14.867,
+   "subtask": "close red drawer"
+  }
+ ]
+}

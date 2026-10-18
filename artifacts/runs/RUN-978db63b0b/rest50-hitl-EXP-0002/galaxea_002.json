@@ -1,0 +1,11 @@
+{
+ "episode_id": "galaxea_002",
+ "version_id": "rest50-hitl-EXP-0002",
+ "segments": [
+  {
+   "start_sec": 0.0,
+   "end_sec": 43.833,
+   "subtask": "move the letter 'b' to the left side of the word"
+  }
+ ]
+}

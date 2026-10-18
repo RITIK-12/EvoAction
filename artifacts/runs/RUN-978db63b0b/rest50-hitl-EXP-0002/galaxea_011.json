@@ -1,0 +1,41 @@
+{
+ "episode_id": "galaxea_011",
+ "version_id": "rest50-hitl-EXP-0002",
+ "segments": [
+  {
+   "start_sec": 0.0,
+   "end_sec": 4.75,
+   "subtask": "The robot arm moves towards the left basket, positioning itself to pick up an item."
+  },
+  {
+   "start_sec": 4.75,
+   "end_sec": 8.0,
+   "subtask": "The robot arm grasps an item from the left basket using the left gripper."
+  },
+  {
+   "start_sec": 8.0,
+   "end_sec": 12.0,
+   "subtask": "The robot arm moves the grasped item towards the right basket."
+  },
+  {
+   "start_sec": 12.0,
+   "end_sec": 16.0,
+   "subtask": "The robot arm places the item into the right basket using the right gripper."
+  },
+  {
+   "start_sec": 16.0,
+   "end_sec": 20.0,
+   "subtask": "The robot arm returns to the left basket to pick up another item."
+  },
+  {
+   "start_sec": 20.0,
+   "end_sec": 24.0,
+   "subtask": "The robot arm grasps a non-food item from the left basket using the left gripper."
+  },
+  {
+   "start_sec": 24.0,
+   "end_sec": 29.167,
+   "subtask": "The robot arm moves the non-food item towards the left basket."
+  }
+ ]
+}

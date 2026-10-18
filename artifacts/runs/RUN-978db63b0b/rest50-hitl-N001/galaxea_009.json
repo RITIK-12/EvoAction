@@ -1,0 +1,46 @@
+{
+ "episode_id": "galaxea_009",
+ "version_id": "rest50-hitl-N001",
+ "segments": [
+  {
+   "start_sec": 0.0,
+   "end_sec": 1.0,
+   "subtask": "The robot arm is positioned over the table with two baskets, preparing to begin the task."
+  },
+  {
+   "start_sec": 1.0,
+   "end_sec": 10.0,
+   "subtask": "The robot uses its left gripper to pick up a non-food item (a black object) from the table and places it into the left basket."
+  },
+  {
+   "start_sec": 10.0,
+   "end_sec": 15.0,
+   "subtask": "The robot uses its right gripper to pick up a food item (a red can) from the table and places it into the right basket."
+  },
+  {
+   "start_sec": 15.0,
+   "end_sec": 20.0,
+   "subtask": "The robot uses its left gripper to pick up another non-food item (a black object) from the table and places it into the left basket."
+  },
+  {
+   "start_sec": 20.0,
+   "end_sec": 25.0,
+   "subtask": "The robot uses its right gripper to pick up a food item (a red can) from the table and places it into the right basket."
+  },
+  {
+   "start_sec": 25.0,
+   "end_sec": 30.0,
+   "subtask": "The robot uses its left gripper to pick up a non-food item (a black object) from the table and places it into the left basket."
+  },
+  {
+   "start_sec": 30.0,
+   "end_sec": 35.0,
+   "subtask": "The robot uses its right gripper to pick up a food item (a red can) from the table and places it into the right basket."
+  },
+  {
+   "start_sec": 35.0,
+   "end_sec": 40.167,
+   "subtask": "The robot uses its left gripper to pick up a non-food item (a black object) from the table and places it into the left basket."
+  }
+ ]
+}

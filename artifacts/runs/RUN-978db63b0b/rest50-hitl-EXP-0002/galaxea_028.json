@@ -1,0 +1,46 @@
+{
+ "episode_id": "galaxea_028",
+ "version_id": "rest50-hitl-EXP-0002",
+ "segments": [
+  {
+   "start_sec": 0.0,
+   "end_sec": 5.0,
+   "subtask": "grasp test tube with red pigment"
+  },
+  {
+   "start_sec": 5.0,
+   "end_sec": 10.0,
+   "subtask": "lift test tube with red pigment"
+  },
+  {
+   "start_sec": 10.0,
+   "end_sec": 15.0,
+   "subtask": "move test tube with red pigment to container"
+  },
+  {
+   "start_sec": 15.0,
+   "end_sec": 20.0,
+   "subtask": "pour red pigment into container"
+  },
+  {
+   "start_sec": 20.0,
+   "end_sec": 25.0,
+   "subtask": "release test tube with red pigment"
+  },
+  {
+   "start_sec": 25.0,
+   "end_sec": 30.0,
+   "subtask": "approach test tube with blue pigment"
+  },
+  {
+   "start_sec": 30.0,
+   "end_sec": 35.0,
+   "subtask": "grasp test tube with blue pigment"
+  },
+  {
+   "start_sec": 35.0,
+   "end_sec": 38.667,
+   "subtask": "lift test tube with blue pigment"
+  }
+ ]
+}

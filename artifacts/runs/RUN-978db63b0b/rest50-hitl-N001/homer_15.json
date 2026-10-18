@@ -1,0 +1,51 @@
+{
+ "episode_id": "homer_15",
+ "version_id": "rest50-hitl-N001",
+ "segments": [
+  {
+   "start_sec": 0.0,
+   "end_sec": 15.0,
+   "subtask": "fold white cloth"
+  },
+  {
+   "start_sec": 15.0,
+   "end_sec": 30.0,
+   "subtask": "fold white cloth"
+  },
+  {
+   "start_sec": 30.0,
+   "end_sec": 45.0,
+   "subtask": "fold patterned cloth"
+  },
+  {
+   "start_sec": 45.0,
+   "end_sec": 60.0,
+   "subtask": "fold patterned cloth"
+  },
+  {
+   "start_sec": 60.0,
+   "end_sec": 75.0,
+   "subtask": "fold blue cloth"
+  },
+  {
+   "start_sec": 75.0,
+   "end_sec": 90.0,
+   "subtask": "fold blue cloth"
+  },
+  {
+   "start_sec": 90.0,
+   "end_sec": 105.0,
+   "subtask": "fold striped cloth"
+  },
+  {
+   "start_sec": 105.0,
+   "end_sec": 120.0,
+   "subtask": "fold striped cloth"
+  },
+  {
+   "start_sec": 120.0,
+   "end_sec": 132.3,
+   "subtask": "fold striped cloth"
+  }
+ ]
+}

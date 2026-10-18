@@ -1,0 +1,16 @@
+{
+ "episode_id": "galaxea_039",
+ "version_id": "rest50-hitl-N001",
+ "segments": [
+  {
+   "start_sec": 0.0,
+   "end_sec": 1.0,
+   "subtask": "pick up the test tube with yellow pigment and the test tube with red pigment by grippers"
+  },
+  {
+   "start_sec": 1.0,
+   "end_sec": 51.467,
+   "subtask": "pour them into the beaker"
+  }
+ ]
+}

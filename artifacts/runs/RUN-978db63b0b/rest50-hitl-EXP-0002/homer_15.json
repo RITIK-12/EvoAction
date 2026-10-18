@@ -1,0 +1,26 @@
+{
+ "episode_id": "homer_15",
+ "version_id": "rest50-hitl-EXP-0002",
+ "segments": [
+  {
+   "start_sec": 0.0,
+   "end_sec": 30.0,
+   "subtask": "Fold the white cloth neatly"
+  },
+  {
+   "start_sec": 30.0,
+   "end_sec": 60.0,
+   "subtask": "Fold the patterned cloth neatly"
+  },
+  {
+   "start_sec": 60.0,
+   "end_sec": 90.0,
+   "subtask": "Fold the blue cloth neatly"
+  },
+  {
+   "start_sec": 90.0,
+   "end_sec": 132.3,
+   "subtask": "Fold the striped cloth neatly"
+  }
+ ]
+}

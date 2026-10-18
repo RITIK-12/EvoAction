@@ -1,0 +1,26 @@
+{
+ "episode_id": "galaxea_043",
+ "version_id": "rest50-hitl-EXP-0002-trial3",
+ "segments": [
+  {
+   "start_sec": 0.0,
+   "end_sec": 2.0,
+   "subtask": "approach the mouse with the left gripper"
+  },
+  {
+   "start_sec": 2.0,
+   "end_sec": 4.0,
+   "subtask": "grasp the mouse with the left gripper"
+  },
+  {
+   "start_sec": 4.0,
+   "end_sec": 6.0,
+   "subtask": "lift the mouse and move it to the mouse pad"
+  },
+  {
+   "start_sec": 6.0,
+   "end_sec": 9.167,
+   "subtask": "place the mouse on the left side of the mouse pad"
+  }
+ ]
+}

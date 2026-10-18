@@ -1,0 +1,46 @@
+{
+ "episode_id": "galaxea_007",
+ "version_id": "rest50-hitl-N001",
+ "segments": [
+  {
+   "start_sec": 0.0,
+   "end_sec": 1.5,
+   "subtask": "The robot arm moves towards the green mat with the food and utensils."
+  },
+  {
+   "start_sec": 1.5,
+   "end_sec": 3.0,
+   "subtask": "The robot arm grasps the food item with the right gripper."
+  },
+  {
+   "start_sec": 3.0,
+   "end_sec": 5.0,
+   "subtask": "The robot arm moves the food item towards the right basket."
+  },
+  {
+   "start_sec": 5.0,
+   "end_sec": 7.0,
+   "subtask": "The robot arm places the food item into the right basket."
+  },
+  {
+   "start_sec": 7.0,
+   "end_sec": 9.0,
+   "subtask": "The robot arm moves towards the green mat with the non-food items."
+  },
+  {
+   "start_sec": 9.0,
+   "end_sec": 11.0,
+   "subtask": "The robot arm grasps the non-food item with the left gripper."
+  },
+  {
+   "start_sec": 11.0,
+   "end_sec": 13.0,
+   "subtask": "The robot arm moves the non-food item towards the left basket."
+  },
+  {
+   "start_sec": 13.0,
+   "end_sec": 35.533,
+   "subtask": "The robot arm places the non-food item into the left basket."
+  }
+ ]
+}

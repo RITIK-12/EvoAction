@@ -1,0 +1,21 @@
+{
+ "episode_id": "galaxea_058",
+ "version_id": "rest50-hitl-EXP-0002",
+ "segments": [
+  {
+   "start_sec": 0.0,
+   "end_sec": 4.0,
+   "subtask": "approach and grasp the banana"
+  },
+  {
+   "start_sec": 4.0,
+   "end_sec": 7.0,
+   "subtask": "lift and move the banana to the brown bowl"
+  },
+  {
+   "start_sec": 7.0,
+   "end_sec": 11.767,
+   "subtask": "place the banana in the brown bowl"
+  }
+ ]
+}

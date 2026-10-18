@@ -1,0 +1,253 @@
+{
+ "hypothesis": "Lowering the sampling rate to increase temporal context per contact sheet, enabling merging of same\u2011label adjacent segments, and generating refinement windows at unmatched telemetry hints will yield fewer, longer segments aligned with true manipulation state changes, raising median segment length toward the reference distribution and improving Segment F1 at IoU\u22650.75.",
+ "candidate_patch": {
+  "set_params": {
+   "sample": {
+    "sampling_hz": 1.0
+   },
+   "merge": {
+    "merge_same_label": true,
+    "min_duration_sec": 1.2
+   },
+   "inspect": {
+    "include_unmatched_hints": true
+   }
+  },
+  "prompt_updates": {
+   "prompt.md": "Reconstruct the sequence of manipulation events in this robot video from the timestamped contact sheets.\n\nReturn only JSON with this shape:\n{\"segments\":[{\"start_sec\":0.0,\"end_sec\":1.0,\"subtask\":\"short action description\"}]}\n\nRules:\n- Segment only completed robot manipulation events, not every visible movement.\n- Good boundaries happen when a held object changes, an object is placed or released, a tool starts/stops changing a surface, a container/door/lid opens or closes, or contents move between containers.\n- Do not split approach, grasp adjustment, small repositioning, and retreat unless the world state changes.\n- Do not merge separate pick/place/open/close/pour/wipe events when they complete different states.\n- Most segments should be 2-15 seconds. Shorter segments are allowed only for fast pick, place, open, close, or release events that are clearly instantaneous (<1.5 sec).\n- Do not output segments shorter than 1.0 second unless the action is a definitive instantaneous release or grasp (<0.5 sec).\n- Use the visible timestamps for start_sec and end_sec.\n- Ignore label wording quality; prioritize temporally correct boundaries.\n- Prefer fewer, longer segments that correctly capture state changes over many short segments.\n- If uncertain, merge adjacent short segments into a longer segment that spans the whole manipulation.\n- Adjacent segments with the same subtask label should be considered part of the same event and merged.\n\nEpisode instruction: $instruction"
+  }
+ },
+ "root_causes": [
+  {
+   "cause": "Over-segmentation into ~1-second segments due to uniform sampling and insufficient discouragement of short segments in the prompt",
+   "evidence": "predicted_segments_exactly_1s_fraction=0.941, median_predicted_segment_sec=1.0, predicted_segments_le_2s_fraction=0.981"
+  },
+  {
+   "cause": "Merge step fails to combine adjacent short segments because merge_same_label=False and labels differ, and max_gap_sec only merges gaps not zero-length adjacency",
+   "evidence": "predicted_vs_reference_segments = [269,105] showing 2.6\u00d7 over\u2011prediction; merge_filter_segments params: merge_same_label=False, max_gap_sec=1.5"
+  },
+  {
+   "cause": "Refinement step uses thinking=false leading to evenly spaced boundary adjustments and does not effectively leverage telemetry hints to correct boundaries",
+   "evidence": "Measured incumbent cost profile notes thinking=false returns valid JSON in 2\u201111\u202fs but tends toward evenly spaced segment boundaries; low IoU (mean_best_iou_per_reference=0.449)"
+  }
+ ],
+ "expected_outcome": "Median predicted segment length will increase from ~1.0\u202fs to the 2\u20113\u202fs range, the fraction of \u22642\u202fs segments will drop below 0.6, and the snapped F1 at IoU\u22650.75 will rise from ~0.02 to at least 0.15\u20130.20 on the labeled sample, indicating better alignment with human\u2011annotated manipulation boundaries.",
+ "selected_round": 1,
+ "evidence_ids": [],
+ "incumbent_labeled_scores": {
+  "snapped_f1_075": 0.021447721179624662,
+  "raw_f1_075": 0.0213903743315508,
+  "snapped_f1_05": 0.20911528150134048,
+  "tp_snapped": 4,
+  "n_pred": 269,
+  "n_ref": 105
+ },
+ "trials": [
+  {
+   "round": 1,
+   "hypothesis": "Lowering the sampling rate to increase temporal context per contact sheet, enabling merging of same\u2011label adjacent segments, and generating refinement windows at unmatched telemetry hints will yield fewer, longer segments aligned with true manipulation state changes, raising median segment length toward the reference distribution and improving Segment F1 at IoU\u22650.75.",
+   "root_causes": [
+    {
+     "cause": "Over-segmentation into ~1-second segments due to uniform sampling and insufficient discouragement of short segments in the prompt",
+     "evidence": "predicted_segments_exactly_1s_fraction=0.941, median_predicted_segment_sec=1.0, predicted_segments_le_2s_fraction=0.981"
+    },
+    {
+     "cause": "Merge step fails to combine adjacent short segments because merge_same_label=False and labels differ, and max_gap_sec only merges gaps not zero-length adjacency",
+     "evidence": "predicted_vs_reference_segments = [269,105] showing 2.6\u00d7 over\u2011prediction; merge_filter_segments params: merge_same_label=False, max_gap_sec=1.5"
+    },
+    {
+     "cause": "Refinement step uses thinking=false leading to evenly spaced boundary adjustments and does not effectively leverage telemetry hints to correct boundaries",
+     "evidence": "Measured incumbent cost profile notes thinking=false returns valid JSON in 2\u201111\u202fs but tends toward evenly spaced segment boundaries; low IoU (mean_best_iou_per_reference=0.449)"
+    }
+   ],
+   "patch": {
+    "set_params": {
+     "sample": {
+      "sampling_hz": 1.0
+     },
+     "merge": {
+      "merge_same_label": true,
+      "min_duration_sec": 1.2
+     },
+     "inspect": {
+      "include_unmatched_hints": true
+     }
+    },
+    "prompt_updates": {
+     "prompt.md": "Reconstruct the sequence of manipulation events in this robot video from the timestamped contact sheets.\n\nReturn only JSON with this shape:\n{\"segments\":[{\"start_sec\":0.0,\"end_sec\":1.0,\"subtask\":\"short action description\"}]}\n\nRules:\n- Segment only completed robot manipulation events, not every visible movement.\n- Good boundaries happen when a held object changes, an object is placed or released, a tool starts/stops changing a surface, a container/door/lid opens or closes, or contents move between containers.\n- Do not split approach, grasp adjustment, small repositioning, and retreat unless the world state changes.\n- Do not merge separate pick/place/open/close/pour/wipe events when they complete different states.\n- Most segments should be 2-15 seconds. Shorter segments are allowed only for fast pick, place, open, close, or release events that are clearly instantaneous (<1.5 sec).\n- Do not output segments shorter than 1.0 second unless the action is a definitive instantaneous release or grasp (<0.5 sec).\n- Use the visible timestamps for start_sec and end_sec.\n- Ignore label wording quality; prioritize temporally correct boundaries.\n- Prefer fewer, longer segments that correctly capture state changes over many short segments.\n- If uncertain, merge adjacent short segments into a longer segment that spans the whole manipulation.\n- Adjacent segments with the same subtask label should be considered part of the same event and merged.\n\nEpisode instruction: $instruction"
+    }
+   },
+   "labeled_scores": {
+    "snapped_f1_075": 0.06956521739130436,
+    "raw_f1_075": 0.06896551724137932,
+    "snapped_f1_05": 0.1043478260869565,
+    "tp_snapped": 4,
+    "n_pred": 11,
+    "n_ref": 105
+   },
+   "failed_labeled_episodes": [],
+   "root_cause_stats_labeled": {
+    "predicted_vs_reference_segments": [
+     11,
+     105
+    ],
+    "median_predicted_segment_sec": 5.0,
+    "median_reference_segment_sec": 2.37,
+    "predicted_segments_le_2s_fraction": 0.0,
+    "reference_segments_le_2s_fraction": 0.429,
+    "predicted_segments_exactly_1s_fraction": 0.0,
+    "median_coverage_last_predicted_end_over_reference_end": 1.15,
+    "episodes_with_coverage_below_50pct": 0,
+    "references_matched_at_iou075": 4,
+    "mean_best_iou_per_reference": 0.063,
+    "references_with_best_iou_below_0.5": 99,
+    "pooled_scores": {
+     "snapped_f1_075": 0.06956521739130436,
+     "raw_f1_075": 0.06896551724137932,
+     "snapped_f1_05": 0.1043478260869565,
+     "tp_snapped": 4,
+     "n_pred": 11,
+     "n_ref": 105
+    }
+   }
+  },
+  {
+   "round": 2,
+   "hypothesis": "Lowering the sampling rate to increase temporal richness per contact sheet, enabling merging of same\u2011label adjacent segments with a higher minimum duration, and strengthening the prompt\u2019s bias against sub\u20111.5\u2011second segments will reduce over\u2011segmentation, raise median segment length toward the reference distribution, and improve Segment F1 at IoU\u22650.75.",
+   "root_causes": [
+    {
+     "cause": "Model outputs many evenly spaced 1\u2011second segments when thinking=false, causing extreme over\u2011segmentation.",
+     "evidence": "Measured incumbent cost profile notes thinking=false returns valid JSON quickly but tends toward evenly spaced segment boundaries; root\u2011cause stats show 94.1% of predicted segments are exactly 1.0\u202fs (predicted_segments_exactly_1s_fraction\u202f=\u202f0.941) and median predicted segment is 1.0\u202fs vs reference median 2.37\u202fs."
+    },
+    {
+     "cause": "Merge step does not combine same\u2011label adjacent segments, so a single manipulation is split into many short pieces.",
+     "evidence": "merge_same_label is false; predicted segments per episode mean\u202f=\u202f20.4 while reference segments per episode\u202f\u2248\u202f105/50\u202f=\u202f2.1, indicating massive splitting of the same action."
+    },
+    {
+     "cause": "Each contact sheet covers only ~15\u202fs of video (sampling_hz=2.0, frames_per_sheet=30), limiting temporal context and encouraging the model to default to fine\u2011grained splits.",
+     "evidence": "With current sampling, a sheet shows 30 frames at 0.5\u202fs spacing = 15\u202fs; yet median predicted segment is 1.0\u202fs, far below reference median 2.37\u202fs, showing the model cannot see longer manipulations and resorts to short splits."
+    }
+   ],
+   "patch": {
+    "set_params": {
+     "sample": {
+      "sampling_hz": 0.5
+     },
+     "merge": {
+      "merge_same_label": true,
+      "min_duration_sec": 1.5
+     }
+    },
+    "prompt_updates": {
+     "prompt.md": "Reconstruct the sequence of manipulation events in this robot video from the timestamped contact sheets.\n\nReturn only JSON with this shape:\n{\"segments\":[{\"start_sec\":0.0,\"end_sec\":1.0,\"subtask\":\"short action description\"}]}\n\nRules:\n- Segment only completed robot manipulation events, not every visible movement.\n- Good boundaries happen when a held object changes, an object is placed or released, a tool starts/stops changing a surface, a container/door/lid opens or closes, or contents move between containers.\n- Do not split approach, grasp adjustment, small repositioning, and retreat unless the world state changes.\n- Do not merge separate pick/place/open/close/pour/wipe events when they complete different states.\n- Most segments should be 2-15 seconds. Shorter segments are allowed only for fast pick, place, open, close, or release events that are clearly instantaneous (<1.5 sec).\n- Do not output segments shorter than 1.0 second unless the action is a definitive instantaneous release or grasp (<0.5 sec).\n- Use the visible timestamps for start_sec and end_sec.\n- Ignore label wording quality; prioritize temporally correct boundaries.\n- Prefer fewer, longer segments that correctly capture state changes over many short segments.\n- If uncertain, merge adjacent short segments into a longer segment that spans the whole manipulation.\n\nEpisode instruction: $instruction"
+    }
+   },
+   "labeled_scores": {
+    "snapped_f1_075": 0.01739130434782609,
+    "raw_f1_075": 0.01724137931034483,
+    "snapped_f1_05": 0.08695652173913042,
+    "tp_snapped": 1,
+    "n_pred": 11,
+    "n_ref": 105
+   },
+   "failed_labeled_episodes": [],
+   "root_cause_stats_labeled": {
+    "predicted_vs_reference_segments": [
+     11,
+     105
+    ],
+    "median_predicted_segment_sec": 3.17,
+    "median_reference_segment_sec": 2.37,
+    "predicted_segments_le_2s_fraction": 0.455,
+    "reference_segments_le_2s_fraction": 0.429,
+    "predicted_segments_exactly_1s_fraction": 0.0,
+    "median_coverage_last_predicted_end_over_reference_end": 1.15,
+    "episodes_with_coverage_below_50pct": 0,
+    "references_matched_at_iou075": 1,
+    "mean_best_iou_per_reference": 0.053,
+    "references_with_best_iou_below_0.5": 100,
+    "pooled_scores": {
+     "snapped_f1_075": 0.01739130434782609,
+     "raw_f1_075": 0.01724137931034483,
+     "snapped_f1_05": 0.08695652173913042,
+     "tp_snapped": 1,
+     "n_pred": 11,
+     "n_ref": 105
+    }
+   }
+  },
+  {
+   "round": 3,
+   "hypothesis": "Lowering the sampling rate to increase temporal context per sheet, keeping thinking=false but strengthening the prompt against uniform segmentation, generating inspection windows at unmatched telemetry hints, and raising the minimum segment duration while enabling merging of same\u2011label adjacent segments will yield fewer, longer segments aligned with true manipulation state changes, thereby raising median segment length toward the reference distribution and improving Segment F1 at IoU\u22650.75.",
+   "root_causes": [
+    {
+     "cause": "Non-thinking model produces uniformly spaced boundaries, causing massive over-segmentation.",
+     "evidence": "Median predicted segment = 1.0\u202fs, 94.1% exactly 1.0\u202fs; operator library note: thinking=false yields evenly spaced boundaries and ~10\u00d7 fewer tokens but tends toward uniform segmentation."
+    },
+    {
+     "keause": "Merging parameters too permissive: min_duration_sec=0.8 fails to remove 1\u2011second spurious segments and merge_same_label=false prevents combining adjacent same\u2011label predictions.",
+     "evidence": "Predicted segments \u22642\u202fs fraction = 0.981; predicted_segments_exactly_1s_fraction = 0.941; merge step does not filter these out."
+    },
+    {
+     "cause": "Insufficient temporal context per contact sheet and missing windows at unmatched telemetry hints limit the model\u2019s ability to detect true state changes.",
+     "evidence": "sampling_hz=2.0 \u2192 ~15\u202fs per sheet; inspect does not generate windows for hints without nearby boundaries (include_unmatched_hints=false), resulting in low IoU (mean best IoU per reference = 0.449) and only 4/105 references matched at IoU\u22650.75."
+    }
+   ],
+   "patch": {
+    "set_params": {
+     "sample": {
+      "sampling_hz": 0.5,
+      "frames_per_sheet": 30
+     },
+     "inspect": {
+      "include_unmatched_hints": true
+     },
+     "merge": {
+      "min_duration_sec": 2.0,
+      "merge_same_label": true
+     }
+    },
+    "prompt_updates": {
+     "prompt.md": "Reconstruct the sequence of manipulation events in this robot video from the timestamped contact sheets.\n\nReturn only JSON with this shape:\n{\"segments\":[{\"start_sec\":0.0,\"end_sec\":1.0,\"subtask\":\"short action description\"}]}\n\nRules:\n- Segment only completed robot manipulation events, not every visible movement.\n- Good boundaries happen when a held object changes, an object is placed or released, a tool starts/stops changing a surface, a container/door/lid opens or closes, or contents move between containers.\n- Do not split approach, grasp adjustment, small repositioning, and retreat unless the world state changes.\n- Do not merge separate pick/place/open/close/pour/wipe events when they complete different states.\n- Most segments should be 2-20 seconds. Shorter segments are allowed only for fast pick, place, open, close, or release events that are clearly instantaneous (<1.5 sec).\n- Do not output segments shorter than 1.0 second unless the action is a definitive instantaneous release or grasp (<0.5 sec).\n- Use the visible timestamps for start_sec and end_sec.\n- Ignore label wording quality; prioritize temporally correct boundaries.\n- Prefer fewer, longer segments that correctly capture state changes over many short segments.\n- If uncertain, merge adjacent short segments into a longer segment that spans the whole manipulation.\n- Use robot-telemetry hints (gripper open/close, end-effector pauses) as cues for where state changes likely occur; boundaries should align with the first frame where the earlier subtask's world-state change is complete.\n- Avoid producing evenly spaced segments; segment lengths should reflect actual state changes, not a fixed interval.\n\nEpisode instruction: $instruction",
+     "refine.md": "You are refining the temporal boundaries of a robot manipulation video annotation.\nTask instruction: \"$instruction\". Video length: $duration_sec s.\nCurrent segments (JSON): $segments_json\n\nEach following image is a close-up strip of consecutive frames (timestamps printed in yellow) around one current boundary or one robot-telemetry hint:\n$windows\n\nPolicy: a boundary belongs at the first frame where the earlier subtask's world-state change is complete (object released and at rest, gripper opened, drawer closed, pour finished).\nFor each window choose one action:\n- \"keep\": the current boundary is already within 0.25 s of the correct moment\n- \"move\": give boundary_sec, the corrected time (must lie inside the window)\n- \"delete\": there is no real state change here; the two neighbouring segments are one event\n- \"insert\": (hint windows only) a distinct completed state change happens here and is missing; give boundary_sec and new_subtask for the segment that starts there\n\nAdditional guidance:\n- Prefer to delete boundaries that are not near any hint or clear visual state change.\n- When moving a boundary, favor times that coincide with a hint or a clear change in object contact.\n- If a window shows no clear state change and the neighboring segments appear to be part of the same manipulation, choose \"delete\".\n- Do not create segments shorter than 1.0 second unless the action is a definitive instantaneous release or grasp (<0.5 sec).\n- Avoid creating evenly spaced boundaries; let the hints and visual evidence guide the number and placement of segments.\n\nReturn only JSON: {\"windows\": [{\"window_id\": \"W1\", \"action\": \"keep|move|delete|insert\", \"boundary_sec\": <float or null>, \"new_subtask\": <string or null>, \"reason\": \"<one short sentence>\"}]}"
+    }
+   },
+   "labeled_scores": {
+    "snapped_f1_075": 0.0,
+    "raw_f1_075": 0.0,
+    "snapped_f1_05": 0.1043478260869565,
+    "tp_snapped": 0,
+    "n_pred": 11,
+    "n_ref": 105
+   },
+   "failed_labeled_episodes": [],
+   "root_cause_stats_labeled": {
+    "predicted_vs_reference_segments": [
+     11,
+     105
+    ],
+    "median_predicted_segment_sec": 4.25,
+    "median_reference_segment_sec": 2.37,
+    "predicted_segments_le_2s_fraction": 0.273,
+    "reference_segments_le_2s_fraction": 0.429,
+    "predicted_segments_exactly_1s_fraction": 0.0,
+    "median_coverage_last_predicted_end_over_reference_end": 1.15,
+    "episodes_with_coverage_below_50pct": 0,
+    "references_matched_at_iou075": 0,
+    "mean_best_iou_per_reference": 0.056,
+    "references_with_best_iou_below_0.5": 99,
+    "pooled_scores": {
+     "snapped_f1_075": 0.0,
+     "raw_f1_075": 0.0,
+     "snapped_f1_05": 0.1043478260869565,
+     "tp_snapped": 0,
+     "n_pred": 11,
+     "n_ref": 105
+    }
+   }
+  }
+ ],
+ "task_ids": [],
+ "protocol": "v3-macrodata",
+ "task_tree": []
+}

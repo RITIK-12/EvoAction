@@ -1,0 +1,11 @@
+{
+ "episode_id": "homer_4",
+ "version_id": "rest50-hitl-N001",
+ "segments": [
+  {
+   "start_sec": 0.0,
+   "end_sec": 130.033,
+   "subtask": "wipe table"
+  }
+ ]
+}

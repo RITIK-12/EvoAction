@@ -1,0 +1,16 @@
+{
+ "episode_id": "galaxea_073",
+ "version_id": "rest50-hitl-EXP-0002-trial3",
+ "segments": [
+  {
+   "start_sec": 0.0,
+   "end_sec": 10.0,
+   "subtask": "approach and grasp the red drawer"
+  },
+  {
+   "start_sec": 10.0,
+   "end_sec": 14.867,
+   "subtask": "open the drawer and close it"
+  }
+ ]
+}

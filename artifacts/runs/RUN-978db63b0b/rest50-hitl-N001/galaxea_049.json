@@ -1,0 +1,31 @@
+{
+ "episode_id": "galaxea_049",
+ "version_id": "rest50-hitl-N001",
+ "segments": [
+  {
+   "start_sec": 0.0,
+   "end_sec": 3.0,
+   "subtask": "Approach the cup with the gripper"
+  },
+  {
+   "start_sec": 3.0,
+   "end_sec": 5.5,
+   "subtask": "Grasp the cup"
+  },
+  {
+   "start_sec": 5.5,
+   "end_sec": 10.0,
+   "subtask": "Lift the cup and move it over the bowl"
+  },
+  {
+   "start_sec": 10.0,
+   "end_sec": 11.5,
+   "subtask": "Pour the solid from the cup into the bowl"
+  },
+  {
+   "start_sec": 11.5,
+   "end_sec": 13.167,
+   "subtask": "Place the cup back on the surface"
+  }
+ ]
+}

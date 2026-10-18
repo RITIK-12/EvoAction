@@ -1,0 +1,11 @@
+{
+ "episode_id": "homer_12",
+ "version_id": "rest50-hitl-EXP-0001-trial2",
+ "segments": [
+  {
+   "start_sec": 0.0,
+   "end_sec": 124.66,
+   "subtask": "Inspect blue container"
+  }
+ ]
+}
